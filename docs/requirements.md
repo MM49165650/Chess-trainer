@@ -377,6 +377,18 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Agent instructions state that phone width is the primary target and that the check command must pass.
 - Changes to the check configuration itself need human review.
 
+**The check command, as built in step 2**
+
+- The command is `composer check`, run inside Docker. It stops at the first failure.
+- It runs, in order: Pint, Rector, Larastan at level max with no baseline, the Pest architecture tests, route helper generation, vue-tsc, ESLint, Prettier, Vitest, the licence check, and a scan for comments that silence a check.
+- ESLint with typescript-eslint and eslint-plugin-vue is the linter, and Prettier is the formatter for TypeScript and Vue. The starter kit's own lint tool, vite-plus, was removed because it cannot read Vue templates.
+- `any` and non-null assertions are also banned inside Vue templates, through a separate ESLint rule.
+- Linting and formatting cover `resources/`, `tools/` and the root config files. `docs/`, `AGENTS.md` and `README.md` are excluded.
+- Larastan analyses the app, config, database and routes folders. It does not analyse `tests/`.
+- Route helpers are regenerated on every check and are not committed.
+- The pre-commit hook runs the full check and gitleaks, a secret scanner. It is switched on once per clone with `git config core.hooksPath .githooks`.
+- CI runs the check on every push, then audits production dependencies only.
+
 **Tests that matter most**
 
 - Tests are kept to a small fixed set. There is no general unit-testing practice and no coverage target; the static checks cover the rest.
