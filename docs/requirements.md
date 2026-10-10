@@ -149,7 +149,7 @@ A rook moves from a1 to a4 on an otherwise empty board.
 **Sessions**
 
 - Sessions are open-ended. The user goes for as long as they like, and returning resumes at the same move.
-- A next game button serves a random game. There is no browsing.
+- A next game button serves a random game. There is no browsing. The mode opens on a landing page at /squares that shows the three phase percentages and a Start or Resume button. The exercise itself runs at /squares/play.
 - The board is shown with White at the bottom.
 - A rewind button shows the position before the move. The move's squares are not highlighted in this mode. Phase 1 depends on that earlier position, and a user resuming a session did not just watch the move.
 
@@ -200,7 +200,7 @@ Most users are on phones, so phone width is the primary design target for every 
 - Squares are tapped to mark them in square control, with no zooming needed.
 - Moves can be made by tapping a piece and then a square, or by dragging.
 - Nothing depends on hovering, and the page does not scroll while a piece is dragged.
-- Game lists are cards, with filters in a slide-up panel.
+- Game lists are rows separated by hairlines, with filters in a slide-up panel.
 - Data loads on demand, one game or puzzle batch at a time, to stay fast on mobile data.
 
 **Pages**
@@ -304,7 +304,7 @@ The four board rows in this table describe the sage board drawn in the mockups, 
 
 - Every colour, font size, spacing step and corner radius is a named design token, defined in one place. A mode is a different set of values for the same names.
 - Components use tokens only. A lint rule rejects hard-coded colours.
-- A small set of shared components is built before any screen: button, card, list row, bottom bar and slide-up panel.
+- A small set of shared components is built before any screen: button, list row, bottom bar and slide-up panel. There is no card component.
 - Every screen is reviewed on a phone in both modes before its build step is finished.
 
 ## Data and imports
@@ -824,11 +824,13 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | `/guess/{master}` | Game list for one master, by slug |
 | `/guess/{master}/random` | Redirects to a random game by that master |
 | `/guess/{master}/{game}` | Play a master game |
-| `/squares` | Square control |
+| `/squares` | Square control landing page: the three phase percentages and a Start or Resume button |
+| `/squares/play` | The square-control exercise |
 | `/tactics` | The piece categories |
 | `/tactics/{piece}` | Play tactics; `piece` is one of the six piece types or `all` |
 | `/progress`, `/settings`, `/credits`, `/privacy` | As named |
 | `/sitemap.xml` | Lists the master pages and master game pages |
+| `/about` | About |
 
 - The game list is sorted by year and shows 30 games per page.
 - Its query parameters are `q`, `color`, `year_from`, `year_to` and `page`. The search box `q` matches opponent and event, which is how those two are filtered.
