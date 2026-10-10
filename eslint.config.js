@@ -56,6 +56,19 @@ export default defineConfig(
                     'ts-nocheck': true,
                 },
             ],
+            // The typescript-eslint rules do not look inside Vue templates,
+            // so the same two bans are repeated for template expressions.
+            'vue/no-restricted-syntax': [
+                'error',
+                {
+                    selector: 'TSAnyKeyword',
+                    message: 'Unexpected any. Specify a different type.',
+                },
+                {
+                    selector: 'TSNonNullExpression',
+                    message: 'Forbidden non-null assertion.',
+                },
+            ],
         },
     },
     {
