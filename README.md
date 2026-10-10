@@ -34,6 +34,22 @@ Then open <http://localhost:8000>.
 - To run any other command, prefix it with `docker compose exec app`, for example `docker compose exec app php artisan migrate`.
 - `vendor/` and `node_modules/` are kept in Docker volumes, not in the project folder, so the project stays fast on Windows. An editor on the host will not see them.
 
+## The check command
+
+One command runs every check: Pint, Rector, Larastan, the Pest architecture tests, the TypeScript checker, ESLint, Prettier, Vitest, the dependency licence check and a scan for comments that silence a check.
+
+```bash
+docker compose run --rm app composer check
+```
+
+`docker compose run --rm app composer fix` applies the automatic fixes from Rector, Pint and Prettier.
+
+CI runs the same command on every pull request and on `main`. To run it before each commit as well, together with a secret scan of the staged changes, switch the hook on once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Licence
 
 GPL-3.0. See [`LICENSE`](LICENSE). Third-party assets such as piece sets keep their own licences.

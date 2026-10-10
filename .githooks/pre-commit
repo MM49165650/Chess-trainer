@@ -1,0 +1,8 @@
+#!/bin/sh
+# Scans the staged changes for secrets, then runs the check command.
+# Switch it on once per clone:  git config core.hooksPath .githooks
+
+set -e
+
+docker compose run --rm -T app sh -c \
+    'gitleaks git --pre-commit --staged --redact --no-banner && composer check'

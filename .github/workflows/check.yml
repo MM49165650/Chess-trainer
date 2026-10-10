@@ -1,0 +1,34 @@
+name: Check
+
+on:
+    push:
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    check:
+        # A pull request from a branch of this repository is already
+        # covered by its push; only pull requests from forks run here.
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: Create the environment file
+              run: cp .env.example .env
+
+            - name: Build the image
+              run: docker compose build app
+
+            - name: Install dependencies
+              run: docker compose run --rm -T app composer setup
+
+            - name: Check
+              run: docker compose run --rm -T app composer check
+
+            - name: Audit production dependencies
+              run: docker compose run --rm -T app composer audit:production
