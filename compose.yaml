@@ -1,4 +1,4 @@
-# Local development. Copy .env.example to .env first; see the README.
+# Local development and CI. Copy .env.example to .env first; see the README.
 #
 # vendor/ and node_modules/ live in named volumes, not in the source folder,
 # so that a checkout on the Windows filesystem stays fast.
@@ -13,6 +13,20 @@ x-app: &app
     depends_on:
         postgres:
             condition: service_healthy
+        postgres-test:
+            condition: service_healthy
+
+x-postgres: &postgres
+    image: postgres:18
+    environment:
+        POSTGRES_DB: ${DB_DATABASE}
+        POSTGRES_USER: ${DB_USERNAME}
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+        test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}']
+        interval: 2s
+        timeout: 5s
+        retries: 30
 
 services:
     app:
@@ -30,19 +44,16 @@ services:
             - '127.0.0.1:5173:5173'
 
     postgres:
-        image: postgres:18
-        environment:
-            POSTGRES_DB: ${DB_DATABASE}
-            POSTGRES_USER: ${DB_USERNAME}
-            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        <<: *postgres
         volumes:
             - postgres:/var/lib/postgresql
-        healthcheck:
-            test:
-                ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}']
-            interval: 2s
-            timeout: 5s
-            retries: 30
+
+    # The database the tests run against. It lives in memory, so it starts
+    # empty every time and never touches the development data.
+    postgres-test:
+        <<: *postgres
+        tmpfs:
+            - /var/lib/postgresql
 
 volumes:
     vendor:

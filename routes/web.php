@@ -1,5 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+declare(strict_types=1);
 
-Route::inertia('/', 'Home')->name('home');
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use Inertia\Response;
+
+Route::get('/', fn (): Response => Inertia::render('Home'))->name('home');

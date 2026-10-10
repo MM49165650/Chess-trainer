@@ -1,0 +1,32 @@
+name: Check
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+permissions:
+    contents: read
+
+jobs:
+    check:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: Create the environment file
+              run: cp .env.example .env
+
+            - name: Build the image
+              run: docker compose build app
+
+            - name: Install dependencies
+              run: docker compose run --rm -T app composer setup
+
+            - name: Check
+              run: docker compose run --rm -T app composer check
+
+            - name: Audit production dependencies
+              run: docker compose run --rm -T app composer audit:production
