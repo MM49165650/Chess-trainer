@@ -1,0 +1,50 @@
+# Local development. Copy .env.example to .env first; see the README.
+#
+# vendor/ and node_modules/ live in named volumes, not in the source folder,
+# so that a checkout on the Windows filesystem stays fast.
+
+x-app: &app
+    build: .
+    image: chess-trainer-dev
+    volumes:
+        - .:/app
+        - vendor:/app/vendor
+        - node_modules:/app/node_modules
+    depends_on:
+        postgres:
+            condition: service_healthy
+
+services:
+    app:
+        <<: *app
+        command: php artisan serve --host=0.0.0.0 --port=8000
+        ports:
+            - '127.0.0.1:8000:8000'
+
+    vite:
+        <<: *app
+        command: npm run dev
+        environment:
+            VITE_USE_POLLING: 'true'
+        ports:
+            - '127.0.0.1:5173:5173'
+
+    postgres:
+        image: postgres:18
+        environment:
+            POSTGRES_DB: ${DB_DATABASE}
+            POSTGRES_USER: ${DB_USERNAME}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - postgres:/var/lib/postgresql
+        healthcheck:
+            test:
+                ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}']
+            interval: 2s
+            timeout: 5s
+            retries: 30
+
+volumes:
+    vendor:
+    node_modules:
+    postgres:
