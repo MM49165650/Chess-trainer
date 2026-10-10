@@ -1,6 +1,6 @@
 # Chess trainer
 
-A free, open source, mobile-first chess training site with three modes:
+A free, open source, mobile-first chess training site focused on beginners with three modes:
 
 - **Guess the move**: play through a master's win and guess each move.
 - **Square control**: after every move of a beginner game, mark what changed on the board.
