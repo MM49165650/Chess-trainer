@@ -80,7 +80,7 @@ Seven masters, chosen because their styles work well together: Morphy, Capablanc
 - The winner must be one of the seven masters.
 - Draws are excluded.
 - Odds games, which start from a non-standard position, are excluded.
-- Simultaneous and blindfold exhibition games are excluded where the data labels them.
+- Simultaneous and blindfold games are excluded where the data labels them. PGN Mentor marks simultaneous games with the word "sim". One-on-one exhibition games against other masters are kept.
 - There is no minimum length. Every decisive game is kept, however short, as long as it has at least one move.
 - Duplicate games are removed.
 - Player names are normalized so each master has one spelling.
@@ -423,7 +423,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Tests are kept to a small fixed set. There is no general unit-testing practice and no coverage target; the static checks cover the rest.
 - Golden tests for the control and hanging-piece rules: fifteen to twenty hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
 - Import twice and confirm every game and puzzle keeps the same ID.
-- Import a handful of real games that include castling, promotion and en passant, and confirm they replay correctly.
+- Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 
 **Operations**
 
@@ -579,7 +579,7 @@ The import scripts, the database, the data endpoints and the browser all use the
 - A board may report castling as the king moving onto its rook. That is normalized to the king's two-square move before any comparison.
 - Every game starts from the standard starting position. Anything else is rejected at import.
 - Two sets are equal when they hold the same squares. Sorting only keeps stored data stable between imports.
-- Each data shape is defined once, as a PHP data class, and its TypeScript type is generated. This includes the entries inside the `moves` lists.
+- Each data shape is defined once, as a PHP data class, and its TypeScript type is generated, using spatie/laravel-data and spatie/laravel-typescript-transformer. The types are generated on every check and are not committed. This includes the entries inside the `moves` lists.
 
 ## Appendix B: The control and hanging calculation
 
@@ -813,7 +813,7 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 | Command | Option | Meaning | Default |
 | --- | --- | --- | --- |
 | `extract:masters` | `--min-plies` | Shortest game kept | 0, which keeps every game. Decided on 11 October 2026 |
-| `extract:masters` | `--exclude-events` | Words in the event or site that exclude a game | simul, blindfold, odds, exhibition, consultation |
+| `extract:masters` | `--exclude-events` | Words in the event or site that exclude a game | sim, simul, blindfold, odds, consultation, each matched as a whole word |
 | `extract:practice` | `--max-rating` | Rating limit | 1000 |
 | `extract:practice` | `--both-players` | Whether both players must be under the limit | Yes, placeholder |
 | `extract:practice` | `--exclude-speeds` | Speeds to skip, read from the game's Event tag | bullet and ultrabullet, placeholder |
@@ -923,7 +923,7 @@ A puzzle ID list response:
 - They are stateless: no session and no cookies. A response that sets a cookie is not cached by Cloudflare.
 - Each response carries a public cache header with the time shown above, and a Cloudflare cache rule covers `/api/*`.
 - After an import that uses the update option, the Cloudflare cache is purged. Newly added items appear within an hour without a purge.
-- An unknown ID returns 404. An invalid parameter returns 422. Both have a JSON body with a message.
+- An unknown ID returns 404, and so does an ID in the address that is not a number. An invalid query parameter returns 422. Both have a JSON body with a message. Error responses carry no public cache header, so a game imported later is never hidden behind a cached "not found".
 - Requests are limited to 120 per minute per visitor, a placeholder value.
 - Laravel is configured to trust Cloudflare's forwarding headers. Without that, every visitor appears to come from Cloudflare's address and they all share one limit.
 - Each response shape is a PHP data class with a generated TypeScript type.
