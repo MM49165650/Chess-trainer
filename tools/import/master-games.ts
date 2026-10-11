@@ -19,14 +19,7 @@ export type ExtractOptions = {
 
 export const DEFAULT_OPTIONS: ExtractOptions = {
     minPlies: 0,
-    excludeEvents: [
-        'simul',
-        'sim',
-        'blindfold',
-        'odds',
-        'exhibition',
-        'consultation',
-    ],
+    excludeEvents: ['simul', 'sim', 'blindfold', 'odds', 'consultation'],
 };
 
 export type ExtractReport = {
