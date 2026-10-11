@@ -663,7 +663,7 @@ The MVP has four content tables and nothing about users. Every column is not-nul
 | `name` | text | Display name |
 | `sort_order` | smallint | Unique; display order: Morphy, Capablanca, Alekhine, Botvinnik, Tal, Fischer, Spassky |
 
-The seven rows are created by a seeder kept in the repository.
+The seven rows are created by a seeder kept in the repository, with the display names Paul Morphy, José Raúl Capablanca, Alexander Alekhine, Mikhail Botvinnik, Mikhail Tal, Bobby Fischer and Boris Spassky. The seeder is safe to rerun and never changes an ID.
 
 **`master_games`**
 
@@ -738,7 +738,7 @@ No usernames and no Lichess game ID are stored, since the ID links back to the p
 - Each `moves` column is a JSON array whose length equals `ply_count`.
 - On `puzzles`, `reply_move` and `second_move` are both null or both present.
 - Indexes: `master_games (master_id, year)` and `puzzles (piece)`.
-- Search on opponent and event uses a case-insensitive match. No special index is needed at this size.
+- Search on opponent and event uses a case-insensitive match. No special index is needed at this size. Each fingerprint column has a check constraint requiring 64 lowercase hexadecimal characters, so the same game can never be stored twice under different spellings of its fingerprint. Migrations for content tables have no rollback, so a rollback can never drop imported games.
 - List queries never select the `moves` column.
 - The contents of each `moves` entry are validated by the import, not by the database.
 
