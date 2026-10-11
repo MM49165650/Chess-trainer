@@ -28,6 +28,8 @@ export default defineConfig(
             'resources/js/actions/**',
             'resources/js/routes/**',
             'resources/js/wayfinder/**',
+            // Generated from the PHP data classes on every check.
+            'resources/js/generated/**',
         ],
     },
     js.configs.recommended,

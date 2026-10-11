@@ -9,7 +9,9 @@
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "laravel/wayfinder": "^0.1.14",
+        "spatie/laravel-data": "^4.23",
+        "spatie/laravel-typescript-transformer": "^3.3"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.6",
@@ -52,6 +54,7 @@
             "phpstan analyse --memory-limit=1G",
             "pest --compact",
             "@php artisan wayfinder:generate --with-form",
+            "@php artisan typescript:transform",
             "npm run types",
             "npm run lint",
             "npm run lint:css",

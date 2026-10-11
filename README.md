@@ -34,9 +34,24 @@ Then open <http://localhost:8000>.
 - To run any other command, prefix it with `docker compose exec app`, for example `docker compose exec app php artisan migrate`.
 - `vendor/` and `node_modules/` are kept in Docker volumes, not in the project folder, so the project stays fast on Windows. An editor on the host will not see them.
 
+## Importing master games
+
+Game files are never committed. Put them under `data/`, which git ignores. An import runs in two stages:
+
+```bash
+docker compose exec app npm run extract:masters -- --input data/masters --out data/intermediate/master-games.jsonl
+```
+
+```bash
+docker compose exec app php artisan import:master-games data/intermediate/master-games.jsonl
+```
+
+- The first stage reads PGN files, replays every game and prints what it kept and what it skipped. `--input` takes one file or a folder.
+- The second stage loads the result into the database. It is safe to run again: games already loaded are skipped and keep their IDs. Add `--dry-run` to see the report without changing anything, or `--update` to rewrite the details of games already loaded.
+
 ## The check command
 
-One command runs every check: Pint, Rector, Larastan, the Pest architecture tests, the TypeScript checker, ESLint, Stylelint, Prettier, Vitest, the dependency licence check and a scan for comments that silence a check.
+One command runs every check: Pint, Rector, Larastan, the Pest tests, the TypeScript checker, ESLint, Stylelint, Prettier, Vitest, the dependency licence check and a scan for comments that silence a check.
 
 ```bash
 docker compose run --rm app composer check
