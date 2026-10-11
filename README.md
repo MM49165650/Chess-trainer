@@ -30,7 +30,7 @@ docker compose up
 
 Then open <http://localhost:8000>.
 
-- `composer setup` installs the PHP and Node packages, creates the application key and runs the migrations. It is only needed once, and again after the dependencies change.
+- `composer setup` installs the PHP and Node packages, creates the application key, runs the migrations and adds the seven masters. It is only needed once, and again after the dependencies change.
 - To run any other command, prefix it with `docker compose exec app`, for example `docker compose exec app php artisan migrate`.
 - `vendor/` and `node_modules/` are kept in Docker volumes, not in the project folder, so the project stays fast on Windows. An editor on the host will not see them.
 
