@@ -9,7 +9,7 @@ export default defineConfig({
     },
     test: {
         include: ['resources/js/**/*.test.ts', 'tools/**/*.test.ts'],
-        // The first TypeScript tests are the golden tests of build step 6.
+        // The first TypeScript tests are the golden tests of build step 7.
         passWithNoTests: true,
     },
 });
