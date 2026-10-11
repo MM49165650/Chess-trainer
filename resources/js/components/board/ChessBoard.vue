@@ -279,13 +279,18 @@ watch(
 /*
  * On larger screens the board has its own width and is centred on the column
  * it sits in, so it may be narrower or wider than that column. It is never
- * shown taller than the screen allows, whatever size was chosen.
+ * shown taller than the screen allows, whatever size was chosen. A page that
+ * knows how much room it has says so with --board-height-limit.
  */
 @media (min-width: 640px) {
     .chess-board {
         --shown-size: max(
             320px,
-            min(var(--board-size), 100vh - 120px, 100vw - 2rem)
+            min(
+                var(--board-size),
+                var(--board-height-limit, calc(100vh - 120px)),
+                100vw - 2rem
+            )
         );
 
         width: var(--shown-size);

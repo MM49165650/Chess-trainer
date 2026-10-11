@@ -5,6 +5,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ShowMasterGameController from '@/actions/App/Http/Controllers/Api/ShowMasterGameController';
+import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import GuessGame from '@/components/guess/GuessGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type { MasterGameData, MasterGameDetailsData } from '@/generated/data';
@@ -14,7 +15,17 @@ const props = defineProps<{
 }>();
 
 const loaded = ref<MasterGameData | null>(null);
-const failed = ref(false);
+
+/**
+ * Why the moves did not load: the game is not there, or the request itself
+ * failed, which a retry may fix.
+ */
+const failure = ref<'missing' | 'unreachable' | null>(null);
+
+// The board is kept short enough for the whole screen to fit without
+// scrolling: the header, the prompt and the bottom bar all stay in view.
+const page = ref<HTMLElement | null>(null);
+const boardHeightLimit = useBoardHeightLimit(page);
 
 // White's name first. The master goes by family name, as in the mockups.
 const players = computed(() => {
@@ -33,7 +44,7 @@ const occasion = computed(() =>
 );
 
 async function load(): Promise<void> {
-    failed.value = false;
+    failure.value = null;
 
     try {
         const response = await fetch(
@@ -42,6 +53,12 @@ async function load(): Promise<void> {
                 headers: { Accept: 'application/json' },
             },
         );
+
+        if (response.status === 404) {
+            failure.value = 'missing';
+
+            return;
+        }
 
         if (!response.ok) {
             throw new Error(
@@ -53,7 +70,7 @@ async function load(): Promise<void> {
 
         loaded.value = body as MasterGameData;
     } catch {
-        failed.value = true;
+        failure.value = 'unreachable';
     }
 }
 
@@ -65,7 +82,11 @@ onMounted(load);
         :title="`Guess the move: ${players}${occasion ? `, ${occasion.replace(', ', ' ')}` : ''}`"
     />
 
-    <main class="sm:mx-auto sm:w-[560px]">
+    <main
+        ref="page"
+        class="sm:mx-auto sm:w-[560px]"
+        :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
+    >
         <header class="flex items-center gap-1 p-1">
             <Link
                 href="/"
@@ -99,7 +120,20 @@ onMounted(load);
         <GuessGame v-if="loaded" :game="loaded" />
 
         <div
-            v-else-if="failed"
+            v-else-if="failure === 'missing'"
+            class="flex flex-col items-start gap-3 px-5 pt-6"
+            role="alert"
+        >
+            <h1 class="font-serif text-heading tracking-heading">
+                This game is no longer here.
+            </h1>
+            <p class="text-muted">
+                Its moves could not be found. Go back and choose another game.
+            </p>
+        </div>
+
+        <div
+            v-else-if="failure === 'unreachable'"
             class="flex flex-col items-start gap-3 px-5 pt-6"
             role="alert"
         >

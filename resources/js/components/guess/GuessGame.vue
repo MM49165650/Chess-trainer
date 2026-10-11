@@ -129,7 +129,10 @@ const moveNumber = computed(() =>
         @move="guess"
     />
 
-    <div class="flex items-center justify-between px-5 py-2 text-caption">
+    <!-- Extra room above on larger screens, clear of the resize handle. -->
+    <div
+        class="flex items-center justify-between px-5 py-2 text-caption sm:pt-4"
+    >
         <span class="flex items-center gap-2 font-semibold">
             <span
                 class="player-dot"
@@ -145,7 +148,14 @@ const moveNumber = computed(() =>
     </div>
 
     <!-- Screen readers hear each result and each new question. -->
-    <section class="flex flex-col gap-1.5 px-5 pt-4 pb-6" aria-live="polite">
+    <!--
+        On larger screens the block keeps one height, so the board beside it
+        does not change size as the text changes.
+    -->
+    <section
+        class="flex flex-col gap-1.5 px-5 pt-4 pb-6 sm:min-h-48"
+        aria-live="polite"
+    >
         <template v-if="status === 'over'">
             <p class="label-caps text-muted">Game over</p>
             <h1 class="font-serif text-heading tracking-heading">
