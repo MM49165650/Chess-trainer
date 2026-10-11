@@ -527,7 +527,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 ## Open decisions and later features
 
-Six decisions are still open. None of them blocks starting the build.
+Five decisions are still open; the source of master games is settled. None of them blocks starting the build.
 
 **Open decisions**
 
@@ -536,7 +536,7 @@ Six decisions are still open. None of them blocks starting the build.
 | Game selection | Square control | Whether both players must be under 1000, whether fast time controls are excluded, minimum length, and how many games |
 | Puzzle difficulty | Tactics by piece | Whether to cap puzzle rating, and whether puzzles are served randomly or easiest first |
 | Minimum game length | Guess the move | The number of moves below which a master game is excluded |
-| Source of master games | Guess the move | Which game collection to import, and its terms of use |
+| Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
 | Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone |
 | Name and domain | Whole site | What the site is called |
 
