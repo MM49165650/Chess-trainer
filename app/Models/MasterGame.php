@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A master game, filed under its winner. Rows are written only by the
@@ -24,6 +25,16 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class MasterGame extends Model
 {
+    /**
+     * The winner, under whom the game is filed.
+     *
+     * @return BelongsTo<Master, $this>
+     */
+    public function master(): BelongsTo
+    {
+        return $this->belongsTo(Master::class);
+    }
+
     /**
      * @return array<string, string>
      */
