@@ -262,7 +262,7 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 **Principles**
 
 - The board is the centrepiece. Everything around it is quiet, with one accent colour and few borders.
-- Each mode has a matching default board theme, so the board never clashes with the page.
+- The default board, olive, looks the same in light and dark mode for now. It is not dimmed or swapped in dark mode.
 - The square-control marking colours must be clear in both modes and on every board theme.
 - One or two typefaces, with care for numbers, since scores and tallies appear everywhere.
 - Motion is quick and subtle.
