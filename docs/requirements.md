@@ -203,6 +203,18 @@ Most users are on phones, so phone width is the primary design target for every 
 - Game lists are rows separated by hairlines, with filters in a slide-up panel.
 - Data loads on demand, one game or puzzle batch at a time, to stay fast on mobile data.
 
+**Larger screens**
+
+- The layout is the same single column on every screen size. Nothing is rearranged for desktop.
+- On a screen wider than a phone, the column is centred and the page background fills the rest.
+- The board can be resized by dragging a handle at its corner, between 320 and 720 pixels wide. The default is 560 pixels. The column is as wide as the board.
+- The chosen board size is saved with the other settings. On a phone the board is always the full width of the screen and there is no handle.
+
+**Board**
+
+- When a king is in check, its square shows the red highlight used on Lichess. Chessground provides this.
+- The check highlight appears in all three modes, including square control, because it describes the position and does not reveal the move.
+
 **Pages**
 
 - Home, with the three modes
@@ -523,6 +535,7 @@ Six decisions are still open. None of them blocks starting the build.
 - Puzzle theme labels
 - Automated browser tests at phone size for the three core flows
 - More board themes and piece sets
+- A desktop layout with the board beside a panel, which needs its own mockups
 
 ## Appendix A: Conventions
 
@@ -927,6 +940,7 @@ type Settings = {
   appearance: 'light' | 'dark' | 'system' // default 'system'
   boardTheme: string
   pieceSet: string
+  boardSizePx: number | null // larger screens only; null means the 560 default
   sound: boolean
   moveInput: 'tap' | 'drag' | 'both'
   opponentDelaySeconds: number // 1 to 10, default 3
