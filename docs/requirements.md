@@ -277,11 +277,11 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 
 | Token | Light | Dark |
 | --- | --- | --- |
-| Page background | `#F3EFE6` | `#1B1A17` |
-| Raised surface | `#FBF8F1` | `#24231F` |
+| Page background | `#EDE8DC` | `#1B1A17` |
+| Raised surface | `#F4F0E6` | `#24231F` |
 | Text | `#2A2824` | `#E9E4D8` |
 | Muted text | `#6B665C` | `#A39D8F` |
-| Hairline | `#DDD6C7` | `#35332D` |
+| Hairline | `#D5CDBD` | `#35332D` |
 | Accent | `#2E6A4F` | `#86BC9C` |
 | Wrong guess | `#C98A6B` | `#A8644A` |
 | Board, light squares | `#ECE6D6` | `#B7B3A2` |
@@ -289,7 +289,22 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 | Last move, light squares | `#E3DC9A` | `#C9C27A` |
 | Last move, dark squares | `#A9B36A` | `#8E9A52` |
 
-The four board rows in this table describe the sage board drawn in the mockups, which is no longer the default, so they are not tokens. The olive board is the same in both modes, so everything drawn on the board uses the light-mode values in both modes: the last-move highlight, the marks and the feedback. These are separate "on the board" tokens. The "on the page" versions of the same colours, used for things like the phase indicator, still change with the mode. Outline buttons take their border from one more token, `#C9C1B0` in light mode and `#4A473F` in dark.
+The four board rows in this table describe the sage board drawn in the mockups, which is no longer the default, so they are not tokens. The olive board is the same in both modes, so everything drawn on the board uses the light-mode values in both modes: the last-move highlight, the marks and the feedback. These are separate "on the board" tokens. The "on the page" versions of the same colours, used for things like the phase indicator, still change with the mode. Outline buttons take their border from one more token, `#C3BBAB` in light mode and `#4A473F` in dark.
+
+**Light mode brightness**
+
+The light-mode backgrounds were softened on 11 October 2026 after the first values proved too bright on a real screen. The table above holds the chosen set, "a little softer". The other two are kept here so the brightness can be changed later by swapping these five values in the tokens file. Dark mode is unaffected.
+
+| Token | Brighter (the mockups) | Chosen | Softer |
+| --- | --- | --- | --- |
+| Page background | `#F3EFE6` | `#EDE8DC` | `#E6E0D2` |
+| Raised surface | `#FBF8F1` | `#F4F0E6` | `#EEE9DD` |
+| Hairline | `#DDD6C7` | `#D5CDBD` | `#CEC5B3` |
+| Muted text | `#6B665C` | `#6B665C` | `#68635A` |
+| Outline-button border | `#C9C1B0` | `#C3BBAB` | `#BCB4A5` |
+
+- Every text colour passes 4.5 to 1 in all three sets. The softer set is at the limit, with muted text at 4.53, so anything softer needs darker text colours as well.
+- The phase and feedback colours are not yet used as text on the page. Lost fails 4.5 to 1 as text in every set, and Controls and Wrong fail in the softer set, so a screen that needs them as text uses darker text versions.
 
 **Square-control marking**
 
