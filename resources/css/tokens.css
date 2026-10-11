@@ -40,6 +40,9 @@
     --color-accent: #2e6a4f;
     --color-wrong: #c98a6b;
 
+    /* The wrong-guess colour as text. The one above is for fills only. */
+    --color-wrong-text: #895e49;
+
     /* The border of an outline button, stronger than a hairline. */
     --color-control-border: #c3bbab;
 
@@ -149,6 +152,7 @@
         --color-hairline: #35332d;
         --color-accent: #86bc9c;
         --color-wrong: #a8644a;
+        --color-wrong-text: #e0a07e;
         --color-control-border: #4a473f;
 
         --color-on-accent: var(--color-page);
