@@ -126,14 +126,14 @@ These rules are the specification for the import code and its tests.
 
 - The destination square belongs in phase 1, because the piece controlled it before the move and now stands on it.
 - Pawn pushes are the exception that follows from the rule: a pawn never controlled the square it pushes to, so that square is not marked. A pawn capture's destination is marked.
-- Castling counts the king and the rook together in phases 1 and 2. A square may then appear in both phases, lost by one piece and controlled by the other.
-- Promotion: phase 1 uses the pawn's squares, phase 2 uses the new piece's squares.
+- Castling counts the king and the rook together in phases 1 and 2. The prompt for a castling move names both pieces. A square may then appear in both phases, lost by one piece and controlled by the other.
+- Promotion: the before set is the pawn's and the after set is the new piece's. A square the pawn controlled is lost only if the new piece does not control it. A pawn that promotes to a queen by a push loses nothing, because the queen still controls both of the pawn's squares.
 - A hanging piece is marked again on every move for as long as it stays hanging.
 - An empty submission is valid. Many positions have no hanging pieces.
 
 **Worked example**
 
-A rook moves from a1 to a4 on an otherwise empty board.
+A rook moves from a1 to a4. The only other pieces are the white king on g2 and the black king on g7, which affect no answer.
 
 - Before: it controls a2 to a8 and b1 to h1.
 - Phase 1 answer: b1 to h1, plus a4.
@@ -606,7 +606,7 @@ After `e2e4`, `e7e5`, White plays `g1f3`.
 
 **Example: castling**
 
-White has the king on e1, a rook on h1, the queen on d1, and pawns on d2, e2, f2, g2 and h2. The squares f1 and g1 are empty. White castles, `e1g1`.
+White has the king on e1, a rook on h1, the queen on d1, and pawns on d2, e2, f2, g2 and h2. The squares f1 and g1 are empty. Black's king is on e8, where it affects no answer. White castles, `e1g1`.
 
 | Piece | Before set | After set | Lost |
 | --- | --- | --- | --- |
