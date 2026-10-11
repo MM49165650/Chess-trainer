@@ -81,7 +81,7 @@ Seven masters, chosen because their styles work well together: Morphy, Capablanc
 - Draws are excluded.
 - Odds games, which start from a non-standard position, are excluded.
 - Simultaneous and blindfold exhibition games are excluded where the data labels them.
-- Games below a minimum length are excluded.
+- There is no minimum length. Every decisive game is kept, however short, as long as it has at least one move.
 - Duplicate games are removed.
 - Player names are normalized so each master has one spelling.
 - Annotations and commentary are stripped; only moves and basic details are kept.
@@ -492,7 +492,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 15. End of game | The score, the replay with guesses marked, and the share summary | A finished game can be reviewed and shared from a phone |
 | 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button | A specific game can be found and started in a few taps |
 | 17. Search engines | Server rendering for master and game pages, their titles and descriptions, and the sitemap | A game page's source shows its title and description with scripts disabled |
-| 18. Full import | All master games loaded on the server | Needs two open decisions: the game source and the minimum length |
+| 18. Full import | All master games loaded on the server | Needs no further decisions: the game source and the minimum length are settled |
 
 **Stage 4: Tactics by piece**
 
@@ -527,7 +527,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 ## Open decisions and later features
 
-Five decisions are still open; the source of master games is settled. None of them blocks starting the build.
+Four decisions are still open. The source of master games and their minimum length are settled. None of them blocks starting the build.
 
 **Open decisions**
 
@@ -535,7 +535,7 @@ Five decisions are still open; the source of master games is settled. None of th
 | --- | --- | --- |
 | Game selection | Square control | Whether both players must be under 1000, whether fast time controls are excluded, minimum length, and how many games |
 | Puzzle difficulty | Tactics by piece | Whether to cap puzzle rating, and whether puzzles are served randomly or easiest first |
-| Minimum game length | Guess the move | The number of moves below which a master game is excluded |
+| Minimum game length | Guess the move | Decided on 11 October 2026: there is no minimum |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
 | Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone |
 | Name and domain | Whole site | What the site is called |
@@ -812,7 +812,7 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 
 | Command | Option | Meaning | Default |
 | --- | --- | --- | --- |
-| `extract:masters` | `--min-plies` | Shortest game kept | 40, placeholder |
+| `extract:masters` | `--min-plies` | Shortest game kept | 0, which keeps every game. Decided on 11 October 2026 |
 | `extract:masters` | `--exclude-events` | Words in the event or site that exclude a game | simul, blindfold, odds, exhibition, consultation |
 | `extract:practice` | `--max-rating` | Rating limit | 1000 |
 | `extract:practice` | `--both-players` | Whether both players must be under the limit | Yes, placeholder |
