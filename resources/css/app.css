@@ -1,3 +1,80 @@
 @import 'tailwindcss';
 
 @source '../../storage/framework/views/*.php';
+
+/*
+ * Colour tokens. Build step 9 completes this set; these are the ones the board
+ * needs. Every value comes from the Visual design section of the requirements.
+ */
+:root {
+    --color-surface: #fbf8f1;
+    --color-muted: #6b665c;
+    --color-hairline: #ddd6c7;
+    --color-accent: #2e6a4f;
+
+    --color-last-move-light: #e3dc9a;
+    --color-last-move-dark: #a9b36a;
+
+    /* The red highlight Lichess draws under a king in check, in both modes. */
+    --board-check-highlight: radial-gradient(
+        ellipse at center,
+        rgb(255 0 0 / 1) 0%,
+        rgb(231 0 0 / 1) 25%,
+        rgb(169 0 0 / 0) 89%,
+        rgb(158 0 0 / 0) 100%
+    );
+
+    --color-mark-lost: #a66a0c;
+    --color-mark-controlled: #2b66a6;
+    --color-mark-hanging: #a03a78;
+
+    --color-feedback-correct: #2b66a6;
+    --color-feedback-wrong: #be3232;
+    --color-feedback-wrong-border: #8a1c1c;
+
+    /* A marked square's border is a darker shade of its fill colour. */
+    --color-mark-lost-border: color-mix(
+        in srgb,
+        var(--color-mark-lost) 72%,
+        black
+    );
+    --color-mark-controlled-border: color-mix(
+        in srgb,
+        var(--color-mark-controlled) 72%,
+        black
+    );
+    --color-mark-hanging-border: color-mix(
+        in srgb,
+        var(--color-mark-hanging) 72%,
+        black
+    );
+    --color-feedback-correct-border: color-mix(
+        in srgb,
+        var(--color-feedback-correct) 72%,
+        black
+    );
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-surface: #24231f;
+        --color-muted: #a39d8f;
+        --color-hairline: #35332d;
+        --color-accent: #86bc9c;
+
+        --color-last-move-light: #c9c27a;
+        --color-last-move-dark: #8e9a52;
+
+        --color-mark-lost: #e3a64a;
+        --color-mark-controlled: #8ec0ee;
+        --color-mark-hanging: #d98bbb;
+
+        --color-feedback-correct: #8ec0ee;
+        --color-feedback-wrong: #e58a8a;
+        --color-feedback-wrong-border: color-mix(
+            in srgb,
+            var(--color-feedback-wrong) 72%,
+            black
+        );
+    }
+}

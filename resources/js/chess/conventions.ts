@@ -151,3 +151,11 @@ export function isCorrectGuess(
 ): boolean {
     return movesEqual(normalizeCastling(guess, movingPiece), played);
 }
+
+/** Whether a square is one of the board's light squares. a1 is dark. */
+export function isLightSquare(square: Square): boolean {
+    const file = square.charCodeAt(0) - 'a'.charCodeAt(0);
+    const rank = Number(square.charAt(1));
+
+    return (file + rank) % 2 === 0;
+}

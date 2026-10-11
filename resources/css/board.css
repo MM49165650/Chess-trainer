@@ -1,0 +1,97 @@
+/*
+ * The board's look: the board theme, the piece set and the square highlights.
+ * Chessground's own base stylesheet handles layout only.
+ */
+
+/* Board theme: Lichess's olive board. See resources/boards/LICENSE.md. */
+.board-olive cg-board {
+    background-image: url('../boards/olive.jpg');
+}
+
+/* Piece set: Maestro. See resources/pieces/maestro/LICENSE.md. */
+.pieces-maestro :is(piece, .piece-image) {
+    background-size: cover;
+}
+
+.pieces-maestro :is(piece, .piece-image).white.king {
+    background-image: url('../pieces/maestro/wK.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).white.queen {
+    background-image: url('../pieces/maestro/wQ.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).white.rook {
+    background-image: url('../pieces/maestro/wR.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).white.bishop {
+    background-image: url('../pieces/maestro/wB.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).white.knight {
+    background-image: url('../pieces/maestro/wN.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).white.pawn {
+    background-image: url('../pieces/maestro/wP.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).black.king {
+    background-image: url('../pieces/maestro/bK.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).black.queen {
+    background-image: url('../pieces/maestro/bQ.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).black.rook {
+    background-image: url('../pieces/maestro/bR.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).black.bishop {
+    background-image: url('../pieces/maestro/bB.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).black.knight {
+    background-image: url('../pieces/maestro/bN.svg');
+}
+
+.pieces-maestro :is(piece, .piece-image).black.pawn {
+    background-image: url('../pieces/maestro/bP.svg');
+}
+
+/* The last move, in one colour for light squares and one for dark. */
+cg-board square.last-move.on-light {
+    background-color: var(--color-last-move-light);
+}
+
+cg-board square.last-move.on-dark {
+    background-color: var(--color-last-move-dark);
+}
+
+/* A king in check. */
+cg-board square.check {
+    background: var(--board-check-highlight);
+}
+
+/* The piece that is picked up, and where it may go. */
+cg-board square.selected {
+    background-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+}
+
+cg-board square.move-dest {
+    background: radial-gradient(
+        color-mix(in srgb, var(--color-accent) 60%, transparent) 22%,
+        transparent 23%
+    );
+}
+
+/* A destination that holds a piece gets a ring, so the piece stays visible. */
+cg-board square.move-dest.oc {
+    background: radial-gradient(
+        transparent 0%,
+        transparent 78%,
+        color-mix(in srgb, var(--color-accent) 60%, transparent) 80%
+    );
+}
