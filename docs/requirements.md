@@ -206,8 +206,8 @@ Most users are on phones, so phone width is the primary design target for every 
 **Larger screens**
 
 - The layout is the same single column on every screen size. Nothing is rearranged for desktop.
-- On a screen wider than a phone, the column is centred and the page background fills the rest.
-- The board can be resized by dragging a handle at its corner, between 320 and 720 pixels wide. The default is 560 pixels. The column is as wide as the board.
+- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, so it always fits without scrolling; the user's chosen size is kept.
+- The board can be resized by dragging a handle at its corner, between 320 and 720 pixels wide. The default is 560 pixels. Resizing changes the board only. Text and controls stay in a fixed column 560 pixels wide, and the board is centred on the same line, so it may be narrower or wider than the column.
 - The chosen board size is saved with the other settings. On a phone the board is always the full width of the screen and there is no handle.
 
 **Board**
