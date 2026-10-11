@@ -18,6 +18,14 @@ The mockups in `docs/design/` show the intended look.
 - Keep all chess logic in the shared TypeScript chess code. None goes in PHP.
 - Never write code that deletes or reloads imported content. Game and puzzle IDs must stay stable.
 
+## Laravel Boost
+
+- Laravel Boost is installed for its tools only (see `.mcp.json`). Its generated guidelines and skills are switched off in `boost.json`. Do not switch them on and do not run `boost:install`.
+- The tools run inside Docker, so the containers must be running first: `docker compose up -d`. Without them the tools do not start.
+- Use the `search-docs` tool before relying on a Laravel, Inertia, Pest or Wayfinder API. It searches the documentation for the installed versions.
+- Do not rely on PHP or Node being installed on the host. Run every command through the container, for example `docker compose exec app php artisan route:list`.
+- Do not use the `record-rule` tool. Project rules live only in this file and in `docs/requirements.md`.
+
 ## Known pitfalls
 
 - The route `/guess/{master}/random` must be registered before `/guess/{master}/{game}`, and `{game}` must accept digits only.

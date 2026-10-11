@@ -4,12 +4,14 @@
         "Apache-2.0",
         "BSD-2-Clause",
         "BSD-3-Clause",
-        "BlueOak-1.0.0",
         "GPL-3.0-only",
         "GPL-3.0-or-later",
         "ISC",
         "MIT",
         "MPL-2.0"
+    ],
+    "developmentOnly": [
+        "BlueOak-1.0.0"
     ],
     "exceptions": {}
 }
