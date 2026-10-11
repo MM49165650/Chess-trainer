@@ -1,14 +1,21 @@
 // Lists the licence of every PHP and Node dependency and fails when one is
 // not in approved-licences.json. Every approved licence must be compatible
-// with GPL-3.0. A package whose licence cannot be read automatically goes in
-// "exceptions" there, as package name to licence, after a check by hand.
+// with GPL-3.0. Licences under "developmentOnly" are accepted for development
+// tools but fail the check on a production dependency, which is one that is
+// installed on the server or bundled for the browser. A package whose licence
+// cannot be read automatically goes in "exceptions", as package name to
+// licence, after a check by hand.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-type Approved = { approved: string[]; exceptions: Record<string, string> };
-type Dependency = { name: string; licence: string | null };
+type Approved = {
+    approved: string[];
+    developmentOnly: string[];
+    exceptions: Record<string, string>;
+};
+type Dependency = { name: string; licence: string | null; production: boolean };
 
 const here = import.meta.dirname;
 const root = join(here, '..', '..');
@@ -39,11 +46,12 @@ function asLicence(value: unknown): string | null {
     return null;
 }
 
-function phpDependencies(): Dependency[] {
-    const output = execFileSync('composer', ['licenses', '--format=json'], {
-        cwd: root,
-        encoding: 'utf8',
-    });
+function composerLicences(...options: string[]): Record<string, unknown> {
+    const output = execFileSync(
+        'composer',
+        ['licenses', '--format=json', ...options],
+        { cwd: root, encoding: 'utf8' },
+    );
     const parsed: unknown = JSON.parse(output);
     const dependencies = isRecord(parsed) ? parsed.dependencies : null;
 
@@ -51,9 +59,16 @@ function phpDependencies(): Dependency[] {
         throw new Error('Unexpected output from "composer licenses".');
     }
 
-    return Object.entries(dependencies).map(([name, details]) => ({
+    return dependencies;
+}
+
+function phpDependencies(): Dependency[] {
+    const production = new Set(Object.keys(composerLicences('--no-dev')));
+
+    return Object.entries(composerLicences()).map(([name, details]) => ({
         name: `php:${name}`,
         licence: isRecord(details) ? asLicence(details.license) : null,
+        production: production.has(name),
     }));
 }
 
@@ -84,6 +99,8 @@ function nodeDependencies(): Dependency[] {
         dependencies.push({
             name: `node:${path.replace(/^.*node_modules\//, '')}`,
             licence: fromLock ?? fromManifest,
+            // The lock file marks packages that only development needs.
+            production: !(isRecord(entry) && entry.dev === true),
         });
     }
 
@@ -111,7 +128,8 @@ function isApproved(expression: string, approved: Set<string>): boolean {
 }
 
 const config = readJson(join(here, 'approved-licences.json')) as Approved;
-const approved = new Set(config.approved);
+const forProduction = new Set(config.approved);
+const forDevelopment = new Set([...config.approved, ...config.developmentOnly]);
 const counts = new Map<string, number>();
 const rejected: string[] = [];
 
@@ -122,8 +140,14 @@ for (const dependency of [...phpDependencies(), ...nodeDependencies()]) {
 
     counts.set(label, (counts.get(label) ?? 0) + 1);
 
-    if (licence === null || !isApproved(licence, approved)) {
+    if (licence === null) {
         rejected.push(`${dependency.name}: ${label}`);
+    } else if (!isApproved(licence, forDevelopment)) {
+        rejected.push(`${dependency.name}: ${label}`);
+    } else if (dependency.production && !isApproved(licence, forProduction)) {
+        rejected.push(
+            `${dependency.name}: ${label} (approved for development only, but this is a production dependency)`,
+        );
     }
 }
 
