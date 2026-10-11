@@ -63,11 +63,11 @@
 
 /* The last move, in one colour for light squares and one for dark. */
 cg-board square.last-move.on-light {
-    background-color: var(--color-last-move-light);
+    background-color: var(--color-board-last-move-light);
 }
 
 cg-board square.last-move.on-dark {
-    background-color: var(--color-last-move-dark);
+    background-color: var(--color-board-last-move-dark);
 }
 
 /* A king in check. */

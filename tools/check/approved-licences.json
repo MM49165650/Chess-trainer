@@ -4,14 +4,19 @@
         "Apache-2.0",
         "BSD-2-Clause",
         "BSD-3-Clause",
+        "CC0-1.0",
         "GPL-3.0-only",
         "GPL-3.0-or-later",
         "ISC",
         "MIT",
-        "MPL-2.0"
+        "MIT-0",
+        "MPL-2.0",
+        "Python-2.0"
     ],
     "developmentOnly": [
         "BlueOak-1.0.0"
     ],
-    "exceptions": {}
+    "exceptions": {
+        "svg-tags": "MIT"
+    }
 }
