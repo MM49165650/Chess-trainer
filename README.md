@@ -36,7 +36,7 @@ Then open <http://localhost:8000>.
 
 ## The check command
 
-One command runs every check: Pint, Rector, Larastan, the Pest architecture tests, the TypeScript checker, ESLint, Prettier, Vitest, the dependency licence check and a scan for comments that silence a check.
+One command runs every check: Pint, Rector, Larastan, the Pest architecture tests, the TypeScript checker, ESLint, Stylelint, Prettier, Vitest, the dependency licence check and a scan for comments that silence a check.
 
 ```bash
 docker compose run --rm app composer check

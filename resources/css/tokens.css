@@ -1,0 +1,163 @@
+/*
+ * The design tokens: every colour, typeface, font size and corner radius is
+ * named here, once. The colour values come from the Visual design section of
+ * docs/requirements.md, and the sizes from the mockups in docs/design/.
+ *
+ * This is the only file where a colour may be written out. The lint rule
+ * rejects a hard-coded colour anywhere else.
+ */
+
+/*
+ * Dark mode applies when the page is set to dark, or when the device asks for
+ * it and the page is not set to light.
+ */
+@custom-variant dark {
+    &:where([data-appearance='dark'], [data-appearance='dark'] *) {
+        @slot;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        &:where(:not([data-appearance='light'], [data-appearance='light'] *)) {
+            @slot;
+        }
+    }
+}
+
+@theme static {
+    /* Only the tokens below exist. Tailwind's own palette is switched off. */
+    --color-*: initial;
+
+    /*
+     * The light-mode backgrounds. To make light mode brighter or softer, see
+     * "Light mode brightness" in docs/requirements.md: it lists two other
+     * sets of these values, with the text colours that go with each.
+     */
+    --color-page: #ede8dc;
+    --color-surface: #f4f0e6;
+    --color-ink: #2a2824;
+    --color-muted: #6b665c;
+    --color-hairline: #d5cdbd;
+    --color-accent: #2e6a4f;
+    --color-wrong: #c98a6b;
+
+    /* The border of an outline button, stronger than a hairline. */
+    --color-control-border: #c3bbab;
+
+    /* Text and icons on top of the accent colour. */
+    --color-on-accent: var(--color-surface);
+
+    /* The page behind an open slide-up panel. */
+    --color-scrim: color-mix(in srgb, var(--color-ink) 40%, transparent);
+
+    /*
+     * Square control, drawn on the page: the phase indicator and the legend.
+     * These change with the mode, like the rest of the page.
+     */
+    --color-mark-lost: #a66a0c;
+    --color-mark-controlled: #2b66a6;
+    --color-mark-hanging: #a03a78;
+    --color-feedback-correct: #2b66a6;
+    --color-feedback-wrong: #be3232;
+
+    /*
+     * Everything drawn on the board. The board looks the same in light and
+     * dark mode, so these keep one value in both.
+     */
+    --color-board-last-move-light: #e3dc9a;
+    --color-board-last-move-dark: #a9b36a;
+
+    --color-board-mark-lost: #a66a0c;
+    --color-board-mark-controlled: #2b66a6;
+    --color-board-mark-hanging: #a03a78;
+
+    --color-board-feedback-correct: #2b66a6;
+    --color-board-feedback-wrong: #be3232;
+    --color-board-feedback-wrong-border: #8a1c1c;
+
+    /* A marked square's border is a darker shade of its fill colour. */
+    --color-board-mark-lost-border: color-mix(
+        in srgb,
+        var(--color-board-mark-lost) 50%,
+        black
+    );
+    --color-board-mark-controlled-border: color-mix(
+        in srgb,
+        var(--color-board-mark-controlled) 50%,
+        black
+    );
+    --color-board-mark-hanging-border: color-mix(
+        in srgb,
+        var(--color-board-mark-hanging) 50%,
+        black
+    );
+    --color-board-feedback-correct-border: color-mix(
+        in srgb,
+        var(--color-board-feedback-correct) 50%,
+        black
+    );
+
+    /* Headings are set in the serif, everything else in the sans. */
+    --font-*: initial;
+    --font-serif: 'Newsreader', georgia, 'Times New Roman', serif;
+    --font-sans: 'Instrument Sans', system-ui, sans-serif;
+
+    --text-*: initial;
+    --text-label: 0.75rem;
+    --text-label--line-height: 1.3;
+    --text-caption: 0.8125rem;
+    --text-caption--line-height: 1.4;
+    --text-body: 0.875rem;
+    --text-body--line-height: 1.45;
+    --text-button: 1rem;
+    --text-button--line-height: 1.2;
+    --text-title-small: 1.125rem;
+    --text-title-small--line-height: 1.2;
+    --text-title: 1.375rem;
+    --text-title--line-height: 1.15;
+    --text-heading: 1.625rem;
+    --text-heading--line-height: 1.15;
+    --text-display: 2.125rem;
+    --text-display--line-height: 1.1;
+
+    --tracking-*: initial;
+    --tracking-label: 0.12em;
+    --tracking-heading: -0.01em;
+
+    --radius-*: initial;
+    --radius-tick: 2px;
+    --radius-pill: 9999px;
+
+    /* Spacing steps are multiples of this. The page gutter is five of them. */
+    --spacing: 0.25rem;
+}
+
+:root {
+    /* The red highlight Lichess draws under a king in check, in both modes. */
+    --board-check-highlight: radial-gradient(
+        ellipse at center,
+        rgb(255 0 0 / 1) 0%,
+        rgb(231 0 0 / 1) 25%,
+        rgb(169 0 0 / 0) 89%,
+        rgb(158 0 0 / 0) 100%
+    );
+
+    @variant dark {
+        --color-page: #1b1a17;
+        --color-surface: #24231f;
+        --color-ink: #e9e4d8;
+        --color-muted: #a39d8f;
+        --color-hairline: #35332d;
+        --color-accent: #86bc9c;
+        --color-wrong: #a8644a;
+        --color-control-border: #4a473f;
+
+        --color-on-accent: var(--color-page);
+
+        --color-mark-lost: #e3a64a;
+        --color-mark-controlled: #8ec0ee;
+        --color-mark-hanging: #d98bbb;
+
+        --color-feedback-correct: #8ec0ee;
+        --color-feedback-wrong: #e58a8a;
+    }
+}

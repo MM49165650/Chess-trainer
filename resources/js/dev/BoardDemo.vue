@@ -15,6 +15,7 @@ import {
 import { GOLDEN_POSITIONS } from '@/chess/golden-positions';
 import { playMove } from '@/chess/position';
 import ChessBoard from '@/components/board/ChessBoard.vue';
+import AppButton from '@/components/ui/AppButton.vue';
 import {
     BOARD_SIZE_DEFAULT,
     type MarkFeedback,
@@ -134,19 +135,21 @@ function resetCheck(): void {
 
     <!-- On larger screens the text and controls stay in a fixed, centred column. -->
     <main class="pb-16 sm:mx-auto sm:w-[560px]">
-        <h1 class="p-4 text-2xl font-semibold">Board demo</h1>
-        <div class="hidden flex-wrap items-center gap-2 px-4 pb-2 sm:flex">
+        <h1 class="px-5 py-4 font-serif text-heading tracking-heading">
+            Board demo
+        </h1>
+        <div class="hidden flex-wrap items-center gap-2 px-5 pb-2 sm:flex">
             <span class="tabular-nums">
                 Chosen board size: {{ boardSizeInPixels
                 }}{{ boardSize === null ? ' (the default)' : '' }}
             </span>
-            <button type="button" class="demo-button" @click="boardSize = null">
+            <AppButton variant="outline" @click="boardSize = null">
                 Default size
-            </button>
+            </AppButton>
         </div>
 
         <section>
-            <h2 class="px-4 py-2 text-lg font-semibold">1. Make a move</h2>
+            <h2 class="px-5 py-2 font-serif text-title">1. Make a move</h2>
             <ChessBoard
                 v-model:size="boardSize"
                 resizable
@@ -158,43 +161,41 @@ function resetCheck(): void {
                 movable
                 @move="onGameMove"
             />
-            <div class="flex flex-wrap gap-2 p-4">
-                <button type="button" class="demo-button" @click="flip">
+            <div class="flex flex-wrap gap-2 px-5 py-4">
+                <AppButton variant="outline" @click="flip">
                     Flip board
-                </button>
-                <button
-                    type="button"
-                    class="demo-button"
+                </AppButton>
+                <AppButton
+                    variant="outline"
                     :aria-pressed="showLastMove"
                     @click="showLastMove = !showLastMove"
                 >
                     Last move: {{ showLastMove ? 'shown' : 'hidden' }}
-                </button>
-                <button type="button" class="demo-button" @click="resetGame">
+                </AppButton>
+                <AppButton variant="outline" @click="resetGame">
                     Reset
-                </button>
+                </AppButton>
             </div>
-            <div class="flex flex-wrap items-center gap-2 px-4">
+            <div class="flex flex-wrap items-center gap-2 px-5">
                 <span>Move input:</span>
-                <button
+                <AppButton
                     v-for="input in MOVE_INPUTS"
                     :key="input"
-                    type="button"
-                    class="demo-button"
+                    variant="outline"
                     :aria-pressed="moveInput === input"
                     @click="moveInput = input"
                 >
                     {{ input }}
-                </button>
+                </AppButton>
             </div>
-            <p class="p-4 tabular-nums">
+            <p class="px-5 py-4 tabular-nums">
                 Last move:
                 {{ gameLastMove ? formatMove(gameLastMove) : 'none yet' }}
             </p>
         </section>
 
         <section>
-            <h2 class="px-4 py-2 text-lg font-semibold">2. Promote a pawn</h2>
+            <h2 class="px-5 py-2 font-serif text-title">2. Promote a pawn</h2>
             <ChessBoard
                 v-model:size="boardSize"
                 resizable
@@ -206,16 +207,12 @@ function resetCheck(): void {
                 movable
                 @move="onPromotionMove"
             />
-            <div class="flex flex-wrap gap-2 p-4">
-                <button
-                    type="button"
-                    class="demo-button"
-                    @click="resetPromotion"
-                >
+            <div class="flex flex-wrap gap-2 px-5 py-4">
+                <AppButton variant="outline" @click="resetPromotion">
                     Reset
-                </button>
+                </AppButton>
             </div>
-            <p class="px-4 pb-4 tabular-nums">
+            <p class="px-5 pb-4 tabular-nums">
                 Last move:
                 {{
                     promotionLastMove
@@ -226,8 +223,8 @@ function resetCheck(): void {
         </section>
 
         <section>
-            <h2 class="px-4 py-2 text-lg font-semibold">3. Mark squares</h2>
-            <p class="px-4 pb-2">
+            <h2 class="px-5 py-2 font-serif text-title">3. Mark squares</h2>
+            <p class="px-5 pb-2">
                 White has just played Nf3. Mark the squares for the chosen
                 phase, then check them.
             </p>
@@ -241,33 +238,31 @@ function resetCheck(): void {
                 :mark-phase="phase"
                 :feedback="feedback"
             />
-            <div class="flex flex-wrap items-center gap-2 p-4">
+            <div class="flex flex-wrap items-center gap-2 px-5 py-4">
                 <span>Phase:</span>
-                <button
+                <AppButton
                     v-for="name in PHASES"
                     :key="name"
-                    type="button"
-                    class="demo-button"
+                    variant="outline"
                     :aria-pressed="phase === name"
                     @click="setPhase(name)"
                 >
                     {{ name }}
-                </button>
+                </AppButton>
             </div>
-            <div class="flex flex-wrap gap-2 px-4">
-                <button
-                    type="button"
-                    class="demo-button"
+            <div class="flex flex-wrap gap-2 px-5">
+                <AppButton
+                    variant="outline"
                     :disabled="feedback !== null"
                     @click="check"
                 >
                     Check
-                </button>
-                <button type="button" class="demo-button" @click="clearMarks">
+                </AppButton>
+                <AppButton variant="outline" @click="clearMarks">
                     Clear
-                </button>
+                </AppButton>
             </div>
-            <p class="p-4 tabular-nums">
+            <p class="px-5 py-4 tabular-nums">
                 <template v-if="feedback">
                     {{ feedback.correct.length }} correct,
                     {{ feedback.missed.length }} missed,
@@ -278,8 +273,8 @@ function resetCheck(): void {
         </section>
 
         <section>
-            <h2 class="px-4 py-2 text-lg font-semibold">4. Check</h2>
-            <p class="px-4 pb-2">
+            <h2 class="px-5 py-2 font-serif text-title">4. Check</h2>
+            <p class="px-5 pb-2">
                 Black is in check. The red highlight stays while squares are
                 being marked.
             </p>
@@ -296,38 +291,18 @@ function resetCheck(): void {
                 movable
                 @move="onCheckMove"
             />
-            <div class="flex flex-wrap gap-2 p-4">
-                <button
-                    type="button"
-                    class="demo-button"
+            <div class="flex flex-wrap gap-2 px-5 py-4">
+                <AppButton
+                    variant="outline"
                     :aria-pressed="checkMarking"
                     @click="checkMarking = !checkMarking"
                 >
                     Marking: {{ checkMarking ? 'on' : 'off' }}
-                </button>
-                <button type="button" class="demo-button" @click="resetCheck">
+                </AppButton>
+                <AppButton variant="outline" @click="resetCheck">
                     Reset
-                </button>
+                </AppButton>
             </div>
         </section>
     </main>
 </template>
-
-<style scoped>
-.demo-button {
-    min-height: 44px;
-    padding: 0 16px;
-    border: 1px solid var(--color-hairline);
-    border-radius: 9999px;
-    background-color: var(--color-surface);
-}
-
-.demo-button[aria-pressed='true'] {
-    border-color: var(--color-accent);
-    outline: 2px solid var(--color-accent);
-}
-
-.demo-button:disabled {
-    opacity: 0.5;
-}
-</style>

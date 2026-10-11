@@ -5,6 +5,15 @@ import vue from 'eslint-plugin-vue';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// A hex colour as a whole string in a script, or a hex colour or colour
+// function anywhere in a template's class or style attribute.
+const hardCodedColour = {
+    inScript: 'Literal[value=/^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i]',
+    inTemplate:
+        'VLiteral[value=/#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})\\b|\\b(rgb|hsl)a?\\(/i]',
+    message: 'Hard-coded colour. Use a design token from tokens.css.',
+};
+
 export default defineConfig(
     {
         // Only resources/, tools/ and the root config files are linted.
@@ -33,7 +42,10 @@ export default defineConfig(
             parserOptions: {
                 parser: tseslint.parser,
                 projectService: {
-                    allowDefaultProject: ['eslint.config.js'],
+                    allowDefaultProject: [
+                        'eslint.config.js',
+                        'stylelint.config.js',
+                    ],
                 },
                 extraFileExtensions: ['.vue'],
                 tsconfigRootDir: import.meta.dirname,
@@ -56,6 +68,16 @@ export default defineConfig(
                     'ts-nocheck': true,
                 },
             ],
+            // Colours are design tokens. Stylelint checks the stylesheets;
+            // this rule and the two at the end of the next one catch a colour
+            // written into a script or a template.
+            'no-restricted-syntax': [
+                'error',
+                {
+                    selector: hardCodedColour.inScript,
+                    message: hardCodedColour.message,
+                },
+            ],
             // The typescript-eslint rules do not look inside Vue templates,
             // so the same two bans are repeated for template expressions.
             'vue/no-restricted-syntax': [
@@ -67,6 +89,14 @@ export default defineConfig(
                 {
                     selector: 'TSNonNullExpression',
                     message: 'Forbidden non-null assertion.',
+                },
+                {
+                    selector: hardCodedColour.inScript,
+                    message: hardCodedColour.message,
+                },
+                {
+                    selector: hardCodedColour.inTemplate,
+                    message: hardCodedColour.message,
                 },
             ],
         },

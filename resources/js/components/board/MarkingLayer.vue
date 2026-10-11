@@ -81,18 +81,18 @@ function toggle(square: Square): void {
 }
 
 .marking-layer.lost {
-    --mark-fill: var(--color-mark-lost);
-    --mark-border: var(--color-mark-lost-border);
+    --mark-fill: var(--color-board-mark-lost);
+    --mark-border: var(--color-board-mark-lost-border);
 }
 
 .marking-layer.controlled {
-    --mark-fill: var(--color-mark-controlled);
-    --mark-border: var(--color-mark-controlled-border);
+    --mark-fill: var(--color-board-mark-controlled);
+    --mark-border: var(--color-board-mark-controlled-border);
 }
 
 .marking-layer.hanging {
-    --mark-fill: var(--color-mark-hanging);
-    --mark-border: var(--color-mark-hanging-border);
+    --mark-fill: var(--color-board-mark-hanging);
+    --mark-border: var(--color-board-mark-hanging-border);
 }
 
 .mark-square {
@@ -108,24 +108,24 @@ function toggle(square: Square): void {
 
 /* The three kinds of feedback differ in shape as well as colour. */
 .mark-square.correct {
-    border-color: var(--color-feedback-correct-border);
+    border-color: var(--color-board-feedback-correct-border);
     background-color: color-mix(
         in srgb,
-        var(--color-feedback-correct) 50%,
+        var(--color-board-feedback-correct) 50%,
         transparent
     );
 }
 
 .mark-square.missed {
     border-style: dashed;
-    border-color: var(--color-feedback-correct-border);
+    border-color: var(--color-board-feedback-correct-border);
 }
 
 .mark-square.wrong {
-    border-color: var(--color-feedback-wrong-border);
+    border-color: var(--color-board-feedback-wrong-border);
     background-color: color-mix(
         in srgb,
-        var(--color-feedback-wrong) 55%,
+        var(--color-board-feedback-wrong) 55%,
         transparent
     );
 }
