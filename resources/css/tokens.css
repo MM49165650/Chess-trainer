@@ -27,16 +27,21 @@
     /* Only the tokens below exist. Tailwind's own palette is switched off. */
     --color-*: initial;
 
-    --color-page: #f3efe6;
-    --color-surface: #fbf8f1;
+    /*
+     * The light-mode backgrounds. To make light mode brighter or softer, see
+     * "Light mode brightness" in docs/requirements.md: it lists two other
+     * sets of these values, with the text colours that go with each.
+     */
+    --color-page: #ede8dc;
+    --color-surface: #f4f0e6;
     --color-ink: #2a2824;
     --color-muted: #6b665c;
-    --color-hairline: #ddd6c7;
+    --color-hairline: #d5cdbd;
     --color-accent: #2e6a4f;
     --color-wrong: #c98a6b;
 
     /* The border of an outline button, stronger than a hairline. */
-    --color-control-border: #c9c1b0;
+    --color-control-border: #c3bbab;
 
     /* Text and icons on top of the accent colour. */
     --color-on-accent: var(--color-surface);
