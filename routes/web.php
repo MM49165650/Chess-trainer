@@ -7,3 +7,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 Route::get('/', fn (): Response => Inertia::render('Home'))->name('home');
+
+// Development-only pages. They are never registered on the public site.
+if (app()->environment('local')) {
+    Route::get('/dev/board', fn (): Response => Inertia::render('dev/BoardDemo'))->name('dev.board');
+}
