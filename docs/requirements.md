@@ -923,7 +923,7 @@ A puzzle ID list response:
 - They are stateless: no session and no cookies. A response that sets a cookie is not cached by Cloudflare.
 - Each response carries a public cache header with the time shown above, and a Cloudflare cache rule covers `/api/*`.
 - After an import that uses the update option, the Cloudflare cache is purged. Newly added items appear within an hour without a purge.
-- An unknown ID returns 404, and so does an ID in the address that is not a number. An invalid query parameter returns 422. Both have a JSON body with a message. Error responses carry no public cache header, so a game imported later is never hidden behind a cached "not found".
+- An unknown ID returns 404, and so does an ID in the address that is not a number. An invalid query parameter returns 422. Both have a JSON body with a message. Every 404 under /api uses one fixed message that does not repeat the requested address. The endpoints send no CORS header, so other websites cannot read them from a visitor's browser; the site's own pages are same-origin and do not need one. Error responses carry no public cache header, so a game imported later is never hidden behind a cached "not found".
 - Requests are limited to 120 per minute per visitor, a placeholder value.
 - Laravel is configured to trust Cloudflare's forwarding headers. Without that, every visitor appears to come from Cloudflare's address and they all share one limit.
 - Each response shape is a PHP data class with a generated TypeScript type.
