@@ -25,7 +25,7 @@ class ShowMasterGameController extends Controller
         $game = MasterGame::query()->with('master')->find((int) $id);
         $master = $game?->master;
 
-        abort_if($game === null || $master === null, 404, 'This master game does not exist.');
+        abort_if($game === null || $master === null, 404);
 
         $data = MasterGameData::from([
             'id' => $game->id,
