@@ -277,11 +277,11 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 
 | Token | Light | Dark |
 | --- | --- | --- |
-| Page background | `#F3EFE6` | `#1B1A17` |
-| Raised surface | `#FBF8F1` | `#24231F` |
+| Page background | `#EDE8DC` | `#1B1A17` |
+| Raised surface | `#F4F0E6` | `#24231F` |
 | Text | `#2A2824` | `#E9E4D8` |
 | Muted text | `#6B665C` | `#A39D8F` |
-| Hairline | `#DDD6C7` | `#35332D` |
+| Hairline | `#D5CDBD` | `#35332D` |
 | Accent | `#2E6A4F` | `#86BC9C` |
 | Wrong guess | `#C98A6B` | `#A8644A` |
 | Board, light squares | `#ECE6D6` | `#B7B3A2` |
@@ -289,7 +289,22 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 | Last move, light squares | `#E3DC9A` | `#C9C27A` |
 | Last move, dark squares | `#A9B36A` | `#8E9A52` |
 
-The four board rows in this table describe the sage board drawn in the mockups, which is no longer the default. With the olive board as the default, the last-move highlight and the square-control marking and feedback colours are checked against olive in both modes in build step 9, and adjusted there if they do not read clearly.
+The four board rows in this table describe the sage board drawn in the mockups, which is no longer the default, so they are not tokens. The olive board is the same in both modes, so everything drawn on the board uses the light-mode values in both modes: the last-move highlight, the marks and the feedback. These are separate "on the board" tokens. The "on the page" versions of the same colours, used for things like the phase indicator, still change with the mode. Outline buttons take their border from one more token, `#C3BBAB` in light mode and `#4A473F` in dark.
+
+**Light mode brightness**
+
+The light-mode backgrounds were softened on 11 October 2026 after the first values proved too bright on a real screen. The table above holds the chosen set, "a little softer". The other two are kept here so the brightness can be changed later by swapping these five values in the tokens file. Dark mode is unaffected.
+
+| Token | Brighter (the mockups) | Chosen | Softer |
+| --- | --- | --- | --- |
+| Page background | `#F3EFE6` | `#EDE8DC` | `#E6E0D2` |
+| Raised surface | `#FBF8F1` | `#F4F0E6` | `#EEE9DD` |
+| Hairline | `#DDD6C7` | `#D5CDBD` | `#CEC5B3` |
+| Muted text | `#6B665C` | `#6B665C` | `#68635A` |
+| Outline-button border | `#C9C1B0` | `#C3BBAB` | `#BCB4A5` |
+
+- Every text colour passes 4.5 to 1 in all three sets. The softer set is at the limit, with muted text at 4.53, so anything softer needs darker text colours as well.
+- The phase and feedback colours are not yet used as text on the page. Lost fails 4.5 to 1 as text in every set, and Controls and Wrong fail in the softer set, so a screen that needs them as text uses darker text versions.
 
 **Square-control marking**
 
@@ -299,7 +314,7 @@ The four board rows in this table describe the sage board drawn in the mockups, 
 | Controls | `#2B66A6` blue | `#8EC0EE` blue |
 | Hanging | `#A03A78` magenta | `#D98BBB` pink |
 
-- While marking, a marked square has a half-transparent fill in the phase colour and a solid 3 px border in a darker shade of it.
+- While marking, a marked square has a half-transparent fill in the phase colour and a solid 3 px border in a darker shade of it: the fill colour mixed with 50% black.
 - After a phase is submitted, the three kinds of square differ in shape as well as colour, so they read without colour vision.
 
 | Square | Drawn as |
@@ -309,7 +324,7 @@ The four board rows in this table describe the sage board drawn in the mockups, 
 | Wrong | Red fill `#BE3232` with a solid `#8A1C1C` border |
 
 - A legend under the board counts correct, missed and wrong squares, and the main button moves to the next phase.
-- In dark mode, feedback follows the same rule with lighter shades: blue #8EC0EE for correct and missed, and a red near #E58A8A for wrong. The dark values have not been drawn in a mockup and are confirmed on the dark board in build step 9. All values come from the mockups and are a starting point: each is checked for contrast when the tokens are built.
+- On the board, the Light column of the phase table and the feedback colours above apply in both modes. The Dark column applies only to these colours where they appear on the page. This was settled in build step 9, after the pale dark-mode values proved unreadable on the olive board.
 - The mockups are saved as images in the repository under `docs/design/`, because the building agent only sees what is in the repository.
 
 **How it is enforced**
@@ -392,7 +407,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 **The check command, as built in step 2**
 
 - The command is `composer check`, run inside Docker. It stops at the first failure.
-- It runs, in order: Pint, Rector, Larastan at level max with no baseline, the Pest architecture tests, route helper generation, vue-tsc, ESLint, Prettier, Vitest, the licence check, and a scan for comments that silence a check.
+- It runs, in order: Pint, Rector, Larastan at level max with no baseline, the Pest architecture tests, route helper generation, vue-tsc, ESLint, Stylelint, Prettier, Vitest, the licence check, and a scan for comments that silence a check.
 - ESLint with typescript-eslint and eslint-plugin-vue is the linter, and Prettier is the formatter for TypeScript and Vue. The starter kit's own lint tool, vite-plus, was removed because it cannot read Vue templates.
 - `any` and non-null assertions are also banned inside Vue templates, through a separate ESLint rule.
 - Linting and formatting cover `resources/`, `tools/` and the root config files. `docs/`, `AGENTS.md` and `README.md` are excluded.
@@ -400,6 +415,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Route helpers are regenerated on every check and are not committed.
 - The pre-commit hook runs the full check and gitleaks, a secret scanner. It is switched on once per clone with `git config core.hooksPath .githooks`.
 - CI runs the check on every push, then audits production dependencies only.
+- Stylelint and an ESLint rule reject hard-coded colours everywhere except the tokens file, `resources/css/tokens.css`.
+- The development-only pages under `/dev` are left out of production builds. `npm run build:dev` makes a build that includes them, for checking on a phone.
 
 **Tests that matter most**
 
