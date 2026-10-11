@@ -14,7 +14,8 @@
         "format:check": "prettier --check --no-error-on-unmatched-pattern \"resources/**/*.{ts,vue,css}\" \"tools/**/*.ts\" \"*.{js,ts}\"",
         "test": "vitest run",
         "licences": "node tools/check/licences.ts",
-        "silencers": "node tools/check/silencers.ts"
+        "silencers": "node tools/check/silencers.ts",
+        "extract:masters": "node tools/import/extract-masters.ts"
     },
     "dependencies": {
         "@inertiajs/vite": "^3.0.0",
