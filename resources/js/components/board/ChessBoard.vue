@@ -22,7 +22,13 @@ import { isPromotionMove, pieceTypeAt, readPosition } from '@/chess/position';
 import '../../../css/board.css';
 import MarkingLayer from './MarkingLayer.vue';
 import PromotionPicker from './PromotionPicker.vue';
-import type { MarkFeedback, MoveInput } from './types';
+import ResizeHandle from './ResizeHandle.vue';
+import {
+    BOARD_SIZE_MAX,
+    BOARD_SIZE_MIN,
+    type MarkFeedback,
+    type MoveInput,
+} from './types';
 
 const props = withDefaults(
     defineProps<{
@@ -39,6 +45,8 @@ const props = withDefaults(
         markPhase?: Phase | null;
         /** Feedback on a submitted phase, drawn in place of the marks. */
         feedback?: MarkFeedback | null;
+        /** Whether larger screens get a handle to resize the board. */
+        resizable?: boolean;
     }>(),
     {
         orientation: 'white',
@@ -48,6 +56,7 @@ const props = withDefaults(
         showLastMove: true,
         markPhase: null,
         feedback: null,
+        resizable: false,
     },
 );
 
@@ -57,6 +66,11 @@ const emit = defineEmits<{
 
 const marks = defineModel<Square[]>('marks', { default: () => [] });
 
+// The board's width in pixels on larger screens, reported while it is dragged.
+// The page lays out its column to match; the board fills that column.
+const size = defineModel<number | null>('size', { default: null });
+
+const root = ref<HTMLElement | null>(null);
 const wrap = ref<HTMLElement | null>(null);
 
 // A pawn move that is waiting for its promotion piece.
@@ -85,10 +99,11 @@ function config(): Config {
         orientation: props.orientation,
         turnColor: position.turn,
         lastMove: lastMove ? [lastMove.from, lastMove.to] : undefined,
+        check: position.inCheck,
         coordinates: false,
         highlight: {
             lastMove: true,
-            check: false,
+            check: true,
             custom: shades,
         },
         movable: {
@@ -154,6 +169,30 @@ function onPromotionCancel(): void {
     sync();
 }
 
+let widthAtDragStart = 0;
+
+function currentWidth(): number {
+    return root.value?.getBoundingClientRect().width ?? 0;
+}
+
+function resizeTo(width: number): void {
+    size.value = Math.round(
+        Math.min(BOARD_SIZE_MAX, Math.max(BOARD_SIZE_MIN, width)),
+    );
+}
+
+function onResizeStart(): void {
+    widthAtDragStart = currentWidth();
+}
+
+function onResizeDrag(change: number): void {
+    resizeTo(widthAtDragStart + change);
+}
+
+function onResizeStep(change: number): void {
+    resizeTo(currentWidth() + change);
+}
+
 onMounted(() => {
     if (wrap.value !== null) {
         board = Chessground(wrap.value, config());
@@ -184,7 +223,7 @@ watch(
 </script>
 
 <template>
-    <div class="chess-board board-olive pieces-maestro">
+    <div ref="root" class="chess-board board-olive pieces-maestro">
         <div ref="wrap" class="chess-board-wrap" />
 
         <MarkingLayer
@@ -200,6 +239,13 @@ watch(
             :color="promotion.color"
             @pick="onPromotionPick"
             @cancel="onPromotionCancel"
+        />
+
+        <ResizeHandle
+            v-if="resizable"
+            @start="onResizeStart"
+            @drag="onResizeDrag"
+            @step="onResizeStep"
         />
     </div>
 </template>

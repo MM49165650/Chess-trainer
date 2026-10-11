@@ -14,6 +14,8 @@ export type Position = {
     turn: Color;
     /** For each piece of the side to move, the squares it may move to. */
     destinations: Map<Square, Square[]>;
+    /** Whether the king of the side to move is in check. */
+    inCheck: boolean;
 };
 
 export function readPosition(fen: string): Position {
@@ -34,6 +36,7 @@ export function readPosition(fen: string): Position {
     return {
         turn: chess.turn() === 'w' ? 'white' : 'black',
         destinations,
+        inCheck: chess.inCheck(),
     };
 }
 

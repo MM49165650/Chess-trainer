@@ -70,6 +70,11 @@ cg-board square.last-move.on-dark {
     background-color: var(--color-last-move-dark);
 }
 
+/* A king in check. */
+cg-board square.check {
+    background: var(--board-check-highlight);
+}
+
 /* The piece that is picked up, and where it may go. */
 cg-board square.selected {
     background-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
