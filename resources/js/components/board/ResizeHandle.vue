@@ -6,7 +6,7 @@ import { ref } from 'vue';
 
 const emit = defineEmits<{
     start: [];
-    /** The distance dragged since the start, right and down added together. */
+    /** The change in board width that the drag so far asks for. */
     drag: [change: number];
     /** One press of an arrow key. */
     step: [change: number];
@@ -26,7 +26,15 @@ function onPointerDown(event: PointerEvent): void {
 
 function onPointerMove(event: PointerEvent): void {
     if (origin !== null) {
-        emit('drag', event.clientX - origin.x + (event.clientY - origin.y));
+        // The board is centred, so its corner moves half as far sideways as
+        // the board grows, and the full amount downwards.
+        const sideways = (event.clientX - origin.x) * 2;
+        const downwards = event.clientY - origin.y;
+
+        emit(
+            'drag',
+            Math.abs(sideways) > Math.abs(downwards) ? sideways : downwards,
+        );
     }
 }
 

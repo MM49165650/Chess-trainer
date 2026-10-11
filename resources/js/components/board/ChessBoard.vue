@@ -7,7 +7,14 @@ import type { Api } from '@lichess-org/chessground/api';
 import type { Config } from '@lichess-org/chessground/config';
 import type { Key } from '@lichess-org/chessground/types';
 import '@lichess-org/chessground/assets/chessground.base.css';
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import {
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    watch,
+} from 'vue';
 import {
     isLightSquare,
     isSquare,
@@ -24,6 +31,7 @@ import MarkingLayer from './MarkingLayer.vue';
 import PromotionPicker from './PromotionPicker.vue';
 import ResizeHandle from './ResizeHandle.vue';
 import {
+    BOARD_SIZE_DEFAULT,
     BOARD_SIZE_MAX,
     BOARD_SIZE_MIN,
     type MarkFeedback,
@@ -66,9 +74,13 @@ const emit = defineEmits<{
 
 const marks = defineModel<Square[]>('marks', { default: () => [] });
 
-// The board's width in pixels on larger screens, reported while it is dragged.
-// The page lays out its column to match; the board fills that column.
+// The width the user chose for the board on larger screens, in pixels. The
+// board sizes and centres itself; the page around it does not change.
 const size = defineModel<number | null>('size', { default: null });
+
+const chosenSize = computed(
+    () => `${String(size.value ?? BOARD_SIZE_DEFAULT)}px`,
+);
 
 const root = ref<HTMLElement | null>(null);
 const wrap = ref<HTMLElement | null>(null);
@@ -223,7 +235,11 @@ watch(
 </script>
 
 <template>
-    <div ref="root" class="chess-board board-olive pieces-maestro">
+    <div
+        ref="root"
+        class="chess-board board-olive pieces-maestro"
+        :style="{ '--board-size': chosenSize }"
+    >
         <div ref="wrap" class="chess-board-wrap" />
 
         <MarkingLayer
@@ -258,6 +274,23 @@ watch(
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+}
+
+/*
+ * On larger screens the board has its own width and is centred on the column
+ * it sits in, so it may be narrower or wider than that column. It is never
+ * shown taller than the screen allows, whatever size was chosen.
+ */
+@media (min-width: 640px) {
+    .chess-board {
+        --shown-size: max(
+            320px,
+            min(var(--board-size), 100vh - 120px, 100vw - 2rem)
+        );
+
+        width: var(--shown-size);
+        margin-inline: calc((100% - var(--shown-size)) / 2);
+    }
 }
 
 .chess-board-wrap {

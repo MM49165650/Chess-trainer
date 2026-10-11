@@ -132,15 +132,12 @@ function resetCheck(): void {
 <template>
     <Head title="Board demo" />
 
-    <!-- On larger screens the column is centred and as wide as the board. -->
-    <main
-        class="pb-16 sm:mx-auto sm:w-(--board-size) sm:max-w-[calc(100%-2rem)]"
-        :style="{ '--board-size': boardSizeInPixels }"
-    >
+    <!-- On larger screens the text and controls stay in a fixed, centred column. -->
+    <main class="pb-16 sm:mx-auto sm:w-[560px]">
         <h1 class="p-4 text-2xl font-semibold">Board demo</h1>
         <div class="hidden flex-wrap items-center gap-2 px-4 pb-2 sm:flex">
             <span class="tabular-nums">
-                Board size: {{ boardSizeInPixels
+                Chosen board size: {{ boardSizeInPixels
                 }}{{ boardSize === null ? ' (the default)' : '' }}
             </span>
             <button type="button" class="demo-button" @click="boardSize = null">
