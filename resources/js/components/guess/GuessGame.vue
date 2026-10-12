@@ -6,6 +6,10 @@ import { computed, ref } from 'vue';
 import { colorOfPly } from '@/chess/conventions';
 import { isCapture, isCastling } from '@/chess/game';
 import ChessBoard from '@/components/board/ChessBoard.vue';
+import {
+    CORRECTION_ANIMATION_MS,
+    MOVE_ANIMATION_MS,
+} from '@/components/board/types';
 import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import SlideUpPanel from '@/components/ui/SlideUpPanel.vue';
@@ -102,6 +106,14 @@ function inWords(played: { uci: string; san: string }): string {
         : `played ${played.san}`;
 }
 
+// Straight after a wrong guess the board goes from the user's move to the
+// master's move, more slowly than a normal move so it can be followed.
+const animationMs = computed(() =>
+    resultIsFresh.value && result.value?.correct === false
+        ? CORRECTION_ANIMATION_MS
+        : MOVE_ANIMATION_MS,
+);
+
 /** The move being asked about or just answered, counting from 1. */
 const moveNumber = computed(() =>
     resultIsFresh.value && result.value
@@ -136,6 +148,7 @@ const moveNumber = computed(() =>
         :orientation="game.master_color"
         :last-move="lastMove"
         :movable="status === 'guess'"
+        :animation-ms="animationMs"
         @move="guess"
     />
 
