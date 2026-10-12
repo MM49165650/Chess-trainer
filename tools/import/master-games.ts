@@ -18,8 +18,25 @@ export type ExtractOptions = {
 };
 
 export const DEFAULT_OPTIONS: ExtractOptions = {
-    minPlies: 0,
-    excludeEvents: ['simul', 'sim', 'blindfold', 'odds', 'consultation'],
+    minPlies: 2,
+    excludeEvents: [
+        'simul',
+        'sim',
+        'blindfold',
+        'odds',
+        'consultation',
+        'blitz',
+        'rapid',
+    ],
+};
+
+/** One game on the exclusion list, masters-exclude.json. */
+export type ExcludedGame = {
+    fingerprint: string;
+    players: string;
+    event: string;
+    year: number | null;
+    reason: string;
 };
 
 export type ExtractReport = {
@@ -32,6 +49,8 @@ export type ExtractReport = {
     unmatchedWinners: Record<string, number>;
     /** Games excluded by an event word, counted by word and event. */
     excludedEvents: { word: string; event: string; games: number }[];
+    /** Every game on the exclusion list, and whether the input held it. */
+    excludedByList: { game: ExcludedGame; found: boolean }[];
     /** Accepted games whose moves are the beginning of another game. */
     possibleDuplicates: { shorter: string; longer: string }[];
 };
@@ -66,12 +85,15 @@ export function familyName(name: string): string | null {
     return family === '' ? null : family;
 }
 
-/** The first excluded word that appears as a whole word in the text. */
+/**
+ * The first excluded word that appears as a whole word in the text. Digits
+ * may follow the word, so "rapid" also matches "rapid45".
+ */
 function excludedWord(text: string, words: string[]): string | null {
     return (
         words.find((word) =>
             new RegExp(
-                `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
+                `\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\d*\\b`,
                 'i',
             ).test(text),
         ) ?? null
@@ -104,7 +126,10 @@ export function extractMasterGames(
     texts: string[],
     masters: MasterNames,
     options: ExtractOptions,
+    excludedGames: ExcludedGame[] = [],
 ): ExtractResult {
+    const listed = new Set(excludedGames.map((game) => game.fingerprint));
+    const foundOnList = new Set<string>();
     const slugByName = new Map<string, string>();
 
     for (const [slug, names] of Object.entries(masters)) {
@@ -197,6 +222,12 @@ export function extractMasterGames(
         const uci = moves.map((move) => move.uci);
         const print = fingerprint(slug, masterColor, uci);
 
+        if (listed.has(print)) {
+            foundOnList.add(print);
+            skip('excluded by list');
+            continue;
+        }
+
         if (labels.has(print)) {
             skip('duplicate of another game in this run');
             continue;
@@ -236,6 +267,10 @@ export function extractMasterGames(
             skipped,
             unmatchedWinners,
             excludedEvents: [...excluded.values()],
+            excludedByList: excludedGames.map((game) => ({
+                game,
+                found: foundOnList.has(game.fingerprint),
+            })),
             possibleDuplicates: possibleDuplicates(moveText, labels),
         },
     };
@@ -296,6 +331,18 @@ export function formatReport(report: ExtractReport): string[] {
     )) {
         lines.push(
             `    ${String(entry.games).padStart(5)}  ${entry.event}  (word: ${entry.word})`,
+        );
+    }
+
+    lines.push('', '  Excluded by list:');
+
+    if (report.excludedByList.length === 0) {
+        lines.push('    none');
+    }
+
+    for (const { game, found } of report.excludedByList) {
+        lines.push(
+            `    ${found ? 'skipped  ' : 'not found'}  ${game.players}, ${game.event}${game.year === null ? '' : ` ${String(game.year)}`}: ${game.reason}`,
         );
     }
 

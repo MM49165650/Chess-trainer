@@ -17,6 +17,7 @@ import {
     DEFAULT_OPTIONS,
     extractMasterGames,
     formatReport,
+    type ExcludedGame,
     type MasterNames,
 } from './master-games.ts';
 
@@ -68,10 +69,16 @@ const masters = JSON.parse(
     readFileSync(join(import.meta.dirname, 'masters.json'), 'utf8'),
 ) as MasterNames;
 
+// Single games left out by hand, such as odds games the source does not label.
+const excludedGames = JSON.parse(
+    readFileSync(join(import.meta.dirname, 'masters-exclude.json'), 'utf8'),
+) as ExcludedGame[];
+
 const { games, report } = extractMasterGames(
     files.map((file) => readFileSync(file, 'utf8')),
     masters,
     options,
+    excludedGames,
 );
 
 // JSON Lines: a header naming the content, then one game per line.

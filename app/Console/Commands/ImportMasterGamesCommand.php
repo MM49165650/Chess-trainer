@@ -60,7 +60,9 @@ class ImportMasterGamesCommand extends Command
         /** @var array<string, int> $masterIds */
         $masterIds = Master::query()->pluck('id', 'slug')->all();
 
-        $games = [];
+        // Every line is validated first, but only its fingerprint is kept:
+        // a full file of games with their moves does not fit in memory.
+        $fingerprints = [];
         $problems = [];
 
         foreach ($lines as $index => $line) {
@@ -73,7 +75,7 @@ class ImportMasterGamesCommand extends Command
             if (is_string($game)) {
                 $problems[] = 'Line '.($index + 1).': '.$game;
             } else {
-                $games[] = $game;
+                $fingerprints[$index] = $game->fingerprint;
             }
         }
 
@@ -92,8 +94,8 @@ class ImportMasterGamesCommand extends Command
         $update = $this->option('update') === true;
 
         $counts = $dryRun
-            ? $this->load($games, $masterIds, $update, write: false)
-            : DB::transaction(fn (): array => $this->load($games, $masterIds, $update, write: true));
+            ? $this->load($lines, $fingerprints, $masterIds, $update, write: false)
+            : DB::transaction(fn (): array => $this->load($lines, $fingerprints, $masterIds, $update, write: true));
 
         $this->report($path, $dryRun, $counts);
 
@@ -149,22 +151,22 @@ class ImportMasterGamesCommand extends Command
     }
 
     /**
-     * Inserts, skips or updates each game by its fingerprint.
+     * Inserts, skips or updates each game by its fingerprint. A game is read
+     * from its line again only when it is about to be written.
      *
-     * @param  list<MasterGameImportData>  $games
+     * @param  list<string>  $lines
+     * @param  array<int, string>  $fingerprints  The fingerprint of each valid line, by line index.
      * @param  array<string, int>  $masterIds
      * @return array{imported: int, updated: int, already_loaded: int, repeated_in_file: int}
      */
-    private function load(array $games, array $masterIds, bool $update, bool $write): array
+    private function load(array $lines, array $fingerprints, array $masterIds, bool $update, bool $write): array
     {
         $counts = ['imported' => 0, 'updated' => 0, 'already_loaded' => 0, 'repeated_in_file' => 0];
 
         $loaded = [];
 
-        foreach (array_chunk($games, 500) as $chunk) {
-            $fingerprints = array_map(fn (MasterGameImportData $game): string => $game->fingerprint, $chunk);
-
-            foreach (MasterGame::query()->whereIn('fingerprint', $fingerprints)->pluck('fingerprint') as $fingerprint) {
+        foreach (array_chunk($fingerprints, 500) as $chunk) {
+            foreach (MasterGame::query()->whereIn('fingerprint', $chunk)->pluck('fingerprint') as $fingerprint) {
                 if (is_string($fingerprint)) {
                     $loaded[$fingerprint] = true;
                 }
@@ -173,14 +175,31 @@ class ImportMasterGamesCommand extends Command
 
         $seen = [];
 
-        foreach ($games as $game) {
-            if (array_key_exists($game->fingerprint, $seen)) {
+        foreach ($fingerprints as $index => $fingerprint) {
+            if (array_key_exists($fingerprint, $seen)) {
                 $counts['repeated_in_file']++;
 
                 continue;
             }
 
-            $seen[$game->fingerprint] = true;
+            $seen[$fingerprint] = true;
+
+            $isNew = ! array_key_exists($fingerprint, $loaded);
+
+            if (! $isNew && ! $update) {
+                $counts['already_loaded']++;
+
+                continue;
+            }
+
+            $counts[$isNew ? 'imported' : 'updated']++;
+
+            if (! $write) {
+                continue;
+            }
+
+            // The line passed validation above, so it is read without it here.
+            $game = MasterGameImportData::from(json_decode($lines[$index] ?? '', true));
 
             $details = [
                 'opponent_name' => $game->opponent_name,
@@ -189,33 +208,23 @@ class ImportMasterGamesCommand extends Command
                 'event' => $game->event,
             ];
 
-            if (! array_key_exists($game->fingerprint, $loaded)) {
-                $counts['imported']++;
-
-                if ($write) {
-                    MasterGame::query()->create([
-                        ...$details,
-                        'master_id' => $masterIds[$game->master_slug],
-                        'fingerprint' => $game->fingerprint,
-                        'master_color' => $game->master_color,
-                        'ply_count' => $game->ply_count,
-                        'guess_count' => $game->guess_count,
-                        'moves' => array_map(
-                            fn (GameMoveData $move): array => ['uci' => $move->uci, 'san' => $move->san],
-                            $game->moves,
-                        ),
-                    ]);
-                }
-            } elseif ($update) {
+            if ($isNew) {
+                MasterGame::query()->create([
+                    ...$details,
+                    'master_id' => $masterIds[$game->master_slug],
+                    'fingerprint' => $game->fingerprint,
+                    'master_color' => $game->master_color,
+                    'ply_count' => $game->ply_count,
+                    'guess_count' => $game->guess_count,
+                    'moves' => array_map(
+                        fn (GameMoveData $move): array => ['uci' => $move->uci, 'san' => $move->san],
+                        $game->moves,
+                    ),
+                ]);
+            } else {
                 // The same fingerprint means the same master, colour and
                 // moves, so only the details can differ.
-                $counts['updated']++;
-
-                if ($write) {
-                    MasterGame::query()->where('fingerprint', $game->fingerprint)->update($details);
-                }
-            } else {
-                $counts['already_loaded']++;
+                MasterGame::query()->where('fingerprint', $fingerprint)->update($details);
             }
         }
 
