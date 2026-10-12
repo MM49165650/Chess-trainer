@@ -2,7 +2,7 @@
 
 Last updated: 10 October 2026
 
-A free, open source, mobile-first chess training site with three modes: guess the move against seven masters, a square-control drill on beginner games, and short tactics grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
+A free, open source, mobile-first chess training site with three modes: guess the move against eleven masters, a square-control drill on beginner games, and short tactics grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
 ## MVP scope
 
@@ -10,7 +10,7 @@ The MVP is three training modes served from a read-only library, with nothing to
 
 **In the MVP**
 
-- Guess the move, with games from seven masters
+- Guess the move, with games from eleven masters
 - Square control, on games by players rated under 1000
 - Tactics by piece, one or two moves long
 - Progress, history and settings saved in the browser
@@ -41,7 +41,7 @@ The user picks a master game and guesses every move the winner played, starting 
 
 **Masters**
 
-Seven masters, chosen because their styles work well together: Morphy, Capablanca, Alekhine, Botvinnik, Tal, Fischer and Spassky. They are not grouped by era.
+Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Alekhine, Keres, Smyslov, Botvinnik, Tal, Spassky and Fischer. They are not grouped by era. Lasker, Rubinstein, Keres and Smyslov were added on 12 October 2026.
 
 - Each game is filed under its winner. Capablanca beating Alekhine appears under Capablanca only.
 
@@ -52,6 +52,8 @@ Seven masters, chosen because their styles work well together: Morphy, Capablanc
 - One attempt per move. After the guess, right or wrong, the actual move is played and the game continues.
 - Only legal moves can be made on the board. A promotion shows a piece picker, and the guess includes the promotion piece.
 - Feedback on a wrong guess is the user's move shown against the master's move.
+- Moves in feedback are described in words: "took on e3" for a capture, "castled", otherwise "played Nf3". A correct guess is confirmed in the accent colour. The result of the last guess stays on screen until the user's next guess.
+- If a game's moves fail to load, the page says so and offers Try again. A game that does not exist says so with no retry.
 - The board is oriented to the winner's side, and the last move played is highlighted.
 - Progress is saved after every move, so closing the tab and returning resumes at the same position.
 - Several games can be in progress at once, each resumable.
@@ -77,7 +79,7 @@ Seven masters, chosen because their styles work well together: Morphy, Capablanc
 
 **Import rules**
 
-- The winner must be one of the seven masters.
+- The winner must be one of the masters.
 - Draws are excluded.
 - Odds games, which start from a non-standard position, are excluded.
 - Simultaneous and blindfold games are excluded where the data labels them. PGN Mentor marks simultaneous games with the word "sim". One-on-one exhibition games against other masters are kept.
@@ -206,7 +208,7 @@ Most users are on phones, so phone width is the primary design target for every 
 **Larger screens**
 
 - The layout is the same single column on every screen size. Nothing is rearranged for desktop.
-- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, or wider than the screen width minus 32 pixels, so it always fits without scrolling; the user's chosen size is kept.
+- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, or wider than the screen width minus 32 pixels, so it always fits without scrolling; the user's chosen size is kept. The guess-the-move play screen measures its limit instead: the board is never taller than the screen height minus the header, the player rows, the prompt and the bottom bar, so the whole screen fits without scrolling. The prompt area keeps one height so the board does not change size as its text changes. Below the 320-pixel minimum the page scrolls. Settled in build step 13.
 - The board can be resized by dragging a handle at its corner, between 320 and 720 pixels wide. The default is 560 pixels. Resizing changes the board only. Text and controls stay in a fixed column 560 pixels wide, and the board is centred on the same line, so it may be narrower or wider than the column.
 - The chosen board size is saved with the other settings. On a phone the board is always the full width of the screen and there is no handle.
 
@@ -284,6 +286,7 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 | Hairline | `#D5CDBD` | `#35332D` |
 | Accent | `#2E6A4F` | `#86BC9C` |
 | Wrong guess | `#C98A6B` | `#A8644A` |
+| Wrong guess, text | `#895E49` | `#E0A07E` |
 | Board, light squares | `#ECE6D6` | `#B7B3A2` |
 | Board, dark squares | `#8DA084` | `#65755E` |
 | Last move, light squares | `#E3DC9A` | `#C9C27A` |
@@ -340,7 +343,7 @@ All content is loaded by command-line import, one command per mode. Nothing can 
 
 | Mode | Source | Stored per item |
 | --- | --- | --- |
-| Guess the move | Game files of the seven masters | Game details, and the full move list stored on the game |
+| Guess the move | Game files of the eleven masters | Game details, and the full move list stored on the game |
 | Square control | Lichess open database | Game details, and one list on the game holding each move with its three answer sets |
 | Tactics by piece | Lichess puzzle database | The position, the solution moves, the piece category, and the puzzle's rating |
 
@@ -484,14 +487,14 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 | Step | Build | Done when |
 | --- | --- | --- |
-| 10. Tables | Migrations for `masters` and `master_games`, and the seeder for the seven masters | Migrations run, and the constraints reject a deliberately bad row |
+| 10. Tables | Migrations for `masters` and `master_games`, and the seeder for the masters | Migrations run, and the constraints reject a deliberately bad row |
 | 11. Import on a sample | `extract:masters` and `import:master-games`, run on about twenty games | The games load, a second run adds nothing and changes no ID, and the report lists what was skipped |
 | 12. Data endpoint | `GET /api/master-games/{id}` with its generated TypeScript type | The response matches Appendix F, carries the cache header, and sets no cookie |
 | 13. Play screen | Guessing through one game: the opponent delay, one attempt per move, feedback, and the running score. Nothing is saved yet | A full game can be played on a phone |
 | 14. Saving | The storage module; resuming; several games in progress; replaying | Closing and reopening the browser resumes a game mid-way |
 | 15. End of game | The score, the replay with guesses marked, and the share summary | A finished game can be reviewed and shared from a phone |
-| 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button | A specific game can be found and started in a few taps |
-| 17. Search engines | Server rendering for master and game pages, their titles and descriptions, and the sitemap | A game page's source shows its title and description with scripts disabled |
+| 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button; the site's not-found page | A specific game can be found and started in a few taps |
+| 17. Search engines | Server rendering for master and game pages, their titles and descriptions, and the sitemap; the `opponent_short_name` column, filled by the extract, and used in titles and the play screen header | A game page's source shows its title and description with scripts disabled |
 | 18. Full import | All master games loaded on the server | Needs no further decisions: the game source and the minimum length are settled |
 
 **Stage 4: Tactics by piece**
@@ -661,9 +664,9 @@ The MVP has four content tables and nothing about users. Every column is not-nul
 | `id` | bigint | Primary key |
 | `slug` | text | Unique; lowercase letters only, used in URLs, for example `capablanca` |
 | `name` | text | Display name |
-| `sort_order` | smallint | Unique; display order: Morphy, Capablanca, Alekhine, Botvinnik, Tal, Fischer, Spassky |
+| `sort_order` | smallint | Unique; display order: Morphy, Lasker, Rubinstein, Capablanca, Alekhine, Keres, Smyslov, Botvinnik, Tal, Spassky, Fischer |
 
-The seven rows are created by a seeder kept in the repository, with the display names Paul Morphy, José Raúl Capablanca, Alexander Alekhine, Mikhail Botvinnik, Mikhail Tal, Bobby Fischer and Boris Spassky. The seeder is safe to rerun and never changes an ID.
+The eleven rows are created by a seeder kept in the repository, with the display names Paul Morphy, Emanuel Lasker, Akiba Rubinstein, José Raúl Capablanca, Alexander Alekhine, Paul Keres, Vasily Smyslov, Mikhail Botvinnik, Mikhail Tal, Boris Spassky and Bobby Fischer. The seeder is safe to rerun and never changes an ID; adding a master may change other masters' display order, but never their IDs or slugs.
 
 **`master_games`**
 
@@ -674,6 +677,7 @@ The seven rows are created by a seeder kept in the repository, with the display 
 | `fingerprint` | char(64) | Unique; see Appendix D |
 | `master_color` | text | `white` or `black` |
 | `opponent_name` | text | Written as first name then last name |
+| `opponent_short_name` | text | Nullable; the family name, taken from the part of the source name before the comma, for titles and the play screen header. Added in build step 17; where it is null, the full name is shown |
 | `year` | smallint | Nullable; between 1800 and 2100 |
 | `event` | text | Nullable |
 | `ply_count` | smallint | At least 1 |
@@ -827,7 +831,7 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 **Master games: extract rules**
 
 - A configuration file lists each master's slug with the name spellings found in the sources.
-- The result must be a win, and the winner's name must match one of the seven masters.
+- The result must be a win, and the winner's name must match one of the masters.
 - Winners that match no master are counted by name in the report, so a missing spelling is noticed.
 - A game with a custom starting position, shown by a `SetUp` or `FEN` tag, is rejected.
 - Comments, side variations and annotation symbols are removed.
@@ -862,7 +866,7 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | Path | Page |
 | --- | --- |
 | `/` | Home, with the three modes |
-| `/guess` | The seven masters |
+| `/guess` | The masters |
 | `/guess/{master}` | Game list for one master, by slug |
 | `/guess/{master}/random` | Redirects to a random game by that master |
 | `/guess/{master}/{game}` | Play a master game |
@@ -878,6 +882,7 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 - Its query parameters are `q`, `color`, `year_from`, `year_to` and `page`. The search box `q` matches opponent and event, which is how those two are filtered.
 - The list receives each game's details as page data, never its moves.
 - Master and master game pages are rendered on the server with a readable title and description, such as "Guess the move: Capablanca vs. Marshall, New York 1918".
+- An address that matches no page, including a master or game that does not exist, shows the site's own not-found page in the site's style rather than the framework's default. It is built with browsing in step 16.
 
 **Data endpoints**
 
