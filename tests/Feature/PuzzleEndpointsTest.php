@@ -140,7 +140,7 @@ test('repeated IDs are returned once', function (): void {
     expect($response->json('items.*.id'))->toBe([$first->id, $second->id]);
 });
 
-test('the theme labels are not sent to the browser', function (): void {
+test('a puzzle carries its Lichess ID, and not its theme labels, popularity or plays', function (): void {
     $puzzle = madeUpPuzzle('aaaaa', 'knight', 1000);
 
     $response = $this->get("/api/puzzles?ids={$puzzle->id}");
@@ -150,6 +150,7 @@ test('the theme labels are not sent to the browser', function (): void {
     $response->assertExactJson([
         'items' => [[
             'id' => $puzzle->id,
+            'lichess_id' => 'aaaaa',
             'fen' => 'made up',
             'setup_move' => 'e7e5',
             'first_move' => 'g1f3',

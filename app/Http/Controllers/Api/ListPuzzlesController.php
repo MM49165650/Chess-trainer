@@ -42,7 +42,7 @@ class ListPuzzlesController extends Controller
 
         $puzzles = Puzzle::query()
             ->whereKey($listed)
-            ->get(['id', 'fen', 'setup_move', 'first_move', 'reply_move', 'second_move', 'piece', 'rating'])
+            ->get(['id', 'lichess_id', 'fen', 'setup_move', 'first_move', 'reply_move', 'second_move', 'piece', 'rating'])
             ->keyBy('id');
 
         // In the order asked for. A repeated ID is returned once, and an ID
@@ -55,6 +55,7 @@ class ListPuzzlesController extends Controller
             if ($puzzle !== null) {
                 $items[] = new PuzzleData(
                     id: $puzzle->id,
+                    lichess_id: $puzzle->lichess_id,
                     fen: $puzzle->fen,
                     setup_move: $puzzle->setup_move,
                     first_move: $puzzle->first_move,
