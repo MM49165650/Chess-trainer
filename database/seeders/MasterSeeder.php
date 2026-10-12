@@ -10,18 +10,22 @@ use Illuminate\Support\Facades\DB;
 class MasterSeeder extends Seeder
 {
     /**
-     * The seven masters, in display order.
+     * The masters, in display order.
      *
      * @var list<array{slug: string, name: string}>
      */
     private const array MASTERS = [
         ['slug' => 'morphy', 'name' => 'Paul Morphy'],
+        ['slug' => 'lasker', 'name' => 'Emanuel Lasker'],
+        ['slug' => 'rubinstein', 'name' => 'Akiba Rubinstein'],
         ['slug' => 'capablanca', 'name' => 'José Raúl Capablanca'],
         ['slug' => 'alekhine', 'name' => 'Alexander Alekhine'],
+        ['slug' => 'keres', 'name' => 'Paul Keres'],
+        ['slug' => 'smyslov', 'name' => 'Vasily Smyslov'],
         ['slug' => 'botvinnik', 'name' => 'Mikhail Botvinnik'],
         ['slug' => 'tal', 'name' => 'Mikhail Tal'],
-        ['slug' => 'fischer', 'name' => 'Bobby Fischer'],
         ['slug' => 'spassky', 'name' => 'Boris Spassky'],
+        ['slug' => 'fischer', 'name' => 'Bobby Fischer'],
     ];
 
     /**
@@ -36,6 +40,15 @@ class MasterSeeder extends Seeder
             $rows[] = [...$master, 'sort_order' => $index + 1];
         }
 
-        DB::table('masters')->upsert($rows, ['slug'], ['name', 'sort_order']);
+        DB::transaction(function () use ($rows): void {
+            // The display order is unique and checked one row at a time, so a
+            // new master cannot take a number an existing one still holds.
+            // Existing numbers are moved out of the way first, below zero.
+            DB::table('masters')
+                ->where('sort_order', '>', 0)
+                ->update(['sort_order' => DB::raw('-sort_order')]);
+
+            DB::table('masters')->upsert($rows, ['slug'], ['name', 'sort_order']);
+        });
     }
 }

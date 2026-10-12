@@ -1,9 +1,13 @@
 {
     "morphy": ["Morphy, Paul"],
+    "lasker": ["Lasker, Emanuel"],
+    "rubinstein": ["Rubinstein, Akiba"],
     "capablanca": ["Capablanca, Jose Raul"],
     "alekhine": ["Alekhine, Alexander"],
+    "keres": ["Keres, Paul"],
+    "smyslov": ["Smyslov, Vassily", "Smyslov,V"],
     "botvinnik": ["Botvinnik, Mikhail"],
     "tal": ["Tal, Mihail"],
-    "fischer": ["Fischer, Robert James"],
-    "spassky": ["Spassky, Boris V", "Spassky,B"]
+    "spassky": ["Spassky, Boris V", "Spassky,B"],
+    "fischer": ["Fischer, Robert James"]
 }
