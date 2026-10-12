@@ -47,7 +47,7 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 
 **Play**
 
-- The user guesses the winner's moves. The opponent's moves play automatically after a delay the user sets, from 1 to 10 seconds.
+- The user guesses the winner's moves. The opponent's moves play automatically after a delay the user sets, from 1 to 5 seconds.
 - Guessing starts at move 1. If the winner had Black, White's first move plays automatically.
 - One attempt per move. After the guess, right or wrong, the actual move is played and the game continues.
 - Only legal moves can be made on the board. A promotion shows a piece picker, and the guess includes the promotion piece.
@@ -235,7 +235,7 @@ Most users are on phones, so phone width is the primary design target for every 
 - Board theme and piece set, taken from Lichess's collection, starting with three or four of each. The default board is Lichess's olive board and the default piece set is Lichess's Maestro
 - Sound on or off. The sound source is undecided: Lichess's licence file lists most of its sounds as exceptions without a free licence, so they are not used unless that is cleared
 - Move input: tap, drag, or both
-- Opponent move delay in guess the move: 1 to 10 seconds in whole seconds, default 3
+- Opponent move delay in guess the move: 1 to 5 seconds in whole seconds, default 3. It is set with a slider that moves in whole seconds and shows the chosen value, such as "3 s", both on the play screen and in settings
 - Marking colours for square control, including at least one colour-blind-friendly palette
 
 **Progress**
@@ -967,7 +967,7 @@ type Settings = {
   boardSizePx: number | null // larger screens only; null means the 560 default
   sound: boolean
   moveInput: 'tap' | 'drag' | 'both'
-  opponentDelaySeconds: number // 1 to 10, default 3
+  opponentDelaySeconds: number // 1 to 5, default 3
   markingPalette: string
 }
 
