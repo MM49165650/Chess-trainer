@@ -34,6 +34,7 @@ import {
     BOARD_SIZE_DEFAULT,
     BOARD_SIZE_MAX,
     BOARD_SIZE_MIN,
+    MOVE_ANIMATION_MS,
     type MarkFeedback,
     type MoveInput,
 } from './types';
@@ -55,6 +56,8 @@ const props = withDefaults(
         feedback?: MarkFeedback | null;
         /** Whether larger screens get a handle to resize the board. */
         resizable?: boolean;
+        /** How long the next change of position takes to animate. */
+        animationMs?: number;
     }>(),
     {
         orientation: 'white',
@@ -65,6 +68,7 @@ const props = withDefaults(
         markPhase: null,
         feedback: null,
         resizable: false,
+        animationMs: MOVE_ANIMATION_MS,
     },
 );
 
@@ -94,6 +98,11 @@ function isMarking(): boolean {
     return props.markPhase !== null || props.feedback !== null;
 }
 
+// Pieces do not slide when the device asks for reduced motion.
+function prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
 function config(): Config {
     const position = readPosition(props.fen);
     const canMove = props.movable && !isMarking();
@@ -113,6 +122,10 @@ function config(): Config {
         lastMove: lastMove ? [lastMove.from, lastMove.to] : undefined,
         check: position.inCheck,
         coordinates: false,
+        animation: {
+            enabled: !prefersReducedMotion(),
+            duration: props.animationMs,
+        },
         highlight: {
             lastMove: true,
             check: true,
@@ -226,6 +239,7 @@ watch(
         props.showLastMove,
         props.markPhase,
         props.feedback,
+        props.animationMs,
     ],
     () => {
         promotion.value = null;

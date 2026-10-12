@@ -17,3 +17,9 @@ export type MarkFeedback = {
 export const BOARD_SIZE_MIN = 320;
 export const BOARD_SIZE_MAX = 720;
 export const BOARD_SIZE_DEFAULT = 560;
+
+// How long a piece takes to slide to its square, in milliseconds. The
+// correction is the move from a wrong guess to the move actually played: it
+// is slower so that it can be followed.
+export const MOVE_ANIMATION_MS = 200;
+export const CORRECTION_ANIMATION_MS = 450;
