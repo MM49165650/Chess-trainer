@@ -1,5 +1,6 @@
 // One game of guess the move: whose turn it is, what the user has guessed and
 // the running score. Every guess is saved, so a game resumes where it was left.
+// The user can also look back over the moves already played.
 
 import { computed, onBeforeUnmount, ref, type Ref } from 'vue';
 import {
@@ -31,6 +32,17 @@ export type GuessResult = {
     guessed: string;
     /** The move the master played. */
     played: { uci: string; san: string };
+};
+
+/** An earlier position being looked at, in place of the current one. */
+export type ViewedMove = {
+    /** How many plies had been played in the position shown. */
+    ply: number;
+    /** The move that led to it, or null at the start of the game. */
+    played: { uci: string; san: string } | null;
+    byMaster: boolean;
+    /** The user's guess at that move, when it was the master's. */
+    result: GuessResult | null;
 };
 
 /**
@@ -69,6 +81,15 @@ export function useGuessGame(
     /** Whole seconds until the opponent's move plays, while it is pending. */
     const secondsLeft = ref(0);
 
+    /**
+     * The earlier position being looked at, as a number of plies, or null
+     * when the board shows the current position. It is never past `ply`,
+     * so looking back cannot show a move still to be guessed.
+     */
+    const viewedPly = ref<number | null>(null);
+
+    const shownPly = computed(() => viewedPly.value ?? ply.value);
+
     let timer: ReturnType<typeof setInterval> | null = null;
 
     const status = computed<GuessStatus>(() => {
@@ -81,10 +102,10 @@ export function useGuessGame(
             : 'opponent';
     });
 
-    const fen = computed(() => positions[ply.value] ?? '');
+    const fen = computed(() => positions[shownPly.value] ?? '');
 
     const lastMove = computed<MoveParts | null>(() => {
-        const played = game.moves[ply.value - 1];
+        const played = game.moves[shownPly.value - 1];
 
         return played ? parseMove(played.uci) : null;
     });
@@ -111,6 +132,11 @@ export function useGuessGame(
         secondsLeft.value = delaySeconds.value;
 
         timer = setInterval(() => {
+            // The reply waits while an earlier position is being looked at.
+            if (viewedPly.value !== null) {
+                return;
+            }
+
             secondsLeft.value -= 1;
 
             if (secondsLeft.value <= 0) {
@@ -129,6 +155,7 @@ export function useGuessGame(
 
         if (
             status.value !== 'guess' ||
+            viewedPly.value !== null ||
             played === undefined ||
             position === undefined ||
             expected === null
@@ -169,25 +196,88 @@ export function useGuessGame(
         return game.master_color === 'white' ? number * 2 - 1 : number * 2;
     }
 
+    /** The outcome of a guess already made, by the number of the move. */
+    function resultOf(number: number): GuessResult | null {
+        const at = plyOfGuess(number);
+        const made = guesses.value[number - 1];
+        const played = game.moves[at - 1];
+        const position = positions[at - 1];
+        const move = made ? parseMove(made.uci) : null;
+
+        if (!made || !played || position === undefined || !move) {
+            return null;
+        }
+
+        return {
+            number,
+            correct: made.correct,
+            guessed: writtenMove(position, move) ?? made.uci,
+            played,
+        };
+    }
+
     // Picks up an attempt where it was left: the opponent's reply to the
     // last guess is already on the board, and that guess's result is shown.
     function resume(earlier: readonly Guess[]): void {
-        const lastPly = plyOfGuess(earlier.length);
-        const last = earlier.at(-1);
-        const played = game.moves[lastPly - 1];
-        const position = positions[lastPly - 1];
-        const move = last ? parseMove(last.uci) : null;
-
         guesses.value = earlier.map((guess) => ({ ...guess }));
-        ply.value = Math.min(lastPly + 1, game.moves.length);
+        ply.value = Math.min(plyOfGuess(earlier.length) + 1, game.moves.length);
+        result.value = resultOf(earlier.length);
+    }
 
-        if (last && played && position !== undefined && move) {
-            result.value = {
-                number: earlier.length,
-                correct: last.correct,
-                guessed: writtenMove(position, move) ?? last.uci,
-                played,
-            };
+    const viewed = computed<ViewedMove | null>(() => {
+        const at = viewedPly.value;
+
+        if (at === null) {
+            return null;
+        }
+
+        const byMaster = at > 0 && colorOfPly(at) === game.master_color;
+        const number = game.master_color === 'white' ? (at + 1) / 2 : at / 2;
+
+        return {
+            ply: at,
+            played: game.moves[at - 1] ?? null,
+            byMaster,
+            result: byMaster ? resultOf(number) : null,
+        };
+    });
+
+    /** How many of the master's moves are on the board as it is shown. */
+    const shownGuessCount = computed(() =>
+        game.master_color === 'white'
+            ? Math.ceil(shownPly.value / 2)
+            : Math.floor(shownPly.value / 2),
+    );
+
+    const canStepBack = computed(() => shownPly.value > 0);
+    const canStepForward = computed(() => viewedPly.value !== null);
+
+    function stepBack(): void {
+        if (canStepBack.value) {
+            viewedPly.value = shownPly.value - 1;
+        }
+    }
+
+    /** Back to the current position, where the game carries on. */
+    function returnToGame(): void {
+        viewedPly.value = null;
+    }
+
+    function stepForward(): void {
+        if (viewedPly.value === null) {
+            return;
+        }
+
+        if (viewedPly.value + 1 >= ply.value) {
+            returnToGame();
+        } else {
+            viewedPly.value += 1;
+        }
+    }
+
+    function viewFromStart(): void {
+        if (ply.value > 0) {
+            viewedPly.value = 0;
         }
     }
 
@@ -199,6 +289,7 @@ export function useGuessGame(
 
     function restart(): void {
         stopTimer();
+        viewedPly.value = null;
         ply.value = 0;
         guesses.value = [];
         result.value = null;
@@ -222,6 +313,15 @@ export function useGuessGame(
 
     return {
         ply,
+        shownPly,
+        viewed,
+        shownGuessCount,
+        canStepBack,
+        canStepForward,
+        stepBack,
+        stepForward,
+        returnToGame,
+        viewFromStart,
         fen,
         lastMove,
         status,

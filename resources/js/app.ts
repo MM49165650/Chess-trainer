@@ -1,9 +1,8 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import type { DefineComponent } from 'vue';
+import { SITE_NAME } from './site';
 
 type PageModule = { default: DefineComponent };
-
-const appName = import.meta.env.VITE_APP_NAME ?? 'Chess training';
 
 const pages = import.meta.glob<PageModule>('./pages/**/*.vue');
 
@@ -15,7 +14,7 @@ const devPages =
         : import.meta.glob<PageModule>('./dev/**/*.vue');
 
 void createInertiaApp({
-    title: (title: string) => (title ? `${title} - ${appName}` : appName),
+    title: (title: string) => (title ? `${title} - ${SITE_NAME}` : SITE_NAME),
     resolve: async (name: string) => {
         const load = pages[`./pages/${name}.vue`] ?? devPages[`./${name}.vue`];
 
