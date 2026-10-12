@@ -2,15 +2,23 @@
 
 declare(strict_types=1);
 
+use App\Data\PageMetaData;
 use App\Http\Controllers\Guess\ListMasterGamesController;
 use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
 use App\Http\Controllers\Guess\RandomMasterGameController;
+use App\Http\Controllers\ShowSitemapController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
-Route::get('/', fn (): Response => Inertia::render('Home'))->name('home');
+Route::get('/', fn (): Response => Inertia::render('Home', ['meta' => PageMetaData::home()]))->name('home');
+
+// The sitemap is the same for every visitor. It starts no session and sets
+// no cookie, so that it can be cached.
+Route::get('/sitemap.xml', ShowSitemapController::class)
+    ->withoutMiddleware('web')
+    ->name('sitemap');
 
 // Guess the move. /guess/{master}/random is registered above the play route,
 // and {game} accepts digits only, so the two never clash.

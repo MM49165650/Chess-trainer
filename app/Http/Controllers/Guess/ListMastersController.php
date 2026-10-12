@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Guess;
 
 use App\Data\MasterListItemData;
+use App\Data\PageMetaData;
 use App\Http\Controllers\Controller;
 use App\Models\Master;
 use Inertia\Inertia;
@@ -29,6 +30,9 @@ class ListMastersController extends Controller
             ]))
             ->all();
 
-        return Inertia::render('guess/Masters', ['masters' => $masters]);
+        return Inertia::render('guess/Masters', [
+            'meta' => PageMetaData::masters(),
+            'masters' => $masters,
+        ]);
     }
 }

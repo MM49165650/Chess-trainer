@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Guess;
 
 use App\Data\MasterGameDetailsData;
+use App\Data\PageMetaData;
 use App\Http\Controllers\Controller;
 use App\Models\MasterGame;
 use Inertia\Inertia;
@@ -20,7 +21,7 @@ class PlayMasterGameController extends Controller
     {
         // The moves can be long, and the page does not need them here.
         $found = MasterGame::query()
-            ->select(['id', 'master_id', 'master_color', 'opponent_name', 'year', 'event', 'ply_count', 'guess_count'])
+            ->select(['id', 'master_id', 'master_color', 'opponent_name', 'opponent_short_name', 'year', 'event', 'ply_count', 'guess_count'])
             ->with('master')
             ->find((int) $game);
 
@@ -30,6 +31,7 @@ class PlayMasterGameController extends Controller
         abort_if($found === null || $winner === null || $winner->slug !== $master, 404);
 
         return Inertia::render('guess/Play', [
+            'meta' => PageMetaData::game($winner, $found),
             'game' => MasterGameDetailsData::from([
                 'id' => $found->id,
                 'master' => ['slug' => $winner->slug, 'name' => $winner->name],

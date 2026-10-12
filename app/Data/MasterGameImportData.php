@@ -41,5 +41,8 @@ final class MasterGameImportData extends Data
         public int $guess_count,
         #[DataCollectionOf(GameMoveData::class)]
         public array $moves,
+        // Last, with a default, because a file extracted before build step
+        // 17 does not carry it.
+        public ?string $opponent_short_name = null,
     ) {}
 }

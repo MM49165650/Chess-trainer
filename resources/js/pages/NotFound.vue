@@ -2,11 +2,17 @@
 // The site's own not-found page, for an address that matches no page or
 // names a master or game that does not exist.
 
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
+import PageHead from '@/components/PageHead.vue';
+import type { PageMetaData } from '@/generated/data';
+
+defineProps<{
+    meta: PageMetaData;
+}>();
 </script>
 
 <template>
-    <Head title="Page not found" />
+    <PageHead :meta="meta" />
 
     <main
         class="flex flex-col items-start gap-3 px-5 pt-10 sm:mx-auto sm:w-[560px]"

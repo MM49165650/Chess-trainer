@@ -2,12 +2,14 @@
 // Guess the move: the masters, in their fixed order. Each row opens that
 // master's game list.
 
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/ListMasterGamesController';
+import PageHead from '@/components/PageHead.vue';
 import ListRow from '@/components/ui/ListRow.vue';
-import type { MasterListItemData } from '@/generated/data';
+import type { MasterListItemData, PageMetaData } from '@/generated/data';
 
 defineProps<{
+    meta: PageMetaData;
     masters: MasterListItemData[];
 }>();
 
@@ -17,7 +19,7 @@ function gameCount(count: number): string {
 </script>
 
 <template>
-    <Head title="Guess the move" />
+    <PageHead :meta="meta" />
 
     <main class="pb-8 sm:mx-auto sm:w-[560px]">
         <header class="flex items-center p-1">
