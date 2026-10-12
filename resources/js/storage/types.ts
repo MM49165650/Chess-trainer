@@ -19,6 +19,8 @@ export type Settings = {
     /** 1 to 5. */
     opponentDelaySeconds: number;
     markingPalette: string;
+    /** Tactics: whether a solved puzzle moves on to the next by itself. */
+    tacticsAutoNext: boolean;
 };
 
 export type MasterGameRecord = {

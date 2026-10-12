@@ -2,7 +2,7 @@
 // One tactics puzzle being solved: the board, the prompt or the outcome, and
 // the bottom bar with the arrows and the way on to the next puzzle.
 
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, toRef, watch } from 'vue';
 import ChessBoard from '@/components/board/ChessBoard.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
@@ -16,6 +16,8 @@ const props = defineProps<{
     puzzle: PuzzleData;
     /** Whether the prompt says which piece solves. All pieces does not. */
     namesPiece: boolean;
+    /** Whether a solved puzzle moves on to the next by itself. */
+    autoNext: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -46,7 +48,10 @@ const {
     canStepForward,
     stepBack,
     stepForward,
-} = useTacticsPuzzle(props.puzzle);
+    autoNextPending,
+} = useTacticsPuzzle(props.puzzle, toRef(props, 'autoNext'), () => {
+    emit('next');
+});
 
 // The result is decided at the first wrong move, or at the final capture
 // when there was none. Retries and doing the puzzle again change nothing.
@@ -97,6 +102,13 @@ const ending = computed(() => {
         return {
             heading: 'Here is the solution.',
             note: 'Use the arrows to step through it, from the first move to the capture.',
+        };
+    }
+
+    if (autoNextPending.value) {
+        return {
+            heading: 'You found both moves.',
+            note: 'On to the next puzzle…',
         };
     }
 

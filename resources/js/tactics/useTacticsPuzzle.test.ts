@@ -3,10 +3,12 @@
 // for the test.
 
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { ref } from 'vue';
 import { parseMove, type MoveParts } from '@/chess/conventions';
 import { positionsFrom } from '@/chess/game';
 import type { PuzzleData } from '@/generated/data';
 import {
+    AUTO_NEXT_DELAY_MS,
     REPLY_DELAY_MS,
     SETUP_DELAY_MS,
     useTacticsPuzzle,
@@ -272,6 +274,91 @@ test('redo resets the board but keeps the result', () => {
 
     expect(lost.result.value).toBe('failed');
     expect(lost.outcome.value).toBe('failed');
+});
+
+test('auto next moves on only after a solve, and anything pressed during the pause cancels it', () => {
+    const autoNext = ref(true);
+    const moved = vi.fn();
+
+    // Plays the fork through, with a wrong move first when asked to.
+    function play(wrongFirst: boolean) {
+        const puzzle = useTacticsPuzzle(fork, autoNext, moved);
+
+        vi.advanceTimersByTime(SETUP_DELAY_MS);
+
+        if (wrongFirst) {
+            puzzle.move(parts('d5b6'));
+        }
+
+        puzzle.move(parts('d5c7'));
+        vi.advanceTimersByTime(REPLY_DELAY_MS);
+        puzzle.move(parts('c7a8'));
+
+        return puzzle;
+    }
+
+    // Solved: the final capture stays on the board for the pause.
+    const solved = play(false);
+
+    expect(solved.autoNextPending.value).toBe(true);
+    vi.advanceTimersByTime(AUTO_NEXT_DELAY_MS - 1);
+    expect(moved).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(moved).toHaveBeenCalledTimes(1);
+    expect(solved.autoNextPending.value).toBe(false);
+    moved.mockClear();
+
+    // Failed, then finished on a retry: it never moves on by itself.
+    const failed = play(true);
+
+    expect(failed.autoNextPending.value).toBe(false);
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
+
+    // Failed, with the solution shown: the same.
+    const shown = useTacticsPuzzle(fork, autoNext, moved);
+
+    vi.advanceTimersByTime(SETUP_DELAY_MS);
+    shown.move(parts('d5b6'));
+    shown.showSolution();
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
+
+    // Redo during the pause cancels it.
+    const redone = play(false);
+
+    redone.redo();
+    expect(redone.autoNextPending.value).toBe(false);
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
+
+    // So does an arrow, in either direction.
+    const steppedBack = play(false);
+
+    steppedBack.stepBack();
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
+
+    const steppedForward = play(false);
+
+    steppedForward.stepForward();
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
+
+    // So does switching auto next off.
+    const switchedOff = play(false);
+
+    autoNext.value = false;
+    expect(switchedOff.autoNextPending.value).toBe(false);
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
+
+    // And with auto next off, a solved puzzle stays where it is.
+    const off = play(false);
+
+    expect(off.autoNextPending.value).toBe(false);
+    vi.advanceTimersByTime(10 * AUTO_NEXT_DELAY_MS);
+    expect(moved).not.toHaveBeenCalled();
 });
 
 test('a promotion move counts the promotion piece', () => {

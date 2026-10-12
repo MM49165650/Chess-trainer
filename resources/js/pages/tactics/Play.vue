@@ -21,6 +21,7 @@ import type {
     PuzzleListData,
 } from '@/generated/data';
 import { storageAvailable } from '@/storage/db';
+import { readSettings, saveSettings } from '@/storage/settings';
 import {
     clearPuzzlesSeen,
     readPuzzlesSeen,
@@ -69,6 +70,24 @@ const failure = ref(false);
 
 /** True once progress is known not to be reaching storage. */
 const notSaved = ref(false);
+
+/**
+ * Whether a solved puzzle moves on to the next by itself. It is one of the
+ * user's settings, so it holds in every category. Off unless chosen.
+ */
+const autoNext = ref(false);
+let autoNextTouched = false;
+
+function toggleAutoNext(): void {
+    autoNextTouched = true;
+    autoNext.value = !autoNext.value;
+
+    void saveSettings({ tacticsAutoNext: autoNext.value }).then((done) => {
+        if (!done) {
+            notSaved.value = true;
+        }
+    });
+}
 
 const current = computed(() => puzzles.value[at.value] ?? null);
 
@@ -205,7 +224,16 @@ async function startAgain(): Promise<void> {
     await load();
 }
 
-onMounted(load);
+onMounted(async () => {
+    void load();
+
+    // Unless the user has pressed the toggle before this arrives.
+    const saved = (await readSettings()).tacticsAutoNext;
+
+    if (saved !== undefined && !autoNextTouched) {
+        autoNext.value = saved;
+    }
+});
 </script>
 
 <template>
@@ -216,10 +244,13 @@ onMounted(load);
         class="sm:mx-auto sm:w-[560px]"
         :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
     >
-        <header class="flex items-center gap-1 p-1">
+        <!-- The two sides are the same width, so the title stays centred. -->
+        <header
+            class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 py-1 pr-3 pl-1"
+        >
             <Link
                 :href="ListTacticsCategoriesController.url()"
-                class="flex size-11 flex-none items-center justify-center"
+                class="flex size-11 items-center justify-center"
                 aria-label="Back to the pieces"
             >
                 <svg
@@ -236,11 +267,23 @@ onMounted(load);
                     <path d="M15 5l-7 7 7 7" />
                 </svg>
             </Link>
-            <p class="min-w-0 flex-1 text-center font-serif text-title-small">
+            <p class="min-w-0 text-center font-serif text-title-small">
                 {{ meta.heading }}
             </p>
-            <!-- Keeps the title centred. -->
-            <span class="size-11 flex-none" aria-hidden="true" />
+            <!-- A solved puzzle then moves on to the next by itself. -->
+            <AppButton
+                class="justify-self-end"
+                variant="outline"
+                :aria-pressed="autoNext"
+                @click="toggleAutoNext"
+            >
+                <span
+                    class="size-2 flex-none rounded-full border border-current"
+                    :class="autoNext ? 'bg-current' : ''"
+                    aria-hidden="true"
+                />
+                Auto next
+            </AppButton>
         </header>
 
         <p
@@ -257,6 +300,7 @@ onMounted(load);
             :key="current.id"
             :puzzle="current"
             :names-piece="piece !== 'all'"
+            :auto-next="autoNext"
             @decided="(solved) => current && onDecided(current, solved)"
             @next="next"
         />

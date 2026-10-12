@@ -204,6 +204,10 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 - When one piece runs out, only that piece's seen records are cleared. When all pieces runs out, which is when every puzzle has been seen, all six are cleared. In all pieces, a piece that has run out is skipped until all of them have.
 - When a category runs out, the screen says "You have been through every knight puzzle. They start again from the easiest." with a Continue button. The seen records are cleared when Continue is pressed.
 - The eight points above were settled in build step 22.
+- An Auto next toggle sits in the play screen's header, beside the title, so the bottom bar is not crowded. It is off by default. When it is on, a solved puzzle moves to the next one by itself after a pause of about 1 second, so the final capture is seen. The pause is kept as a named value.
+- Only a puzzle solved without a wrong move moves on by itself. A failed puzzle never does, whether the user retried to the end or the solution was shown, and neither does a Redo that ends with a wrong move or the solution.
+- Pressing Redo, either arrow or the toggle itself during the pause cancels the move. Next puzzle moves on at once.
+- The choice is one of the user's settings. It is remembered in the browser and applies in every category, including all pieces. Added in build step 22.
 
 **Scoring**
 
@@ -449,7 +453,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
 - Extract made-up puzzle rows with hand-written positions, and confirm each rule: four moves only, the same piece on both solver moves, no puzzle ending in checkmate, a capture on the last move with en passant counted, a promoting pawn filed under pawn, castling filed under king, an illegal move rejected, and the same per-piece cut on every run.
-- Play made-up puzzles through the tactics play logic, and confirm each rule: a correct first and second move solves the puzzle; a wrong first move fails it and the retry starts from the same position; a wrong second move after a correct first move fails it; a later correct answer still leaves it failed; show solution plays only the missed move, and the arrows then reach every position from the setup to the end; redo resets the board but keeps the result; and a promotion move counts the promotion piece.
+- Play made-up puzzles through the tactics play logic, and confirm each rule: a correct first and second move solves the puzzle; a wrong first move fails it and the retry starts from the same position; a wrong second move after a correct first move fails it; a later correct answer still leaves it failed; show solution plays only the missed move, and the arrows then reach every position from the setup to the end; redo resets the board but keeps the result; auto next moves on only after a solve, and anything pressed during the pause cancels it; and a promotion move counts the promotion piece.
 - Choose puzzles from made-up ID lists, and confirm each rule: easiest first with equal ratings by ID; seen puzzles left out; all pieces as one list across the pieces; an empty pool when everything is seen; a puzzle seen in its piece's category left out of all pieces; and clearing one piece leaves the others' seen records alone.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
@@ -1007,7 +1011,7 @@ All user data lives in one IndexedDB database in the browser, opened through the
 | Store | Key | Holds |
 | --- | --- | --- |
 | `meta` | Fixed key `meta` | The schema version and the date of first use |
-| `settings` | Fixed key `settings` | The user's settings |
+| `settings` | Fixed key `settings` | The user's settings. Only the settings that have been chosen are stored; a setting that is missing takes its default |
 | `masterGames` | `gameId` | One record per master game started: the attempt in progress and the last finished result |
 | `squareSession` | Fixed key `current` | Where the user is in square control |
 | `squareSeen` | `gameId` | Practice games finished or abandoned |
@@ -1032,6 +1036,7 @@ type Settings = {
   moveInput: 'tap' | 'drag' | 'both'
   opponentDelaySeconds: number // 1 to 5, default 3
   markingPalette: string
+  tacticsAutoNext: boolean // default false
 }
 
 type MasterGameRecord = {
@@ -1071,6 +1076,7 @@ type TacticsTallies = Record<PieceType, Tally>
 
 **Tactics**
 
+- `tacticsAutoNext` in the settings is the Auto next toggle on the tactics play screen. It is saved when the toggle is pressed and read when the play screen opens, in every category.
 - A puzzle is recorded at the first attempt, and `solved` is the result of that attempt. It is recorded once that result is decided: at the first wrong move, or at the final capture. The tally of the puzzle's own piece is counted at the same moment, and a puzzle already recorded is not counted again.
 - There is one record per puzzle, whichever category it was played in.
 - When a category has no unseen puzzles left, that piece's records in `puzzlesSeen` are deleted. The tallies are kept.
