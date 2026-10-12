@@ -2,7 +2,13 @@
 // use this to verify every game: a game with an illegal move does not replay.
 
 import { Chess } from 'chess.js';
-import type { Move } from './conventions';
+import {
+    PIECE_TYPES,
+    parseMove,
+    type Move,
+    type PieceType,
+} from './conventions.ts';
+import { letterOf } from './position.ts';
 
 export type ReplayedMove = {
     /** From-square, to-square, then a promotion letter if any. */
@@ -42,5 +48,55 @@ export function replayPgn(pgn: string): ReplayedGame {
             .history({ verbose: true })
             .map((move) => ({ uci: move.lan, san: move.san })),
         fen: chess.fen(),
+    };
+}
+
+export type ReplayedPuzzle = {
+    /** Every move in order: the setup move, then the solver and the opponent in turn. */
+    moves: Move[];
+    /** The type of the piece making the solver's first move, before any promotion. */
+    piece: PieceType;
+    /** Whether the last move is checkmate. */
+    endsInMate: boolean;
+    /** Whether the last move takes a piece or pawn, en passant included. */
+    endsWithCapture: boolean;
+};
+
+/**
+ * Replays a puzzle from its position. The first move is the opponent's setup
+ * move and the second is the solver's first. Throws when the position cannot
+ * be read or a move is illegal.
+ */
+export function replayPuzzle(
+    fen: string,
+    moves: readonly Move[],
+): ReplayedPuzzle {
+    const chess = new Chess(fen);
+    const played = moves.map((text) => {
+        const move = parseMove(text);
+
+        if (move === null) {
+            throw new Error(`Not a move: ${text}`);
+        }
+
+        return chess.move({
+            from: move.from,
+            to: move.to,
+            promotion: move.promotion ?? undefined,
+        });
+    });
+
+    const letter = played[1]?.piece;
+    const piece = PIECE_TYPES.find((type) => letterOf(type) === letter);
+
+    if (piece === undefined) {
+        throw new Error('A puzzle needs a setup move and a solver move.');
+    }
+
+    return {
+        moves: played.map((move) => move.lan),
+        piece,
+        endsInMate: chess.isCheckmate(),
+        endsWithCapture: played.at(-1)?.captured !== undefined,
     };
 }

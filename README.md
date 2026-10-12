@@ -49,6 +49,21 @@ docker compose exec app php artisan import:master-games data/intermediate/master
 - The first stage reads PGN files, replays every game and prints what it kept and what it skipped. `--input` takes one file or a folder. Single games can be left out by adding their fingerprint to `tools/import/masters-exclude.json`.
 - The second stage loads the result into the database. It is safe to run again: games already loaded are skipped and keep their IDs. Add `--dry-run` to see the report without changing anything, or `--update` to rewrite the details of games already loaded.
 
+## Importing puzzles
+
+The puzzles come from the Lichess puzzle file, `lichess_db_puzzle.csv.zst`. Put it under `data/puzzles/` and leave it compressed. The import runs in the same two stages:
+
+```bash
+docker compose exec app npm run extract:puzzles -- --input data/puzzles --out data/intermediate/puzzles.jsonl
+```
+
+```bash
+docker compose exec app php artisan import:puzzles data/intermediate/puzzles.jsonl
+```
+
+- The first stage reads the file while it is still compressed and takes a few minutes. It keeps puzzles of two solver moves made by the same piece, where the last move is a capture and not checkmate, and then the 2,000 most popular per piece. `--max-rating`, `--min-popularity`, `--min-plays` and `--per-category` change the limits.
+- The second stage is safe to run again: puzzles already loaded are skipped and keep their IDs. `--dry-run` and `--update` work as for master games.
+
 ## The check command
 
 One command runs every check: Pint, Rector, Larastan, the Pest tests, the TypeScript checker, ESLint, Stylelint, Prettier, Vitest, the dependency licence check and a scan for comments that silence a check.

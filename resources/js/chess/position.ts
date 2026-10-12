@@ -8,7 +8,7 @@ import {
     type MoveParts,
     type PieceType,
     type Square,
-} from './conventions';
+} from './conventions.ts';
 
 export type Position = {
     turn: Color;
@@ -47,7 +47,7 @@ export function pieceTypeAt(fen: string, square: Square): PieceType | null {
 }
 
 // The rules library names a piece by its first letter, with n for the knight.
-function letterOf(type: PieceType): string {
+export function letterOf(type: PieceType): string {
     return type === 'knight' ? 'n' : type.charAt(0);
 }
 
