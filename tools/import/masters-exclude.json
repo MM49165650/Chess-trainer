@@ -1,0 +1,44 @@
+[
+    {
+        "fingerprint": "93c9354c371efa2a6384c47e2790054b88c73a294ef6fe7d0a2b66f8130e484e",
+        "players": "Paul Morphy vs. Charles Maurian",
+        "event": "Alabama",
+        "year": 1855,
+        "reason": "Probable odds game. Morphy lost it, so the extract skips it before it reaches this list; it is listed for completeness."
+    },
+    {
+        "fingerprint": "a4c78bb2a7dca3e6059b54ec357d502ef7063f0d823fcbb0f27b661c3e4e28d1",
+        "players": "Paul Morphy vs. T. Knight",
+        "event": "New Orleans",
+        "year": 1856,
+        "reason": "Possible odds game. The source does not label it."
+    },
+    {
+        "fingerprint": "e8aae44f1150f08a3ba597a9db197dd588eae641f4ef7c0e510936d33888ec5a",
+        "players": "Paul Morphy vs. Ernest Morphy",
+        "event": "New Orleans",
+        "year": 1856,
+        "reason": "Possible odds game. The source does not label it."
+    },
+    {
+        "fingerprint": "9fed1139db446d62dfe178f3e26281cf8c84a2c3869e477d4ae945505f2caac3",
+        "players": "Paul Morphy vs. Charles Maurian",
+        "event": "New Orleans",
+        "year": 1866,
+        "reason": "Probable knight odds game. The source does not label it."
+    },
+    {
+        "fingerprint": "86a3cc7b994653a46342fddd98bdcf6be8aa16f27eba2df3bfe10d071e76e380",
+        "players": "Paul Morphy vs. Charles Maurian",
+        "event": "New Orleans",
+        "year": 1866,
+        "reason": "Probable knight odds game. The source does not label it, and spells the opponent \"Muarian, C.\"."
+    },
+    {
+        "fingerprint": "4303352b480be772ce8d4b09b693fc80edb237afc5c5161e8aeddb84642c8f3b",
+        "players": "Emanuel Lasker vs. JH. Bauer",
+        "event": "Amsterdam",
+        "year": 1889,
+        "reason": "Incomplete duplicate: 65 plies of the 75-ply game against Johann Bauer, which is kept."
+    }
+]

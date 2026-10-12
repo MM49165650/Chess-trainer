@@ -85,9 +85,10 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 
 - The winner must be one of the masters.
 - Draws are excluded.
-- Odds games, which start from a non-standard position, are excluded.
+- Odds games, which start from a non-standard position, are excluded. Where the source does not label one, it is left out by the exclusion list described in Appendix E.
 - Simultaneous and blindfold games are excluded where the data labels them. PGN Mentor marks simultaneous games with the word "sim". One-on-one exhibition games against other masters are kept.
-- There is no minimum length. Every decisive game is kept, however short, as long as it has at least one move.
+- Blitz and rapid games are excluded where the data labels them. Training, radio, telex, television, team and correspondence games are kept.
+- The minimum length is two plies. This leaves out games forfeited after one move.
 - Duplicate games are removed.
 - Player names are normalized so each master has one spelling.
 - Annotations and commentary are stripped; only moves and basic details are kept.
@@ -431,6 +432,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Golden tests for the control and hanging-piece rules: fifteen to twenty hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
 - Import twice and confirm every game and puzzle keeps the same ID.
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
+- Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
 
 **Operations**
 
@@ -542,7 +544,7 @@ Four decisions are still open. The source of master games and their minimum leng
 | --- | --- | --- |
 | Game selection | Square control | Whether both players must be under 1000, whether fast time controls are excluded, minimum length, and how many games |
 | Puzzle difficulty | Tactics by piece | Whether to cap puzzle rating, and whether puzzles are served randomly or easiest first |
-| Minimum game length | Guess the move | Decided on 11 October 2026: there is no minimum |
+| Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
 | Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone |
 | Name and domain | Whole site | What the site is called |
@@ -820,8 +822,8 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 
 | Command | Option | Meaning | Default |
 | --- | --- | --- | --- |
-| `extract:masters` | `--min-plies` | Shortest game kept | 0, which keeps every game. Decided on 11 October 2026 |
-| `extract:masters` | `--exclude-events` | Words in the event or site that exclude a game | sim, simul, blindfold, odds, consultation, each matched as a whole word |
+| `extract:masters` | `--min-plies` | Shortest game kept | 2, which leaves out games forfeited after one move. Decided on 12 October 2026 |
+| `extract:masters` | `--exclude-events` | Words in the event or site that exclude a game | sim, simul, blindfold, odds, consultation, blitz, rapid, each matched as a whole word. Digits may follow the word, so "rapid" also matches "rapid45" |
 | `extract:practice` | `--max-rating` | Rating limit | 1000 |
 | `extract:practice` | `--both-players` | Whether both players must be under the limit | Yes, placeholder |
 | `extract:practice` | `--exclude-speeds` | Speeds to skip, read from the game's Event tag | bullet and ultrabullet, placeholder |
@@ -838,6 +840,7 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 - The result must be a win, and the winner's name must match one of the masters.
 - Winners that match no master are counted by name in the report, so a missing spelling is noticed.
 - A game with a custom starting position, shown by a `SetUp` or `FEN` tag, is rejected.
+- An exclusion list, `tools/import/masters-exclude.json`, names single games to leave out, such as odds games the source does not label and incomplete duplicates. Each entry has the game's fingerprint and a note: the players, the event, the year and the reason. A listed game is skipped and counted under "excluded by list", and the report says which entries were found in the input.
 - Comments, side variations and annotation symbols are removed.
 - `year` is the first four digits of the date when they are digits, otherwise null.
 - `opponent_name` is rewritten from last name, first name to first name then last name.

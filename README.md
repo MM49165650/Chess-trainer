@@ -46,7 +46,7 @@ docker compose exec app npm run extract:masters -- --input data/masters --out da
 docker compose exec app php artisan import:master-games data/intermediate/master-games.jsonl
 ```
 
-- The first stage reads PGN files, replays every game and prints what it kept and what it skipped. `--input` takes one file or a folder.
+- The first stage reads PGN files, replays every game and prints what it kept and what it skipped. `--input` takes one file or a folder. Single games can be left out by adding their fingerprint to `tools/import/masters-exclude.json`.
 - The second stage loads the result into the database. It is safe to run again: games already loaded are skipped and keep their IDs. Add `--dry-run` to see the report without changing anything, or `--update` to rewrite the details of games already loaded.
 
 ## The check command
