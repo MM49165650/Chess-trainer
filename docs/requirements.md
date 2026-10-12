@@ -510,11 +510,11 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 | Step | Build | Done when |
 | --- | --- | --- |
-| 19. Table and import | The `puzzles` migration; `extract:puzzles` and `import:puzzles`, run on the full Lichess file | The puzzles load, every puzzle obeys the same-piece rule, and a second run adds nothing |
+| 19. Table and import | The `puzzles` migration; `extract:puzzles` and `import:puzzles`, run on the full Lichess file. Done on 12 October 2026 into the local database: 12,000 puzzles | The puzzles load, every puzzle obeys the same-piece rule, and a second run adds nothing |
 | 20. Endpoints | The puzzle ID list and the fetch-by-IDs endpoint | Both match Appendix F |
 | 21. Play screen | The setup move, the first move, the opponent's reply and the second move, fail then retry, and show solution | A puzzle can be solved and failed on a phone |
 | 22. Categories and progress | The category page with the all pieces option; the easiest-first order; seen tracking; tallies; the reset when a category runs out | No puzzle repeats within a category until it is exhausted |
-| 23. Full import | All puzzles loaded on the server | Needs no further decisions: puzzle difficulty is settled |
+| 23. Full import | All puzzles loaded on the server, from the same intermediate file loaded locally in step 19 (`data/intermediate/puzzles.jsonl`, kept safe outside the repository), so the selection does not change. Refreshing from a newer Lichess file is not planned: imports never delete, so each refresh would add puzzles without removing any | Needs no further decisions: puzzle difficulty is settled |
 
 **Stage 5: Square control**
 
