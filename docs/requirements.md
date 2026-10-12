@@ -1,8 +1,8 @@
 # Chess training site: product requirements
 
-Last updated: 10 October 2026
+Last updated: 12 October 2026
 
-A free, open source, mobile-first chess training site with three modes: guess the move against eleven masters, a square-control drill on beginner games, and short tactics grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
+A free, open source, mobile-first chess training site with three modes: guess the move against eleven masters, a square-control drill on beginner games, and short tactics that win material, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
 ## MVP scope
 
@@ -12,7 +12,7 @@ The MVP is three training modes served from a read-only library, with nothing to
 
 - Guess the move, with games from eleven masters
 - Square control, on games by players rated under 1000
-- Tactics by piece, one or two moves long
+- Tactics by piece, two moves long, each winning material by a capture
 - Progress, history and settings saved in the browser
 - Command-line imports for all game and puzzle data
 - A mobile-first interface
@@ -26,7 +26,7 @@ The MVP is three training modes served from a read-only library, with nothing to
 - Export or import of progress between devices
 - Partial credit or engine evaluation of moves
 - A puzzle rating for the user
-- Puzzle theme labels (fork, pin and so on)
+- Showing puzzle theme labels (fork, pin and so on)
 - Any anti-cheating measure
 
 **Principles**
@@ -162,7 +162,7 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 
 ## Mode 3: Tactics by piece
 
-The user solves short tactics grouped by the piece that delivers them.
+The user solves short tactics grouped by the piece that delivers them. The mode is about winning material by capturing with a given piece. This was decided on 12 October 2026, after the full Lichess file was counted.
 
 **Categories**
 
@@ -174,20 +174,21 @@ The user solves short tactics grouped by the piece that delivers them.
 **Puzzles**
 
 - Puzzles come from the Lichess puzzle database.
-- A puzzle is one or two solver moves long. In a two-move puzzle, the same piece makes both moves.
-- One-move and two-move puzzles are mixed together within a category.
+- A puzzle is two solver moves long, and the same piece makes both moves. One-move puzzles are left out: nearly all of them are checkmates.
+- The solver's last move is a capture, of a piece or a pawn. En passant counts.
+- The solver's last move is never checkmate. Puzzles that end in checkmate are left out.
 - A pawn that promotes and then moves again counts as the same piece, and the puzzle is filed under pawn.
 - Castling, if it appears, counts as a king move.
-- Only well-rated, widely played puzzles are imported, using the popularity figures in the data.
+- Only well-rated, widely played puzzles are imported, using the popularity figures in the data: a rating of at most 1500, a popularity of at least 80, at least 500 plays, and the 2,000 most popular per piece.
 
 **Play**
 
 - The opponent's previous move plays first, so the user sees what just happened.
 - The board is oriented to the solver's side, only legal moves can be made, and the last move played is highlighted.
-- In a two-move puzzle, the opponent's reply plays automatically after a correct first move.
-- When the final move is checkmate, any move that delivers checkmate is correct.
+- The opponent's reply plays automatically after a correct first move.
 - A wrong move fails the puzzle. The user can then retry until they find the answer.
 - A show solution button is available after a failure.
+- Puzzles are served easiest first within a category, by their Lichess rating.
 - A puzzle the user has seen is not served again until the category runs out. The seen list for that category then resets.
 
 **Scoring**
@@ -350,7 +351,7 @@ All content is loaded by command-line import, one command per mode. Nothing can 
 | --- | --- | --- |
 | Guess the move | Game files of the eleven masters | Game details, and the full move list stored on the game |
 | Square control | Lichess open database | Game details, and one list on the game holding each move with its three answer sets |
-| Tactics by piece | Lichess puzzle database | The position, the solution moves, the piece category, and the puzzle's rating |
+| Tactics by piece | Lichess puzzle database | The position, the solution moves, the piece category, the puzzle's rating, and Lichess's theme labels |
 
 **Every import command**
 
@@ -433,6 +434,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Import twice and confirm every game and puzzle keeps the same ID.
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
+- Extract made-up puzzle rows with hand-written positions, and confirm each rule: four moves only, the same piece on both solver moves, no puzzle ending in checkmate, a capture on the last move with en passant counted, a promoting pawn filed under pawn, castling filed under king, an illegal move rejected, and the same per-piece cut on every run.
+- Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
 
@@ -507,11 +510,11 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 | Step | Build | Done when |
 | --- | --- | --- |
-| 19. Table and import on a sample | The `puzzles` migration; `extract:puzzles` and `import:puzzles`, run on a sample of the Lichess file | The sample loads, every two-move puzzle obeys the same-piece rule, and a second run adds nothing |
+| 19. Table and import | The `puzzles` migration; `extract:puzzles` and `import:puzzles`, run on the full Lichess file | The puzzles load, every puzzle obeys the same-piece rule, and a second run adds nothing |
 | 20. Endpoints | The puzzle ID list and the fetch-by-IDs endpoint | Both match Appendix F |
-| 21. Play screen | The setup move, the one-move and two-move flows, the checkmate rule, fail then retry, and show solution | Puzzles of both lengths can be solved and failed on a phone |
-| 22. Categories and progress | The category page with the all pieces option; seen tracking; tallies; the reset when a category runs out | No puzzle repeats within a category until it is exhausted |
-| 23. Full import | All puzzles loaded on the server | Needs one open decision: puzzle difficulty |
+| 21. Play screen | The setup move, the first move, the opponent's reply and the second move, fail then retry, and show solution | A puzzle can be solved and failed on a phone |
+| 22. Categories and progress | The category page with the all pieces option; the easiest-first order; seen tracking; tallies; the reset when a category runs out | No puzzle repeats within a category until it is exhausted |
+| 23. Full import | All puzzles loaded on the server | Needs no further decisions: puzzle difficulty is settled |
 
 **Stage 5: Square control**
 
@@ -536,14 +539,14 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 ## Open decisions and later features
 
-Four decisions are still open. The source of master games and their minimum length are settled. None of them blocks starting the build.
+Three decisions are still open. The source of master games, their minimum length and puzzle difficulty are settled. None of them blocks starting the build.
 
 **Open decisions**
 
 | Decision | Applies to | What needs deciding |
 | --- | --- | --- |
 | Game selection | Square control | Whether both players must be under 1000, whether fast time controls are excluded, minimum length, and how many games |
-| Puzzle difficulty | Tactics by piece | Whether to cap puzzle rating, and whether puzzles are served randomly or easiest first |
+| Puzzle difficulty | Tactics by piece | Decided on 12 October 2026: a rating of at most 1500, a popularity of at least 80, at least 500 plays, and 2,000 per piece, taking the most popular, then the most played, then by puzzle ID. Puzzles are served easiest first within a category |
 | Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
 | Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone |
@@ -558,7 +561,7 @@ Four decisions are still open. The source of master games and their minimum leng
 - A daily game with streaks, picked from the existing library
 - Leaderboards, which need answers checked on the server and would start fresh from that point
 - A featured set of famous games shown first for each master
-- Puzzle theme labels
+- Showing puzzle theme labels
 - Automated browser tests at phone size for the three core flows
 - More board themes and piece sets
 - A desktop layout with the board beside a panel, which needs its own mockups
@@ -733,20 +736,22 @@ No usernames and no Lichess game ID are stored, since the ID links back to the p
 | `fen` | text | The position before the opponent's setup move, exactly as Lichess gives it |
 | `setup_move` | text | The opponent's move that plays first |
 | `first_move` | text | The solver's first move |
-| `reply_move` | text | Nullable; the opponent's reply in a two-move puzzle |
-| `second_move` | text | Nullable; the solver's second move |
+| `reply_move` | text | The opponent's reply |
+| `second_move` | text | The solver's second move, always a capture and never checkmate |
 | `piece` | text | The category; one of the six piece types |
-| `ends_in_mate` | boolean | True when the solver's last move is checkmate |
-| `rating` | smallint | Lichess puzzle rating |
+| `rating` | smallint | Lichess puzzle rating; between 0 and 4000 |
 | `popularity` | smallint | Between -100 and 100 |
-| `plays` | integer | Number of times played on Lichess |
+| `plays` | integer | Number of times played on Lichess; at least 0 |
+| `themes` | jsonb | Lichess's theme labels, a list of strings exactly as Lichess gives them. Stored but not shown anywhere yet |
+
+Every puzzle is two solver moves long, so no move column is nullable. The `ends_in_mate` column was dropped on 12 October 2026, before the table was first created, because no puzzle ends in checkmate.
 
 **Constraints and indexes**
 
 - Check constraints enforce every fixed set and range above: the two colours, the six piece types, the rating, year and popularity ranges, and the slug format.
 - `guess_count` is between 1 and `ply_count`.
 - Each `moves` column is a JSON array whose length equals `ply_count`.
-- On `puzzles`, `reply_move` and `second_move` are both null or both present.
+- On `puzzles`, `plays` is at least 0 and `themes` is a JSON array.
 - Indexes: `master_games (master_id, year)` and `puzzles (piece)`.
 - Search on opponent and event uses a case-insensitive match. No special index is needed at this size. Each fingerprint column has a check constraint requiring 64 lowercase hexadecimal characters, so the same game can never be stored twice under different spellings of its fingerprint. Migrations for content tables have no rollback, so a rollback can never drop imported games.
 - List queries never select the `moves` column.
@@ -781,6 +786,7 @@ The same game appears in different collections with different name spellings and
 | Fingerprint already in the database, with the update option | Its details are rewritten in place and its ID is unchanged |
 
 - For practice games, the update option also rewrites the `moves` list with freshly calculated answers and sets `answers_version`. This is how a fix to the calculation reaches games already loaded.
+- For puzzles, the update option rewrites every column except `lichess_id`.
 - An import never deletes rows, and no command empties a content table.
 - Removing one bad item is a separate command that takes its ID.
 - Master games whose moves are the beginning of another game by the same master and colour are listed in the report as possible duplicates. They are not removed automatically.
@@ -829,10 +835,10 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 | `extract:practice` | `--exclude-speeds` | Speeds to skip, read from the game's Event tag | bullet and ultrabullet, placeholder |
 | `extract:practice` | `--min-plies` | Shortest game kept | 30, placeholder |
 | `extract:practice` | `--limit` | Stop after this many accepted games | 300, placeholder |
-| `extract:puzzles` | `--max-rating` | Highest puzzle rating kept | 1500, placeholder |
-| `extract:puzzles` | `--min-popularity` | Lowest popularity kept | 80, placeholder |
-| `extract:puzzles` | `--min-plays` | Fewest plays kept | 500, placeholder |
-| `extract:puzzles` | `--per-category` | Most puzzles kept per piece | 2000, placeholder |
+| `extract:puzzles` | `--max-rating` | Highest puzzle rating kept | 1500. Decided on 12 October 2026 |
+| `extract:puzzles` | `--min-popularity` | Lowest popularity kept | 80. Decided on 12 October 2026 |
+| `extract:puzzles` | `--min-plays` | Fewest plays kept | 500. Decided on 12 October 2026 |
+| `extract:puzzles` | `--per-category` | Most puzzles kept per piece | 2000. Decided on 12 October 2026 |
 
 **Master games: extract rules**
 
@@ -856,13 +862,16 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 **Puzzles: extract rules**
 
 - The Lichess file has the columns `PuzzleId, FEN, Moves, Rating, RatingDeviation, Popularity, NbPlays, Themes, GameUrl, OpeningTags, DailyDate`. Columns are read by name, not by position.
+- The source file is read while still compressed, one frame at a time, so it is never unpacked in full. A plain `.csv` file is read as well.
 - The first move in `Moves` is the opponent's setup move. The rest alternate, starting with the solver.
-- Only puzzles with exactly two or four moves are kept, which is one or two solver moves.
-- Same-piece rule for four-move puzzles: the solver's second move must start on the square where the solver's first move ended.
+- Only puzzles with exactly four moves are kept, which is two solver moves.
+- Same-piece rule: the solver's second move must start on the square where the solver's first move ended.
+- A puzzle whose last move is checkmate is skipped. This is found by replaying the puzzle.
+- A puzzle is kept only if the solver's last move is a capture. Any capture counts, of a piece or a pawn, and so does en passant.
 - `piece` is the type of the piece making the solver's first move, before any promotion.
-- `ends_in_mate` is found by replaying the puzzle.
+- `themes` is the `Themes` column split at its spaces, with nothing changed or left out.
 - When a category has more puzzles than `--per-category`, the most popular are kept, then the most played, then by puzzle ID, so the choice is the same on every run.
-- The game link and theme labels are not stored.
+- The game link is not stored.
 
 ## Appendix F: Pages and data endpoints
 
@@ -926,9 +935,9 @@ A puzzle ID list response:
 **How the browser chooses**
 
 - Square control: the browser fetches the ID list, picks at random an ID it has not played, and fetches that game.
-- Tactics: the browser fetches the ID list for the category, removes the puzzles it has seen, picks at random, and fetches the next few in one request. For the all pieces option it combines the six lists.
+- Tactics: the browser fetches the ID list for the category, removes the puzzles it has seen, takes the lowest-rated of the rest, and fetches the next few in one request. For the all pieces option it combines the six lists.
 - This makes "no repeats until the category runs out" exact, and every response the same for every visitor.
-- Ratings are in the ID list so that an easiest-first order can be added later in the browser alone.
+- Ratings are in the ID list so that the easiest-first order is worked out in the browser alone.
 
 **Rules for the endpoints**
 
