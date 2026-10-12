@@ -58,6 +58,8 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 - The board is oriented to the winner's side, and the last move played is highlighted.
 - Progress is saved after every move, so closing the tab and returning resumes at the same position.
 - Several games can be in progress at once, each resumable.
+- The user can step back and forward through the moves already played, to look at earlier positions, both during the game and after it ends. Back and forward buttons sit in the bottom bar, and the left and right arrow keys do the same on a keyboard. Nothing past the current position can be shown, so viewing never reveals a move still to be guessed.
+- While an earlier position is shown, the board cannot be moved, the game pauses, and the opponent's pending reply waits; a clear way back to the current position is shown. Returning to it resumes the game where it paused. Viewing earlier positions changes nothing that is saved.
 - A finished game can be replayed. The new score replaces the old one.
 
 **Scoring**
@@ -494,7 +496,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 12. Data endpoint | `GET /api/master-games/{id}` with its generated TypeScript type | The response matches Appendix F, carries the cache header, and sets no cookie |
 | 13. Play screen | Guessing through one game: the opponent delay, one attempt per move, feedback, and the running score. Nothing is saved yet | A full game can be played on a phone |
 | 14. Saving | The storage module; resuming; several games in progress; replaying | Closing and reopening the browser resumes a game mid-way |
-| 15. End of game | The score, the replay with guesses marked, and the share summary | A finished game can be reviewed and shared from a phone |
+| 15. End of game | The score, the replay with guesses marked, the share summary, and stepping back and forward through the moves during the game and after it | A finished game can be reviewed and shared from a phone |
 | 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button; the site's not-found page | A specific game can be found and started in a few taps |
 | 17. Search engines | Server rendering for master and game pages, their titles and descriptions, and the sitemap; the `opponent_short_name` column, filled by the extract, and used in titles and the play screen header | A game page's source shows its title and description with scripts disabled |
 | 18. Full import | All master games loaded on the server | Needs no further decisions: the game source and the minimum length are settled |
