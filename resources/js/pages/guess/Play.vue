@@ -6,10 +6,12 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ShowMasterGameController from '@/actions/App/Http/Controllers/Api/ShowMasterGameController';
+import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/ListMasterGamesController';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import GuessGame from '@/components/guess/GuessGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type { MasterGameData, MasterGameDetailsData } from '@/generated/data';
+import { gameListLeft } from '@/guess/listReturn';
 import { storageAvailable } from '@/storage/db';
 import { readMasterGame } from '@/storage/masterGames';
 import type { MasterGameRecord } from '@/storage/types';
@@ -34,6 +36,12 @@ const failure = ref<'missing' | 'unreachable' | null>(null);
 // scrolling: the header, the prompt and the bottom bar all stay in view.
 const page = ref<HTMLElement | null>(null);
 const boardHeightLimit = useBoardHeightLimit(page);
+
+// The back arrow returns to the game list as the user left it, with its
+// page, search and filters. A game opened directly goes to the master's list.
+const backUrl =
+    gameListLeft(props.game.master.slug) ??
+    ListMasterGamesController.url(props.game.master.slug);
 
 // White's name first. The master goes by family name, as in the mockups.
 const players = computed(() => {
@@ -100,9 +108,9 @@ onMounted(load);
     >
         <header class="flex items-center gap-1 p-1">
             <Link
-                href="/"
+                :href="backUrl"
                 class="flex size-11 flex-none items-center justify-center"
-                aria-label="Back to home"
+                aria-label="Back to the games"
             >
                 <svg
                     aria-hidden="true"

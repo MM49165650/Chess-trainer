@@ -89,3 +89,36 @@ export function saveMasterGameResult(
         record.current = null;
     });
 }
+
+/**
+ * The saved records for some games, by game ID, for a list that shows scores
+ * and in-progress markers. Games that were never started are left out.
+ */
+export async function readMasterGames(
+    gameIds: readonly number[],
+): Promise<Map<number, MasterGameRecord>> {
+    const records = new Map<number, MasterGameRecord>();
+
+    try {
+        const db = await database();
+
+        if (db === null) {
+            return records;
+        }
+
+        const transaction = db.transaction('masterGames');
+        const found = await Promise.all(
+            gameIds.map((gameId) => transaction.store.get(gameId)),
+        );
+
+        for (const record of found) {
+            if (record !== undefined) {
+                records.set(record.gameId, record);
+            }
+        }
+    } catch {
+        // Without storage the list simply shows no scores.
+    }
+
+    return records;
+}
