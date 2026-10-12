@@ -204,7 +204,7 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 - When one piece runs out, only that piece's seen records are cleared. When all pieces runs out, which is when every puzzle has been seen, all six are cleared. In all pieces, a piece that has run out is skipped until all of them have.
 - When a category runs out, the screen says "You have been through every knight puzzle. They start again from the easiest." with a Continue button. The seen records are cleared when Continue is pressed.
 - The eight points above were settled in build step 22.
-- An Auto next toggle sits in the play screen's header, beside the title, so the bottom bar is not crowded. It is off by default. When it is on, a solved puzzle moves to the next one by itself after a pause of about 1 second, so the final capture is seen. The pause is kept as a named value.
+- An Auto next toggle sits in the play screen's header, beside the title, so the bottom bar is not crowded. It is off by default. When it is on, a solved puzzle moves to the next one by itself after a pause of about 0.5 seconds, so the final capture is seen. The pause is kept as a named value.
 - Only a puzzle solved without a wrong move moves on by itself. A failed puzzle never does, whether the user retried to the end or the solution was shown, and neither does a Redo that ends with a wrong move or the solution.
 - Pressing Redo, either arrow or the toggle itself during the pause cancels the move. Next puzzle moves on at once.
 - The choice is one of the user's settings. It is remembered in the browser and applies in every category, including all pieces. Added in build step 22.

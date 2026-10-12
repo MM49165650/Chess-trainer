@@ -21,7 +21,7 @@ export const REPLY_DELAY_MS = 500;
 
 // How long a solved puzzle stays on the board before auto next moves on, in
 // milliseconds, so that the final capture is seen.
-export const AUTO_NEXT_DELAY_MS = 1000;
+export const AUTO_NEXT_DELAY_MS = 500;
 
 /** The solver's moves in a puzzle. */
 export const SOLVER_MOVE_COUNT = 2;
