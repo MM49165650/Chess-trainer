@@ -11,10 +11,16 @@ import {
     MOVE_ANIMATION_MS,
 } from '@/components/board/types';
 import AppButton from '@/components/ui/AppButton.vue';
+import AppSlider from '@/components/ui/AppSlider.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import SlideUpPanel from '@/components/ui/SlideUpPanel.vue';
 import type { MasterGameData } from '@/generated/data';
-import { useGuessGame } from '@/guess/useGuessGame';
+import {
+    REPLY_DELAY_DEFAULT,
+    REPLY_DELAY_MAX,
+    REPLY_DELAY_MIN,
+    useGuessGame,
+} from '@/guess/useGuessGame';
 import type { MasterGameRecord } from '@/storage/types';
 
 const props = defineProps<{
@@ -25,10 +31,8 @@ const props = defineProps<{
     canSave: boolean;
 }>();
 
-const DELAYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
-
 // Both are kept in memory only, until the settings arrive.
-const delaySeconds = ref(3);
+const delaySeconds = ref(REPLY_DELAY_DEFAULT);
 const boardSize = ref<number | null>(null);
 const delayPanelOpen = ref(false);
 
@@ -295,16 +299,15 @@ const moveNumber = computed(() =>
         <p class="pt-2 text-muted">
             How long {{ game.opponent_name }} waits before replying.
         </p>
-        <div class="grid grid-cols-5 gap-2 pt-4">
-            <AppButton
-                v-for="seconds in DELAYS"
-                :key="seconds"
-                variant="outline"
-                :aria-pressed="delaySeconds === seconds"
-                @click="delaySeconds = seconds"
-            >
-                {{ seconds }} s
-            </AppButton>
+        <div class="pt-3">
+            <AppSlider
+                v-model="delaySeconds"
+                label="Reply delay"
+                unit="s"
+                unit-name="second"
+                :min="REPLY_DELAY_MIN"
+                :max="REPLY_DELAY_MAX"
+            />
         </div>
         <div class="flex pt-5">
             <AppButton size="large" stretch @click="delayPanelOpen = false">

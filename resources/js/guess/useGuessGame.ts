@@ -17,6 +17,11 @@ import {
 } from '@/storage/masterGames';
 import type { Guess, MasterGameRecord } from '@/storage/types';
 
+// How long the opponent waits before replying, in whole seconds.
+export const REPLY_DELAY_MIN = 1;
+export const REPLY_DELAY_MAX = 5;
+export const REPLY_DELAY_DEFAULT = 3;
+
 /** The outcome of the latest guess, kept on screen until the next one. */
 export type GuessResult = {
     /** Which of the master's moves it was, counting from 1. */

@@ -16,7 +16,7 @@ export type Settings = {
     boardSizePx: number | null;
     sound: boolean;
     moveInput: 'tap' | 'drag' | 'both';
-    /** 1 to 10. */
+    /** 1 to 5. */
     opponentDelaySeconds: number;
     markingPalette: string;
 };
