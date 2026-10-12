@@ -192,7 +192,8 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 - Once the solution has been shown, or the puzzle has been solved, the back and forward buttons in the bottom bar step through the puzzle, back to the position before the opponent's first move and forward to the final capture. The left and right arrow keys do the same, as in guess the move. No text names the capture; the board shows it.
 - The opponent's moves play after fixed delays: about 0.8 seconds before the first one and about 0.5 seconds before the reply. Both are kept as named values so they are easy to tune. The 1 to 5 second setting applies to guess the move only.
 - A Next puzzle button appears once a puzzle is over. Until build step 22, the play screen serves a category's puzzles easiest first from the start on every visit, and `/tactics/all` shows the not-found page.
-- The five points above were settled in build step 21.
+- A Redo button appears once a puzzle is over, whether it was solved or failed, and with or without the solution shown. It restarts the same puzzle from before the opponent's first move. It does not change the result: the first attempt still decides. It is a secondary button beside the prompt, so Next puzzle stays the main action in the bottom bar.
+- The six points above were settled in build step 21.
 - Puzzles are served easiest first within a category, by their Lichess rating.
 - A puzzle the user has seen is not served again until the category runs out. The seen list for that category then resets.
 
@@ -440,7 +441,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
 - Extract made-up puzzle rows with hand-written positions, and confirm each rule: four moves only, the same piece on both solver moves, no puzzle ending in checkmate, a capture on the last move with en passant counted, a promoting pawn filed under pawn, castling filed under king, an illegal move rejected, and the same per-piece cut on every run.
-- Play made-up puzzles through the tactics play logic, and confirm each rule: a correct first and second move solves the puzzle; a wrong first move fails it and the retry starts from the same position; a wrong second move after a correct first move fails it; a later correct answer still leaves it failed; show solution plays only the missed move, and the arrows then reach every position from the setup to the end; and a promotion move counts the promotion piece.
+- Play made-up puzzles through the tactics play logic, and confirm each rule: a correct first and second move solves the puzzle; a wrong first move fails it and the retry starts from the same position; a wrong second move after a correct first move fails it; a later correct answer still leaves it failed; show solution plays only the missed move, and the arrows then reach every position from the setup to the end; redo resets the board but keeps the result; and a promotion move counts the promotion piece.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**

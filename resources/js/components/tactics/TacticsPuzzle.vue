@@ -32,7 +32,9 @@ const {
     failed,
     lastAttemptWrong,
     solutionShown,
+    result,
     outcome,
+    redo,
     move,
     canShowSolution,
     showSolution,
@@ -55,13 +57,39 @@ const progress = computed(() => {
     if (outcome.value === 'failed') {
         return {
             figure: 'Failed',
-            note: solutionShown.value ? 'solution shown' : 'first attempt',
+            note: 'first attempt',
+        };
+    }
+
+    // Doing the puzzle again: the result of the first attempt stands.
+    if (result.value !== null) {
+        return {
+            figure: `${String(moveNumber.value)} / ${String(SOLVER_MOVE_COUNT)}`,
+            note: `redo · ${result.value}`,
         };
     }
 
     return {
         figure: `${String(moveNumber.value)} / ${String(SOLVER_MOVE_COUNT)}`,
         note: failed.value ? 'failed, retrying' : 'move',
+    };
+});
+
+/** What is said once the puzzle is over, about the attempt just made. */
+const ending = computed(() => {
+    if (solutionShown.value) {
+        return {
+            heading: 'Here is the solution.',
+            note: 'Use the arrows to step through it, from the first move to the capture.',
+        };
+    }
+
+    return {
+        heading: failed.value ? 'You got there.' : 'You found both moves.',
+        note:
+            outcome.value === 'failed'
+                ? 'The first attempt decides, so this one counts as failed.'
+                : 'Use the arrows to look back over the puzzle.',
     };
 });
 
@@ -117,28 +145,23 @@ onBeforeUnmount(() => {
         class="flex flex-col gap-1.5 px-5 pt-4 pb-6 sm:min-h-48 sm:pt-6"
         aria-live="polite"
     >
-        <template v-if="outcome === 'solved'">
-            <p class="label-caps text-accent">Solved</p>
-            <h1 class="font-serif text-heading tracking-heading">
-                You found both moves.
-            </h1>
-            <p class="text-muted">
-                Use the arrows to look back over the puzzle.
+        <!-- The label is the first attempt's result, whatever came after. -->
+        <template v-if="outcome !== null">
+            <p
+                class="label-caps"
+                :class="
+                    outcome === 'solved' ? 'text-accent' : 'text-wrong-text'
+                "
+            >
+                {{ outcome === 'solved' ? 'Solved' : 'Failed' }}
             </p>
-        </template>
-
-        <template v-else-if="outcome === 'failed'">
-            <p class="label-caps text-wrong-text">Failed</p>
             <h1 class="font-serif text-heading tracking-heading">
-                {{ solutionShown ? 'Here is the solution.' : 'You got there.' }}
+                {{ ending.heading }}
             </h1>
-            <p class="text-muted">
-                {{
-                    solutionShown
-                        ? 'Use the arrows to step through it, from the first move to the capture.'
-                        : 'The first attempt decides, so this one counts as failed.'
-                }}
-            </p>
+            <p class="text-muted">{{ ending.note }}</p>
+            <div class="pt-3">
+                <AppButton variant="outline" @click="redo">Redo</AppButton>
+            </div>
         </template>
 
         <template v-else>
@@ -230,7 +253,7 @@ onBeforeUnmount(() => {
                         <path d="M9 5l7 7-7 7" />
                     </svg>
                 </AppButton>
-                <AppButton :disabled="outcome === null" @click="emit('next')">
+                <AppButton :disabled="result === null" @click="emit('next')">
                     Next puzzle
                 </AppButton>
             </div>

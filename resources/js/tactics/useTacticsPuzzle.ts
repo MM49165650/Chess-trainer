@@ -47,6 +47,12 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
     /** True from the first wrong move on. A later right answer leaves it so. */
     const failed = ref(false);
 
+    /**
+     * How the first attempt ended, once it has. Doing the puzzle again
+     * never changes it.
+     */
+    const result = ref<'solved' | 'failed' | null>(null);
+
     /** True while the latest attempt at the move being asked for was wrong. */
     const lastAttemptWrong = ref(false);
 
@@ -83,14 +89,14 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
         Math.min(Math.ceil(ply.value / 2) || 1, SOLVER_MOVE_COUNT),
     );
 
-    /** Decided by the first attempt, and known once the puzzle is over. */
-    const outcome = computed<'solved' | 'failed' | null>(() => {
-        if (!over.value) {
-            return null;
-        }
+    /** The result, while the puzzle is over and not being done again. */
+    const outcome = computed(() => (over.value ? result.value : null));
 
-        return failed.value ? 'failed' : 'solved';
-    });
+    // The first time the puzzle is over decides its result.
+    function finish(): void {
+        over.value = true;
+        result.value ??= failed.value ? 'failed' : 'solved';
+    }
 
     function stopTimer(): void {
         if (timer !== null) {
@@ -134,7 +140,7 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
         ply.value += 1;
 
         if (ply.value >= line.length) {
-            over.value = true;
+            finish();
         } else {
             playOpponentMove(REPLY_DELAY_MS);
         }
@@ -156,8 +162,25 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
         stopTimer();
         lastAttemptWrong.value = false;
         solutionShown.value = true;
-        over.value = true;
         ply.value += 1;
+        finish();
+    }
+
+    /**
+     * Starts the same puzzle again from before the setup move, once it is
+     * over. The result stays as the first attempt left it.
+     */
+    function redo(): void {
+        if (!over.value) {
+            return;
+        }
+
+        ply.value = 0;
+        failed.value = false;
+        lastAttemptWrong.value = false;
+        solutionShown.value = false;
+        over.value = false;
+        playOpponentMove(SETUP_DELAY_MS);
     }
 
     // Once the puzzle is over, every position from before the setup move to
@@ -194,7 +217,9 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
         failed,
         lastAttemptWrong,
         solutionShown,
+        result,
         outcome,
+        redo,
         move,
         canShowSolution,
         showSolution,

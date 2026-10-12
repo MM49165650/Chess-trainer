@@ -218,6 +218,62 @@ test('show solution plays only the missed move, and the arrows then reach every 
     expect(later.canStepBack.value).toBe(true);
 });
 
+test('redo resets the board but keeps the result', () => {
+    const all = positions(fork);
+    const puzzle = started(fork);
+
+    // Redo does nothing while the puzzle is still being solved.
+    puzzle.redo();
+    expect(puzzle.fen.value).toBe(all[1]);
+
+    puzzle.move(parts('d5c7'));
+    vi.advanceTimersByTime(REPLY_DELAY_MS);
+    puzzle.move(parts('c7a8'));
+
+    expect(puzzle.result.value).toBe('solved');
+
+    puzzle.redo();
+
+    // Back before the setup move, which plays by itself again.
+    expect(puzzle.fen.value).toBe(all[0]);
+    expect(puzzle.lastMove.value).toBeNull();
+    expect(puzzle.status.value).toBe('setup');
+    expect(puzzle.canStepBack.value).toBe(false);
+    expect(puzzle.canStepForward.value).toBe(false);
+    expect(puzzle.result.value).toBe('solved');
+
+    vi.advanceTimersByTime(SETUP_DELAY_MS);
+
+    expect(puzzle.status.value).toBe('solve');
+    expect(puzzle.fen.value).toBe(all[1]);
+
+    // A wrong move the second time round does not undo the solve.
+    puzzle.move(parts('d5b6'));
+    puzzle.showSolution();
+
+    expect(puzzle.status.value).toBe('over');
+    expect(puzzle.result.value).toBe('solved');
+    expect(puzzle.outcome.value).toBe('solved');
+
+    // And a failed puzzle stays failed when it is then done cleanly.
+    const lost = started(fork);
+
+    lost.move(parts('d5b6'));
+    lost.showSolution();
+    lost.redo();
+
+    expect(lost.fen.value).toBe(all[0]);
+    expect(lost.solutionShown.value).toBe(false);
+
+    vi.advanceTimersByTime(SETUP_DELAY_MS);
+    lost.move(parts('d5c7'));
+    vi.advanceTimersByTime(REPLY_DELAY_MS);
+    lost.move(parts('c7a8'));
+
+    expect(lost.result.value).toBe('failed');
+    expect(lost.outcome.value).toBe('failed');
+});
+
 test('a promotion move counts the promotion piece', () => {
     const wrong = started(promotion);
 
