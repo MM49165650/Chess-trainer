@@ -501,7 +501,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 15. End of game | The score, the replay with guesses marked, the share summary, and stepping back and forward through the moves during the game and after it | A finished game can be reviewed and shared from a phone |
 | 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button; the site's not-found page | A specific game can be found and started in a few taps |
 | 17. Search engines | Titles and descriptions in the page source for every public page, and the sitemap; the `opponent_short_name` column, filled by the extract, and used in titles and the play screen header | A game page's source shows its title and description with scripts disabled |
-| 18. Full import | All master games loaded on the server | Needs no further decisions: the game source and the minimum length are settled |
+| 18. Full import | All master games loaded. Done on 12 October 2026 into the local database: 5,772 games. They are loaded on the server once step 4 is done | Needs no further decisions: the game source and the minimum length are settled |
 
 **Stage 4: Tactics by piece**
 
