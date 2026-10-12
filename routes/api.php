@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\ListPuzzleIdsController;
+use App\Http\Controllers\Api\ListPuzzlesController;
 use App\Http\Controllers\Api\ShowMasterGameController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +18,8 @@ Route::middleware('throttle:120,1')->group(function (): void {
     Route::get('/master-games/{id}', ShowMasterGameController::class)
         ->where('id', '[0-9]{1,18}')
         ->name('api.master-games.show');
+
+    Route::get('/puzzles/ids', ListPuzzleIdsController::class)->name('api.puzzles.ids');
+
+    Route::get('/puzzles', ListPuzzlesController::class)->name('api.puzzles.index');
 });
