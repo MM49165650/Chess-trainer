@@ -25,7 +25,8 @@ const VERSION = 1;
 
 interface Schema extends DBSchema {
     meta: { key: 'meta'; value: Meta };
-    settings: { key: 'settings'; value: Settings };
+    // Only the settings that have been chosen are stored.
+    settings: { key: 'settings'; value: Partial<Settings> };
     masterGames: { key: number; value: MasterGameRecord };
     squareSession: { key: 'current'; value: SquareSession };
     squareSeen: { key: number; value: SquareSeen };

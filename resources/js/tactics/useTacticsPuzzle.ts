@@ -1,9 +1,9 @@
 // One tactics puzzle: the opponent's setup move, the solver's first move, the
 // opponent's reply and the solver's second move. A wrong move fails the
 // puzzle, and the user may then retry or ask for the solution. Nothing is
-// saved.
+// saved here.
 
-import { computed, onScopeDispose, ref } from 'vue';
+import { computed, onScopeDispose, ref, type Ref } from 'vue';
 import {
     movesEqual,
     parseMove,
@@ -19,6 +19,10 @@ import type { PuzzleData } from '@/generated/data';
 export const SETUP_DELAY_MS = 800;
 export const REPLY_DELAY_MS = 500;
 
+// How long a solved puzzle stays on the board before auto next moves on, in
+// milliseconds, so that the final capture is seen.
+export const AUTO_NEXT_DELAY_MS = 500;
+
 /** The solver's moves in a puzzle. */
 export const SOLVER_MOVE_COUNT = 2;
 
@@ -30,7 +34,15 @@ export const SOLVER_MOVE_COUNT = 2;
  */
 export type PuzzleStatus = 'setup' | 'solve' | 'reply' | 'over';
 
-export function useTacticsPuzzle(puzzle: PuzzleData) {
+/**
+ * With `autoNext` on, `onAutoNext` is called a moment after the puzzle is
+ * solved. A failed puzzle never moves on by itself.
+ */
+export function useTacticsPuzzle(
+    puzzle: PuzzleData,
+    autoNext?: Ref<boolean>,
+    onAutoNext?: () => void,
+) {
     const line = [
         puzzle.setup_move,
         puzzle.first_move,
@@ -62,6 +74,46 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
     const over = ref(false);
 
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let autoNextTimer: ReturnType<typeof setTimeout> | null = null;
+
+    /** True during the pause before auto next moves on. */
+    const autoNextWaiting = ref(false);
+
+    const autoNextPending = computed(
+        () => autoNextWaiting.value && autoNext?.value === true,
+    );
+
+    /** Anything the user does during the pause calls the move off. */
+    function cancelAutoNext(): void {
+        if (autoNextTimer !== null) {
+            clearTimeout(autoNextTimer);
+            autoNextTimer = null;
+        }
+
+        autoNextWaiting.value = false;
+    }
+
+    // Only a puzzle solved without a wrong move moves on by itself.
+    function startAutoNext(): void {
+        cancelAutoNext();
+
+        if (autoNext?.value !== true) {
+            return;
+        }
+
+        autoNextWaiting.value = true;
+
+        autoNextTimer = setTimeout(() => {
+            const stillOn = autoNextPending.value;
+
+            cancelAutoNext();
+
+            // Switching auto next off during the pause also calls it off.
+            if (stillOn) {
+                onAutoNext?.();
+            }
+        }, AUTO_NEXT_DELAY_MS);
+    }
 
     const status = computed<PuzzleStatus>(() => {
         if (over.value) {
@@ -141,6 +193,10 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
 
         if (ply.value >= line.length) {
             finish();
+
+            if (!failed.value && result.value === 'solved') {
+                startAutoNext();
+            }
         } else {
             playOpponentMove(REPLY_DELAY_MS);
         }
@@ -175,6 +231,7 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
             return;
         }
 
+        cancelAutoNext();
         ply.value = 0;
         failed.value = false;
         lastAttemptWrong.value = false;
@@ -191,12 +248,16 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
     );
 
     function stepBack(): void {
+        cancelAutoNext();
+
         if (canStepBack.value) {
             ply.value -= 1;
         }
     }
 
     function stepForward(): void {
+        cancelAutoNext();
+
         if (canStepForward.value) {
             ply.value += 1;
         }
@@ -205,7 +266,10 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
     playOpponentMove(SETUP_DELAY_MS);
 
     // The second argument keeps this quiet when there is no component.
-    onScopeDispose(stopTimer, true);
+    onScopeDispose(() => {
+        stopTimer();
+        cancelAutoNext();
+    }, true);
 
     return {
         ply,
@@ -227,5 +291,7 @@ export function useTacticsPuzzle(puzzle: PuzzleData) {
         canStepForward,
         stepBack,
         stepForward,
+        autoNextPending,
+        cancelAutoNext,
     };
 }
