@@ -63,6 +63,7 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 
 - The score is correct guesses out of total guesses, for example 23/34.
 - A move is correct only if it matches the move played. Moves are compared by from-square, to-square and promotion piece, not by written notation.
+- The progress page shows the user's accuracy for each master: correct guesses out of all guesses, as a percentage, counted over finished games only and using each game's latest finished result. Masters are listed from highest to lowest accuracy, each with its number of games and moves, for example "Capablanca 72% · 4 games, 131 moves". Masters with no finished game are not listed. Nothing new is stored; it is worked out from the saved game records.
 
 **End of game**
 
@@ -221,7 +222,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - Home, with the three modes
 - A landing page per mode
-- A progress page with the user's stats: guess-the-move scores by master, the three square-control percentages, and tactics tallies by piece
+- A progress page with the user's stats: guess-the-move accuracy by master, the three square-control percentages, and tactics tallies by piece
 - Settings
 - About, at `/about`: what the site is, how the three modes work, and that it is free and open source
 - Credits, with a link to the source code
