@@ -20,6 +20,22 @@ export function positionsOf(moves: readonly { uci: Move }[]): string[] {
     return positions;
 }
 
+/**
+ * The same for a line that starts from a position of its own, such as a
+ * puzzle: entry 0 is that position and entry n is the one after n moves.
+ */
+export function positionsFrom(fen: string, moves: readonly Move[]): string[] {
+    const chess = new Chess(fen);
+    const positions = [chess.fen()];
+
+    for (const uci of moves) {
+        chess.move(uci);
+        positions.push(chess.fen());
+    }
+
+    return positions;
+}
+
 /** The written form of a move in a position, or null when it is not legal. */
 export function writtenMove(fen: string, move: MoveParts): string | null {
     try {
