@@ -252,7 +252,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - A reset progress button in settings, with a confirmation step.
 - When a game or puzzle fails to load, the user sees a clear message and a retry button.
-- Every exercise has a report a problem link that opens a GitHub issue pre-filled with the game or puzzle and the move number.
+- Every exercise has a report a problem link that opens a GitHub issue pre-filled with the game or puzzle and the move number. The link is shown only once there is something to report, so it never gets in the way while playing: at the end of a master game and in its review, after a puzzle is solved or failed, and in square control with the feedback for each move. Decided on 12 October 2026.
 - The site is in English only.
 
 ## Visual design
