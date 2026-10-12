@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Guess the move: play through one master game. The page arrives with the
-// game's details and fetches its moves from the data endpoint.
+// game's details, fetches its moves from the data endpoint and reads the
+// user's saved progress, so a game started earlier resumes.
 
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
@@ -9,12 +10,19 @@ import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import GuessGame from '@/components/guess/GuessGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type { MasterGameData, MasterGameDetailsData } from '@/generated/data';
+import { storageAvailable } from '@/storage/db';
+import { readMasterGame } from '@/storage/masterGames';
+import type { MasterGameRecord } from '@/storage/types';
 
 const props = defineProps<{
     game: MasterGameDetailsData;
 }>();
 
 const loaded = ref<MasterGameData | null>(null);
+
+/** What the browser holds for this game, read before the game starts. */
+const saved = ref<MasterGameRecord | null>(null);
+const canSave = ref(true);
 
 /**
  * Why the moves did not load: the game is not there, or the request itself
@@ -68,6 +76,9 @@ async function load(): Promise<void> {
 
         const body: unknown = await response.json();
 
+        // Neither of these fails: without storage the game starts afresh.
+        canSave.value = await storageAvailable();
+        saved.value = await readMasterGame(props.game.id);
         loaded.value = body as MasterGameData;
     } catch {
         failure.value = 'unreachable';
@@ -117,7 +128,12 @@ onMounted(load);
             <span class="size-11 flex-none" aria-hidden="true" />
         </header>
 
-        <GuessGame v-if="loaded" :game="loaded" />
+        <GuessGame
+            v-if="loaded"
+            :game="loaded"
+            :saved="saved"
+            :can-save="canSave"
+        />
 
         <div
             v-else-if="failure === 'missing'"

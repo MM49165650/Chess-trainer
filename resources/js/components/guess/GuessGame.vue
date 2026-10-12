@@ -11,9 +11,14 @@ import BottomBar from '@/components/ui/BottomBar.vue';
 import SlideUpPanel from '@/components/ui/SlideUpPanel.vue';
 import type { MasterGameData } from '@/generated/data';
 import { useGuessGame } from '@/guess/useGuessGame';
+import type { MasterGameRecord } from '@/storage/types';
 
 const props = defineProps<{
     game: MasterGameData;
+    /** The game's record from an earlier visit, if there is one. */
+    saved: MasterGameRecord | null;
+    /** Whether the browser has storage to save progress in. */
+    canSave: boolean;
 }>();
 
 const DELAYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
@@ -33,9 +38,10 @@ const {
     result,
     resultIsFresh,
     secondsLeft,
+    notSaved,
     guess,
     restart,
-} = useGuessGame(props.game, delaySeconds);
+} = useGuessGame(props.game, delaySeconds, props.saved, props.canSave);
 
 /** The master's family name, as in "What did Capablanca play?". */
 const masterShortName = computed(
@@ -105,6 +111,10 @@ const moveNumber = computed(() =>
 </script>
 
 <template>
+    <p v-if="notSaved" class="px-5 pb-1 text-caption text-muted" role="status">
+        Your progress will not be saved in this browser.
+    </p>
+
     <div
         class="flex items-center justify-between px-5 py-2 text-caption text-muted"
     >

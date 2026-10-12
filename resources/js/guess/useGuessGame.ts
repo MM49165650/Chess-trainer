@@ -1,5 +1,5 @@
 // One game of guess the move: whose turn it is, what the user has guessed and
-// the running score. Nothing here is saved; reloading the page starts again.
+// the running score. Every guess is saved, so a game resumes where it was left.
 
 import { computed, onBeforeUnmount, ref, type Ref } from 'vue';
 import {
@@ -11,9 +11,11 @@ import {
 } from '@/chess/conventions';
 import { positionsOf, writtenMove } from '@/chess/game';
 import type { MasterGameData } from '@/generated/data';
-
-/** One guess, as it will later be stored: Appendix G of the requirements. */
-export type Guess = { uci: string; correct: boolean };
+import {
+    saveMasterGameProgress,
+    saveMasterGameResult,
+} from '@/storage/masterGames';
+import type { Guess, MasterGameRecord } from '@/storage/types';
 
 /** The outcome of the latest guess, kept on screen until the next one. */
 export type GuessResult = {
@@ -33,8 +35,20 @@ export type GuessResult = {
  */
 export type GuessStatus = 'opponent' | 'guess' | 'over';
 
-export function useGuessGame(game: MasterGameData, delaySeconds: Ref<number>) {
+/**
+ * `saved` is the game's record from an earlier visit, if any, and
+ * `canSave` is whether the browser has storage to save this one in.
+ */
+export function useGuessGame(
+    game: MasterGameData,
+    delaySeconds: Ref<number>,
+    saved: MasterGameRecord | null,
+    canSave: boolean,
+) {
     const positions = positionsOf(game.moves);
+
+    /** True once progress is known not to be reaching storage. */
+    const notSaved = ref(!canSave);
 
     /** How many plies have been played on the board so far. */
     const ply = ref(0);
@@ -129,7 +143,53 @@ export function useGuessGame(game: MasterGameData, delaySeconds: Ref<number>) {
         resultIsFresh.value = true;
         ply.value += 1;
 
+        // A game counts as started at its first guess, and as finished at
+        // its last one, even while the opponent's final move is pending.
+        const save =
+            guesses.value.length >= game.guess_count
+                ? saveMasterGameResult
+                : saveMasterGameProgress;
+
+        void save(game.id, game.master.slug, guesses.value).then((done) => {
+            if (!done) {
+                notSaved.value = true;
+            }
+        });
+
         scheduleOpponent();
+    }
+
+    /** The ply of one of the master's moves, counting those from 1. */
+    function plyOfGuess(number: number): number {
+        return game.master_color === 'white' ? number * 2 - 1 : number * 2;
+    }
+
+    // Picks up an attempt where it was left: the opponent's reply to the
+    // last guess is already on the board, and that guess's result is shown.
+    function resume(earlier: readonly Guess[]): void {
+        const lastPly = plyOfGuess(earlier.length);
+        const last = earlier.at(-1);
+        const played = game.moves[lastPly - 1];
+        const position = positions[lastPly - 1];
+        const move = last ? parseMove(last.uci) : null;
+
+        guesses.value = earlier.map((guess) => ({ ...guess }));
+        ply.value = Math.min(lastPly + 1, game.moves.length);
+
+        if (last && played && position !== undefined && move) {
+            result.value = {
+                number: earlier.length,
+                correct: last.correct,
+                guessed: writtenMove(position, move) ?? last.uci,
+                played,
+            };
+        }
+    }
+
+    // A finished game opens on its final position with the saved score.
+    function showFinished(earlier: readonly Guess[]): void {
+        guesses.value = earlier.map((guess) => ({ ...guess }));
+        ply.value = game.moves.length;
     }
 
     function restart(): void {
@@ -143,7 +203,16 @@ export function useGuessGame(game: MasterGameData, delaySeconds: Ref<number>) {
         scheduleOpponent();
     }
 
-    restart();
+    const inProgress = saved?.current?.guesses ?? [];
+
+    if (inProgress.length > 0 && inProgress.length < game.guess_count) {
+        resume(inProgress);
+    } else if (saved?.finished) {
+        showFinished(saved.finished.guesses);
+    } else {
+        restart();
+    }
+
     onBeforeUnmount(stopTimer);
 
     return {
@@ -156,6 +225,7 @@ export function useGuessGame(game: MasterGameData, delaySeconds: Ref<number>) {
         result,
         resultIsFresh,
         secondsLeft,
+        notSaved,
         guess,
         restart,
     };
