@@ -396,7 +396,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Installable: the site can be added to the phone's home screen. There is no install prompt on the first visit; the option is mentioned only on the progress page.
 - Data delivery: Inertia handles pages and navigation. Game and puzzle data come from separate data endpoints, cached for a long time because a game never changes.
 - TypeScript tests: Vitest, run by the check command. The control and hanging-piece golden tests are TypeScript, since that logic runs in the import scripts.
-- Search engines: master game pages are rendered on the server so search engines can read them.
+- Search engines: every public page's title and description are written into the page source by the server, so search engines and link previews can read them. Full server rendering of the app (Inertia's SSR, which needs a separate Node process) is not used; it can be switched on later if needed.
 - Analytics: Cloudflare Web Analytics, which uses no cookies.
 - Large Lichess files and the source of master games are decided when the imports are built.
 
@@ -498,7 +498,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 14. Saving | The storage module; resuming; several games in progress; replaying | Closing and reopening the browser resumes a game mid-way |
 | 15. End of game | The score, the replay with guesses marked, the share summary, and stepping back and forward through the moves during the game and after it | A finished game can be reviewed and shared from a phone |
 | 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button; the site's not-found page | A specific game can be found and started in a few taps |
-| 17. Search engines | Server rendering for master and game pages, their titles and descriptions, and the sitemap; the `opponent_short_name` column, filled by the extract, and used in titles and the play screen header | A game page's source shows its title and description with scripts disabled |
+| 17. Search engines | Titles and descriptions in the page source for every public page, and the sitemap; the `opponent_short_name` column, filled by the extract, and used in titles and the play screen header | A game page's source shows its title and description with scripts disabled |
 | 18. Full import | All master games loaded on the server | Needs no further decisions: the game source and the minimum length are settled |
 
 **Stage 4: Tactics by piece**
@@ -879,13 +879,13 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | `/tactics` | The piece categories |
 | `/tactics/{piece}` | Play tactics; `piece` is one of the six piece types or `all` |
 | `/progress`, `/settings`, `/credits`, `/privacy` | As named |
-| `/sitemap.xml` | Lists the master pages and master game pages |
+| `/sitemap.xml` | Lists the home page, `/guess`, the master pages and master game pages; cached publicly for one hour |
 | `/about` | About |
 
 - The game list is sorted by year and shows 30 games per page.
 - Its query parameters are `q`, `color`, `year_from`, `year_to` and `page`. The search box `q` matches opponent and event, which is how those two are filtered.
 - The list receives each game's details as page data, never its moves.
-- Master and master game pages are rendered on the server with a readable title and description, such as "Guess the move: Capablanca vs. Marshall, New York 1918".
+- Every public page's source carries a readable title and meta description, written by the server, such as "Guess the move: Capablanca vs. Marshall, New York 1918".
 - An address that matches no page, including a master or game that does not exist, shows the site's own not-found page in the site's style rather than the framework's default. It is built with browsing in step 16.
 
 **Data endpoints**
