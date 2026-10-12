@@ -9,6 +9,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -29,10 +31,18 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request): bool => $request->is('api/*') || $request->expectsJson(),
         );
 
-        // Every 404 under /api has the same body, whatever was asked for.
-        $exceptions->render(
-            fn (NotFoundHttpException $exception, Request $request): ?JsonResponse => $request->is('api/*')
-                ? new JsonResponse(['message' => 'Not found.'], 404)
-                : null,
-        );
+        $exceptions->render(function (NotFoundHttpException $exception, Request $request): ?Response {
+            // Every 404 under /api has the same body, whatever was asked for.
+            if ($request->is('api/*')) {
+                return new JsonResponse(['message' => 'Not found.'], 404);
+            }
+
+            if ($request->expectsJson()) {
+                return null;
+            }
+
+            // Everywhere else an address that matches no page, or names a
+            // master or game that does not exist, gets the site's own page.
+            return Inertia::render('NotFound')->toResponse($request)->setStatusCode(404);
+        });
     })->create();

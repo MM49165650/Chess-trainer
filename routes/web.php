@@ -2,15 +2,28 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Guess\ListMasterGamesController;
+use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
+use App\Http\Controllers\Guess\RandomMasterGameController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 
 Route::get('/', fn (): Response => Inertia::render('Home'))->name('home');
 
-// Guess the move. When /guess/{master}/random arrives it must be registered
-// above this route, and {game} accepts digits only so the two never clash.
+// Guess the move. /guess/{master}/random is registered above the play route,
+// and {game} accepts digits only, so the two never clash.
+Route::get('/guess', ListMastersController::class)->name('guess.masters');
+
+Route::get('/guess/{master}', ListMasterGamesController::class)
+    ->where('master', '[a-z]+')
+    ->name('guess.games');
+
+Route::get('/guess/{master}/random', RandomMasterGameController::class)
+    ->where('master', '[a-z]+')
+    ->name('guess.random');
+
 Route::get('/guess/{master}/{game}', PlayMasterGameController::class)
     ->where('master', '[a-z]+')
     ->where('game', '[0-9]{1,18}')
