@@ -529,7 +529,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 30. Progress page | Stats for the three modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
 | 32. Installable | The web app manifest and icons | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
-| 33. Remaining pages and states | About, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
+| 33. Remaining pages and states | The home page with the three modes (a plain link to `/guess` stands in from step 16); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
 ## Open decisions and later features
