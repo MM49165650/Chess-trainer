@@ -69,6 +69,18 @@ final class PageMetaData extends Data
         );
     }
 
+    /**
+     * @param  string  $piece  One of the six piece types
+     */
+    public static function tactics(string $piece): self
+    {
+        return new self(
+            title: 'Tactics: '.$piece,
+            description: 'Short '.$piece.' tactics. Win material in two moves with the '.$piece.', ending in a capture.',
+            heading: Str::ucfirst($piece).' tactics',
+        );
+    }
+
     public static function game(Master $master, MasterGame $game): self
     {
         // White's name first. Both players go by family name; an opponent
