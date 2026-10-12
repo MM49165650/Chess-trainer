@@ -52,6 +52,7 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 - One attempt per move. After the guess, right or wrong, the actual move is played and the game continues.
 - Only legal moves can be made on the board. A promotion shows a piece picker, and the guess includes the promotion piece.
 - Feedback on a wrong guess is the user's move shown against the master's move.
+- After a wrong guess, the board moves from the user's move to the master's move more slowly than a normal move, so the correction can be followed: about 450 milliseconds, against 200 for other moves. Both are kept as named values so they are easy to tune. With reduced motion turned on in the device settings, there is no animation.
 - Moves in feedback are described in words: "took on e3" for a capture, "castled", otherwise "played Nf3". A correct guess is confirmed in the accent colour. The result of the last guess stays on screen until the user's next guess.
 - If a game's moves fail to load, the page says so and offers Try again. A game that does not exist says so with no retry.
 - The board is oriented to the winner's side, and the last move played is highlighted.
