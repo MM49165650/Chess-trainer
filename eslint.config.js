@@ -19,6 +19,8 @@ export default defineConfig(
         // Only resources/, tools/ and the root config files are linted.
         ignores: [
             'bootstrap/**',
+            // Imported data and throwaway scripts. Git ignores it too.
+            'data/**',
             'docs/**',
             'node_modules/**',
             'public/**',
