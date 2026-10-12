@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Data\PageMetaData;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -43,6 +44,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // Everywhere else an address that matches no page, or names a
             // master or game that does not exist, gets the site's own page.
-            return Inertia::render('NotFound')->toResponse($request)->setStatusCode(404);
+            return Inertia::render('NotFound', ['meta' => PageMetaData::notFound()])->toResponse($request)->setStatusCode(404);
         });
     })->create();

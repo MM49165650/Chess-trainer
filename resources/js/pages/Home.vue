@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import ListMastersController from '@/actions/App/Http/Controllers/Guess/ListMastersController';
+import PageHead from '@/components/PageHead.vue';
+import type { PageMetaData } from '@/generated/data';
+
+defineProps<{
+    meta: PageMetaData;
+}>();
 </script>
 
 <template>
+    <PageHead :meta="meta" />
+
     <main class="p-5">
         <h1 class="text-2xl font-semibold">{{ $page.props.name }}</h1>
         <p class="mt-2">

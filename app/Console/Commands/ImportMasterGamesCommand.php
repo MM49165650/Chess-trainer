@@ -184,6 +184,7 @@ class ImportMasterGamesCommand extends Command
 
             $details = [
                 'opponent_name' => $game->opponent_name,
+                'opponent_short_name' => $game->opponent_short_name,
                 'year' => $game->year,
                 'event' => $game->event,
             ];

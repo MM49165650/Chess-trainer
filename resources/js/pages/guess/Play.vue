@@ -3,20 +3,27 @@
 // game's details, fetches its moves from the data endpoint and reads the
 // user's saved progress, so a game started earlier resumes.
 
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ShowMasterGameController from '@/actions/App/Http/Controllers/Api/ShowMasterGameController';
 import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/ListMasterGamesController';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import GuessGame from '@/components/guess/GuessGame.vue';
+import PageHead from '@/components/PageHead.vue';
 import AppButton from '@/components/ui/AppButton.vue';
-import type { MasterGameData, MasterGameDetailsData } from '@/generated/data';
+import type {
+    MasterGameData,
+    MasterGameDetailsData,
+    PageMetaData,
+} from '@/generated/data';
 import { gameListLeft } from '@/guess/listReturn';
 import { storageAvailable } from '@/storage/db';
 import { readMasterGame } from '@/storage/masterGames';
 import type { MasterGameRecord } from '@/storage/types';
 
 const props = defineProps<{
+    /** Its heading names the two players, White first, by family name. */
+    meta: PageMetaData;
     game: MasterGameDetailsData;
 }>();
 
@@ -42,16 +49,6 @@ const boardHeightLimit = useBoardHeightLimit(page);
 const backUrl =
     gameListLeft(props.game.master.slug) ??
     ListMasterGamesController.url(props.game.master.slug);
-
-// White's name first. The master goes by family name, as in the mockups.
-const players = computed(() => {
-    const master = props.game.master.name.split(' ').at(-1) ?? '';
-    const opponent = props.game.opponent_name;
-
-    return props.game.master_color === 'white'
-        ? `${master} vs. ${opponent}`
-        : `${opponent} vs. ${master}`;
-});
 
 const occasion = computed(() =>
     [props.game.event, props.game.year]
@@ -97,9 +94,7 @@ onMounted(load);
 </script>
 
 <template>
-    <Head
-        :title="`Guess the move: ${players}${occasion ? `, ${occasion.replace(', ', ' ')}` : ''}`"
-    />
+    <PageHead :meta="meta" />
 
     <main
         ref="page"
@@ -127,7 +122,7 @@ onMounted(load);
                 </svg>
             </Link>
             <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-                <p class="font-serif text-title-small">{{ players }}</p>
+                <p class="font-serif text-title-small">{{ meta.heading }}</p>
                 <p v-if="occasion" class="text-label text-muted">
                     {{ occasion }}
                 </p>

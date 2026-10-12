@@ -3,12 +3,13 @@
 // games; the scores and in-progress markers come from the browser's own
 // storage. Search, filters and the page number all live in the address.
 
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/ListMasterGamesController';
 import ListMastersController from '@/actions/App/Http/Controllers/Guess/ListMastersController';
 import PlayMasterGameController from '@/actions/App/Http/Controllers/Guess/PlayMasterGameController';
 import RandomMasterGameController from '@/actions/App/Http/Controllers/Guess/RandomMasterGameController';
+import PageHead from '@/components/PageHead.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import ListRow from '@/components/ui/ListRow.vue';
 import SlideUpPanel from '@/components/ui/SlideUpPanel.vue';
@@ -16,6 +17,7 @@ import type {
     MasterGameFiltersData,
     MasterGameListItemData,
     MasterSummaryData,
+    PageMetaData,
 } from '@/generated/data';
 import { rememberGameList } from '@/guess/listReturn';
 import { readMasterGames } from '@/storage/masterGames';
@@ -30,6 +32,7 @@ const COLOURS: readonly { value: Colour; label: string }[] = [
 ];
 
 const props = defineProps<{
+    meta: PageMetaData;
     master: MasterSummaryData;
     games: MasterGameListItemData[];
     filters: MasterGameFiltersData;
@@ -168,7 +171,7 @@ onMounted(readRecords);
 </script>
 
 <template>
-    <Head :title="`Guess the move: ${master.name}`" />
+    <PageHead :meta="meta" />
 
     <main class="pb-8 sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 p-1">

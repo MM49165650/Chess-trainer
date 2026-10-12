@@ -58,6 +58,14 @@ export function firstNameFirst(name: string): string {
     return first === '' ? (last ?? name) : `${first} ${last ?? ''}`.trim();
 }
 
+/** The family name: the part of "Last, First" before the comma, if any. */
+export function familyName(name: string): string | null {
+    const comma = name.indexOf(',');
+    const family = comma === -1 ? '' : name.slice(0, comma).trim();
+
+    return family === '' ? null : family;
+}
+
 /** The first excluded word that appears as a whole word in the text. */
 function excludedWord(text: string, words: string[]): string | null {
     return (
@@ -208,6 +216,7 @@ export function extractMasterGames(
             fingerprint: print,
             master_color: masterColor,
             opponent_name: firstNameFirst(opponent),
+            opponent_short_name: familyName(opponent),
             year,
             event: event === '' || event === '?' ? null : event,
             ply_count: moves.length,

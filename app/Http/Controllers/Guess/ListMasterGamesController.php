@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Guess;
 use App\Data\MasterGameFiltersData;
 use App\Data\MasterGameListItemData;
 use App\Data\MasterSummaryData;
+use App\Data\PageMetaData;
 use App\Http\Controllers\Controller;
 use App\Models\Master;
 use App\Models\MasterGame;
@@ -79,6 +80,9 @@ class ListMasterGamesController extends Controller
         );
 
         return Inertia::render('guess/Games', [
+            // The description counts all the master's games, whatever the
+            // search and filters leave on the list.
+            'meta' => PageMetaData::master($found, $found->games()->count()),
             'master' => new MasterSummaryData($found->slug, $found->name),
             'games' => $games,
             'filters' => $filters,

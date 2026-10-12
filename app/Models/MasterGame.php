@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'fingerprint',
     'master_color',
     'opponent_name',
+    'opponent_short_name',
     'year',
     'event',
     'ply_count',
