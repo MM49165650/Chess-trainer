@@ -69,11 +69,28 @@ final class PageMetaData extends Data
         );
     }
 
+    public static function tacticsCategories(): self
+    {
+        return new self(
+            title: 'Tactics by piece',
+            description: 'Short tactics grouped by piece. Win material in two moves, ending in a capture.',
+            heading: 'Tactics by piece',
+        );
+    }
+
     /**
-     * @param  string  $piece  One of the six piece types
+     * @param  string  $piece  One of the six piece types, or "all"
      */
     public static function tactics(string $piece): self
     {
+        if ($piece === 'all') {
+            return new self(
+                title: 'Tactics: all pieces',
+                description: 'Short tactics with every piece. Win material in two moves, ending in a capture.',
+                heading: 'All pieces',
+            );
+        }
+
         return new self(
             title: 'Tactics: '.$piece,
             description: 'Short '.$piece.' tactics. Win material in two moves with the '.$piece.', ending in a capture.',

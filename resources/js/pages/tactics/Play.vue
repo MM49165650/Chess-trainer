@@ -1,14 +1,15 @@
 <script setup lang="ts">
-// Tactics by piece: solve the puzzles of one piece, easiest first. The page
-// arrives with the piece, fetches the category's list of puzzle IDs and then
-// the puzzles themselves, a few at a time. Nothing is saved yet, so every
-// visit starts from the first puzzle.
+// Tactics by piece: solve the puzzles of one piece, or of all six, easiest
+// first. The page arrives with the category, fetches its lists of puzzle IDs,
+// leaves out the puzzles already seen and fetches the rest a few at a time.
+// Each result is saved, so no puzzle repeats until the category runs out.
 
 import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ListPuzzleIdsController from '@/actions/App/Http/Controllers/Api/ListPuzzleIdsController';
 import ListPuzzlesController from '@/actions/App/Http/Controllers/Api/ListPuzzlesController';
-import type { PieceType } from '@/chess/conventions';
+import ListTacticsCategoriesController from '@/actions/App/Http/Controllers/Tactics/ListTacticsCategoriesController';
+import { PIECE_TYPES } from '@/chess/conventions';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
 import TacticsPuzzle from '@/components/tactics/TacticsPuzzle.vue';
@@ -19,19 +20,42 @@ import type {
     PuzzleIdListData,
     PuzzleListData,
 } from '@/generated/data';
+import { storageAvailable } from '@/storage/db';
+import {
+    clearPuzzlesSeen,
+    readPuzzlesSeen,
+    recordPuzzleResult,
+} from '@/storage/tactics';
+import {
+    seenToClear,
+    servingOrder,
+    type Category,
+    type PuzzleEntry,
+    type SeenPuzzle,
+} from '@/tactics/choose';
 
 // How many puzzles are fetched in one request. The endpoint allows 20.
 const BATCH_SIZE = 10;
 
 const props = defineProps<{
     meta: PageMetaData;
-    piece: PieceType;
+    piece: Category;
 }>();
 
-/** The category's puzzle IDs, easiest first, or null until they arrive. */
-const ids = ref<number[] | null>(null);
+/** The category's lists of puzzle IDs, or null until they arrive. */
+const lists = ref<PuzzleIdListData[] | null>(null);
 
-/** How many of those IDs have been asked for so far. */
+/**
+ * The puzzles whose result is decided, by puzzle ID. It starts from what the
+ * browser has saved and is kept up here, so it holds for the visit even
+ * when nothing can be saved.
+ */
+const seen = new Map<number, SeenPuzzle>();
+
+/** The unseen puzzles, in the order they are served. */
+const queue = ref<PuzzleEntry[]>([]);
+
+/** How many of the queue's puzzles have been asked for so far. */
 const asked = ref(0);
 
 /** The puzzles fetched so far, in the order they are served. */
@@ -43,13 +67,21 @@ const at = ref(0);
 const loading = ref(false);
 const failure = ref(false);
 
+/** True once progress is known not to be reaching storage. */
+const notSaved = ref(false);
+
 const current = computed(() => puzzles.value[at.value] ?? null);
 
-/** True when the category has no puzzle left to serve. */
-const exhausted = computed(
+const puzzleCount = computed(() =>
+    (lists.value ?? []).reduce((count, list) => count + list.items.length, 0),
+);
+
+/** True when every puzzle of the category has been seen. */
+const ranOut = computed(
     () =>
-        ids.value !== null &&
-        asked.value >= ids.value.length &&
+        lists.value !== null &&
+        puzzleCount.value > 0 &&
+        asked.value >= queue.value.length &&
         at.value >= puzzles.value.length,
 );
 
@@ -70,7 +102,15 @@ async function fetchJson(url: string): Promise<unknown> {
     return response.json();
 }
 
-// Fetches until the puzzle wanted is there, or the list has run out. An ID
+// Starts the category from its easiest unseen puzzle.
+function buildQueue(): void {
+    queue.value = servingOrder(lists.value ?? [], new Set(seen.keys()));
+    asked.value = 0;
+    puzzles.value = [];
+    at.value = 0;
+}
+
+// Fetches until the puzzle wanted is there, or the queue has run out. An ID
 // that names no puzzle is left out of a response, so one batch may not do.
 async function load(): Promise<void> {
     if (loading.value) {
@@ -81,26 +121,41 @@ async function load(): Promise<void> {
     failure.value = false;
 
     try {
-        if (ids.value === null) {
-            const list = (await fetchJson(
-                ListPuzzleIdsController.url({ query: { piece: props.piece } }),
-            )) as PuzzleIdListData;
+        if (lists.value === null) {
+            // All pieces is made here from the six lists.
+            const pieces = props.piece === 'all' ? PIECE_TYPES : [props.piece];
 
-            ids.value = list.items.map(([id]) => id);
+            const fetched = (await Promise.all(
+                pieces.map((piece) =>
+                    fetchJson(
+                        ListPuzzleIdsController.url({ query: { piece } }),
+                    ),
+                ),
+            )) as PuzzleIdListData[];
+
+            // Neither of these fails: without storage nothing is seen yet.
+            notSaved.value = !(await storageAvailable());
+
+            for (const record of await readPuzzlesSeen()) {
+                seen.set(record.puzzleId, record);
+            }
+
+            lists.value = fetched;
+            buildQueue();
         }
 
         while (
             at.value >= puzzles.value.length &&
-            asked.value < ids.value.length
+            asked.value < queue.value.length
         ) {
-            const batch = ids.value.slice(
+            const batch = queue.value.slice(
                 asked.value,
                 asked.value + BATCH_SIZE,
             );
 
             const fetched = (await fetchJson(
                 ListPuzzlesController.url({
-                    query: { ids: batch.join(',') },
+                    query: { ids: batch.map((entry) => entry.id).join(',') },
                 }),
             )) as PuzzleListData;
 
@@ -114,6 +169,18 @@ async function load(): Promise<void> {
     }
 }
 
+// A puzzle counts as seen once its result is decided. It is filed under its
+// own piece, whichever category it was played in.
+function onDecided(puzzle: PuzzleData, solved: boolean): void {
+    seen.set(puzzle.id, { puzzleId: puzzle.id, piece: puzzle.piece });
+
+    void recordPuzzleResult(puzzle.id, puzzle.piece, solved).then((done) => {
+        if (!done) {
+            notSaved.value = true;
+        }
+    });
+}
+
 function next(): void {
     at.value += 1;
 
@@ -122,8 +189,20 @@ function next(): void {
     }
 }
 
-function startAgain(): void {
-    at.value = 0;
+// The category has run out: its seen puzzles are forgotten, and it starts
+// again from the easiest. One piece clears only its own; all pieces clears
+// every piece's.
+async function startAgain(): Promise<void> {
+    for (const id of seenToClear(seen.values(), props.piece)) {
+        seen.delete(id);
+    }
+
+    if (!(await clearPuzzlesSeen(props.piece))) {
+        notSaved.value = true;
+    }
+
+    buildQueue();
+    await load();
 }
 
 onMounted(load);
@@ -138,11 +217,10 @@ onMounted(load);
         :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
     >
         <header class="flex items-center gap-1 p-1">
-            <!-- Goes to the category page once there is one. -->
             <Link
-                href="/"
+                :href="ListTacticsCategoriesController.url()"
                 class="flex size-11 flex-none items-center justify-center"
-                aria-label="Back to home"
+                aria-label="Back to the pieces"
             >
                 <svg
                     aria-hidden="true"
@@ -158,21 +236,28 @@ onMounted(load);
                     <path d="M15 5l-7 7 7 7" />
                 </svg>
             </Link>
-            <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-                <p class="font-serif text-title-small">{{ meta.heading }}</p>
-                <p v-if="current" class="text-label text-muted tabular-nums">
-                    Puzzle {{ at + 1 }}
-                </p>
-            </div>
+            <p class="min-w-0 flex-1 text-center font-serif text-title-small">
+                {{ meta.heading }}
+            </p>
             <!-- Keeps the title centred. -->
             <span class="size-11 flex-none" aria-hidden="true" />
         </header>
+
+        <p
+            v-if="notSaved"
+            class="px-5 pb-1 text-caption text-muted"
+            role="status"
+        >
+            Your progress will not be saved in this browser.
+        </p>
 
         <!-- The key starts each puzzle afresh. -->
         <TacticsPuzzle
             v-if="current"
             :key="current.id"
             :puzzle="current"
+            :names-piece="piece !== 'all'"
+            @decided="(solved) => current && onDecided(current, solved)"
             @next="next"
         />
 
@@ -188,23 +273,29 @@ onMounted(load);
             <AppButton @click="load">Try again</AppButton>
         </div>
 
+        <p v-else-if="loading" class="px-5 pt-6 text-muted" role="status">
+            Loading the puzzles…
+        </p>
+
         <div
-            v-else-if="exhausted && puzzles.length > 0"
+            v-else-if="ranOut"
             class="flex flex-col items-start gap-3 px-5 pt-6"
         >
             <h1 class="font-serif text-heading tracking-heading">
-                That was the last {{ piece }} puzzle.
+                You have been through every
+                {{ piece === 'all' ? 'puzzle' : `${piece} puzzle` }}.
             </h1>
-            <p class="text-muted">You have been through all of them.</p>
-            <AppButton @click="startAgain">Start again</AppButton>
+            <p class="text-muted">They start again from the easiest.</p>
+            <AppButton @click="startAgain">Continue</AppButton>
         </div>
 
         <div
-            v-else-if="exhausted"
+            v-else-if="lists !== null"
             class="flex flex-col items-start gap-3 px-5 pt-6"
         >
             <h1 class="font-serif text-heading tracking-heading">
-                There are no {{ piece }} puzzles yet.
+                There are no
+                {{ piece === 'all' ? 'puzzles' : `${piece} puzzles` }} yet.
             </h1>
         </div>
 

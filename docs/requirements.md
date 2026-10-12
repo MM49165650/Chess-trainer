@@ -168,6 +168,7 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 
 - Six categories: pawn, knight, bishop, rook, queen, king.
 - An all pieces option draws puzzles from every category.
+- The category page at `/tactics` lists All pieces first, then the six pieces in the order above. Each row shows the name, the number of puzzles in it, and the user's tally as solved out of attempted, for example "14 / 20". The tally is hidden until there is an attempt. The All pieces row shows the sum of the six. Settled in build step 22.
 - The king category covers tactics such as capturing an undefended piece with the king.
 - A puzzle is filed under the piece that makes the solving moves.
 
@@ -191,16 +192,23 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 - A show solution button is available after a failure. It plays only the next correct move, the one the user missed, and does not play the rest. The puzzle stays failed.
 - Once the solution has been shown, or the puzzle has been solved, the back and forward buttons in the bottom bar step through the puzzle, back to the position before the opponent's first move and forward to the final capture. The left and right arrow keys do the same, as in guess the move. No text names the capture; the board shows it.
 - The opponent's moves play after fixed delays: about 0.8 seconds before the first one and about 0.5 seconds before the reply. Both are kept as named values so they are easy to tune. The 1 to 5 second setting applies to guess the move only.
-- A Next puzzle button appears once a puzzle is over. Until build step 22, the play screen serves a category's puzzles easiest first from the start on every visit, and `/tactics/all` shows the not-found page.
+- A Next puzzle button appears once a puzzle is over.
 - A Redo button appears once a puzzle is over, whether it was solved or failed, and with or without the solution shown. It restarts the same puzzle from before the opponent's first move. It does not change the result: the first attempt still decides. It is a secondary button beside the prompt, so Next puzzle stays the main action in the bottom bar.
 - The six points above were settled in build step 21.
-- Puzzles are served easiest first within a category, by their Lichess rating.
+- Puzzles are served easiest first within a category, by their Lichess rating. Puzzles with the same rating are served by puzzle ID, lowest first.
+- The all pieces option is one list across the six pieces, by rating and then by puzzle ID. Pieces are not taken in turn, so the mix follows the ratings: the easiest puzzles are mostly rook and king puzzles, and it evens out later.
+- In all pieces the prompt does not name the piece: it reads "Win material in two moves." In a piece's own category it names it, as in "Win material with the knight."
+- A puzzle counts as seen once its result is decided: at the first wrong move, or at the final capture when there was none. A puzzle that was shown and left before that is not seen, and is served again.
 - A puzzle the user has seen is not served again until the category runs out. The seen list for that category then resets.
+- Seen records are shared: there is one per puzzle, whichever category it was played in. A puzzle seen in the knight category is skipped in all pieces, and the other way round.
+- When one piece runs out, only that piece's seen records are cleared. When all pieces runs out, which is when every puzzle has been seen, all six are cleared. In all pieces, a piece that has run out is skipped until all of them have.
+- When a category runs out, the screen says "You have been through every knight puzzle. They start again from the easiest." with a Continue button. The seen records are cleared when Continue is pressed.
+- The eight points above were settled in build step 22.
 
 **Scoring**
 
 - Each puzzle is solved or failed, decided by the first attempt. A correct answer on a retry still leaves the puzzle failed.
-- The user sees running tallies per piece category.
+- The user sees running tallies per piece category. A result in all pieces counts towards the tally of the puzzle's own piece.
 - There is no rating for the user.
 
 ## Site-wide requirements
@@ -442,6 +450,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
 - Extract made-up puzzle rows with hand-written positions, and confirm each rule: four moves only, the same piece on both solver moves, no puzzle ending in checkmate, a capture on the last move with en passant counted, a promoting pawn filed under pawn, castling filed under king, an illegal move rejected, and the same per-piece cut on every run.
 - Play made-up puzzles through the tactics play logic, and confirm each rule: a correct first and second move solves the puzzle; a wrong first move fails it and the retry starts from the same position; a wrong second move after a correct first move fails it; a later correct answer still leaves it failed; show solution plays only the missed move, and the arrows then reach every position from the setup to the end; redo resets the board but keeps the result; and a promotion move counts the promotion piece.
+- Choose puzzles from made-up ID lists, and confirm each rule: easiest first with equal ratings by ID; seen puzzles left out; all pieces as one list across the pieces; an empty pool when everything is seen; a puzzle seen in its piece's category left out of all pieces; and clearing one piece leaves the others' seen records alone.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
@@ -541,7 +550,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 30. Progress page | Stats for the three modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
 | 32. Installable | The web app manifest and icons | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
-| 33. Remaining pages and states | The home page with the three modes (a plain link to `/guess` stands in from step 16); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
+| 33. Remaining pages and states | The home page with the three modes (plain links to `/guess` and `/tactics` stand in from steps 16 and 22); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
 ## Open decisions and later features
@@ -975,7 +984,7 @@ Settled in build step 20.
 **How the browser chooses**
 
 - Square control: the browser fetches the ID list, picks at random an ID it has not played, and fetches that game.
-- Tactics: the browser fetches the ID list for the category, removes the puzzles it has seen, takes the lowest-rated of the rest, and fetches the next few in one request. For the all pieces option it combines the six lists.
+- Tactics: the browser fetches the ID list for the category, removes the puzzles it has seen, takes the lowest-rated of the rest, and fetches the next few in one request. For the all pieces option it combines the six lists into one, by rating and then by puzzle ID.
 - This makes "no repeats until the category runs out" exact, and every response the same for every visitor.
 - Ratings are in the ID list so that the easiest-first order is worked out in the browser alone.
 
@@ -1062,7 +1071,8 @@ type TacticsTallies = Record<PieceType, Tally>
 
 **Tactics**
 
-- A puzzle is recorded at the first attempt, and `solved` is the result of that attempt.
+- A puzzle is recorded at the first attempt, and `solved` is the result of that attempt. It is recorded once that result is decided: at the first wrong move, or at the final capture. The tally of the puzzle's own piece is counted at the same moment, and a puzzle already recorded is not counted again.
+- There is one record per puzzle, whichever category it was played in.
 - When a category has no unseen puzzles left, that piece's records in `puzzlesSeen` are deleted. The tallies are kept.
 - For the all pieces option, the pool is every unseen puzzle across the six categories. When it is empty, all records in `puzzlesSeen` are deleted.
 

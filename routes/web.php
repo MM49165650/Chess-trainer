@@ -8,6 +8,7 @@ use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
 use App\Http\Controllers\Guess\RandomMasterGameController;
 use App\Http\Controllers\ShowSitemapController;
+use App\Http\Controllers\Tactics\ListTacticsCategoriesController;
 use App\Http\Controllers\Tactics\PlayTacticsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -38,10 +39,11 @@ Route::get('/guess/{master}/{game}', PlayMasterGameController::class)
     ->where('game', '[0-9]{1,18}')
     ->name('guess.play');
 
-// Tactics by piece. Only the six piece types are played for now: the all
-// pieces option arrives with the category page.
+// Tactics by piece: the categories, then one piece's puzzles or all of them.
+Route::get('/tactics', ListTacticsCategoriesController::class)->name('tactics.categories');
+
 Route::get('/tactics/{piece}', PlayTacticsController::class)
-    ->whereIn('piece', ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king'])
+    ->whereIn('piece', ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king', 'all'])
     ->name('tactics.play');
 
 // Development-only pages. They are never registered on the public site, and

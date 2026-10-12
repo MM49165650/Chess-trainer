@@ -10,8 +10,9 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * GET /tactics/{piece}: the page where the tactics of one piece are played.
- * The page gets only the piece; its puzzles come from the data endpoints.
+ * GET /tactics/{piece}: the page where the tactics of one piece, or of all
+ * pieces, are played. The page gets only the category; its puzzles come from
+ * the data endpoints.
  */
 class PlayTacticsController extends Controller
 {
