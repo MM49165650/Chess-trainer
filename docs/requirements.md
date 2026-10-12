@@ -932,6 +932,39 @@ A puzzle ID list response:
 { "piece": "knight", "items": [[101, 870], [102, 1240]] }
 ```
 
+A fetch-by-IDs response:
+
+```json
+{
+  "items": [
+    {
+      "id": 101,
+      "lichess_id": "abcde",
+      "fen": "r2k4/8/8/3N4/8/8/8/6K1 b - - 0 1",
+      "setup_move": "d8e8",
+      "first_move": "d5c7",
+      "reply_move": "e8d7",
+      "second_move": "c7a8",
+      "piece": "knight",
+      "rating": 870
+    }
+  ]
+}
+```
+
+**Rules for the puzzle endpoints**
+
+Settled in build step 20.
+
+- The ID list is ordered by rating, then ID, so it is the same on every request.
+- `piece` must be one of the six piece types. Anything else returns 422, including a missing or empty `piece` and `all`: the browser makes the all pieces list from the six lists.
+- `ids` must be whole numbers separated by commas, with nothing else. A missing, empty or non-numeric list returns 422.
+- At most 20 IDs may be listed. They are counted as written, before repeats are removed, and a longer list returns 422.
+- An ID that names no puzzle is left out of the answer. If none of them exist, the answer is an empty `items` list, not an error.
+- A repeated ID is returned once. Puzzles come back in the order their IDs were first asked for.
+- Each puzzle carries `lichess_id`, so the report a problem link can point at `lichess.org/training/<id>`.
+- The theme labels, `popularity` and `plays` are not sent, because they are not shown anywhere yet.
+
 **How the browser chooses**
 
 - Square control: the browser fetches the ID list, picks at random an ID it has not played, and fetches that game.
