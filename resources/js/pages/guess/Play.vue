@@ -42,7 +42,7 @@ const failure = ref<'missing' | 'unreachable' | null>(null);
 // The board is kept short enough for the whole screen to fit without
 // scrolling: the header, the prompt and the bottom bar all stay in view.
 const page = ref<HTMLElement | null>(null);
-const boardHeightLimit = useBoardHeightLimit(page);
+useBoardHeightLimit(page);
 
 // The back arrow returns to the game list as the user left it, with its
 // page, search and filters. A game opened directly goes to the master's list.
@@ -96,11 +96,7 @@ onMounted(load);
 <template>
     <PageHead :meta="meta" />
 
-    <main
-        ref="page"
-        class="sm:mx-auto sm:w-[560px]"
-        :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
-    >
+    <main ref="page" class="sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 p-1 short:py-0">
             <Link
                 :href="backUrl"
@@ -134,6 +130,9 @@ onMounted(load);
         <GuessGame
             v-if="loaded"
             :game="loaded"
+            :opponent-short-name="
+                game.opponent_short_name ?? game.opponent_name
+            "
             :saved="saved"
             :can-save="canSave"
         />

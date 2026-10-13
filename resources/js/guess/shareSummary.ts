@@ -10,7 +10,10 @@ const SQUARES_PER_LINE = 10;
 
 export function shareSummary(
     siteName: string,
-    game: MasterGameDetailsData,
+    game: Pick<
+        MasterGameDetailsData,
+        'master' | 'master_color' | 'opponent_name' | 'year'
+    >,
     guesses: readonly Guess[],
     link: string,
 ): string {

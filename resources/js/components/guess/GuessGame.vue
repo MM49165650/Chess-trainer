@@ -29,6 +29,8 @@ import type { MasterGameRecord } from '@/storage/types';
 
 const props = defineProps<{
     game: MasterGameData;
+    /** The opponent's family name, or the full name where there is none. */
+    opponentShortName: string;
     /** The game's record from an earlier visit, if there is one. */
     saved: MasterGameRecord | null;
     /** Whether the browser has storage to save progress in. */
@@ -300,7 +302,10 @@ const moveNumber = computed(() =>
                 :class="game.master_color"
                 aria-hidden="true"
             />
-            <span class="truncate">{{ game.master.name }}</span>
+            <span class="truncate short:hidden">{{ game.master.name }}</span>
+            <span class="hidden truncate short:inline">
+                {{ masterShortName }}
+            </span>
         </span>
         <span
             v-if="status === 'guess' && viewed === null"
@@ -314,7 +319,8 @@ const moveNumber = computed(() =>
 
         <!--
             The one row of a short phone screen: the master on the left and
-            the opponent, with its note, on the right.
+            the opponent, with its note, on the right. Both go by family
+            name, so that the two names and the note fit.
         -->
         <span class="hidden min-w-0 items-center gap-2 text-muted short:flex">
             <span
@@ -322,7 +328,7 @@ const moveNumber = computed(() =>
                 :class="opponentColor"
                 aria-hidden="true"
             />
-            <span class="truncate">{{ game.opponent_name }}</span>
+            <span class="truncate">{{ opponentShortName }}</span>
             <span class="flex-none tabular-nums">{{ opponentNote }}</span>
         </span>
     </div>
@@ -333,7 +339,7 @@ const moveNumber = computed(() =>
         size as the text changes.
     -->
     <section
-        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 short:min-h-29 short:pt-2 short:pb-2"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 short:min-h-29.5 short:pt-2 short:pb-2"
         aria-live="polite"
     >
         <!--
@@ -383,13 +389,20 @@ const moveNumber = computed(() =>
             <p v-if="shareNote" class="text-muted" role="status">
                 {{ shareNote }}
             </p>
-            <div class="flex flex-wrap gap-2 pt-3">
+            <!--
+                The three stay on one line. The full labels only fit on a
+                larger screen, so a phone has shorter ones, and on a short
+                phone screen the buttons are narrower as well.
+            -->
+            <div class="end-actions flex flex-wrap gap-2 pt-3 short:pt-0">
                 <AppButton @click="share">Share</AppButton>
                 <AppButton variant="outline" @click="viewFromStart">
-                    Review from the start
+                    <span class="hidden sm:inline">Review from the start</span>
+                    <span class="sm:hidden">Review</span>
                 </AppButton>
                 <AppButton variant="outline" @click="playAgain">
-                    Play it again
+                    <span class="hidden sm:inline">Play it again</span>
+                    <span class="sm:hidden">Play again</span>
                 </AppButton>
             </div>
         </template>
@@ -426,8 +439,12 @@ const moveNumber = computed(() =>
             </p>
         </template>
 
-        <!-- The way back, whenever an earlier position is on the board. -->
-        <div v-if="viewed" class="pt-3">
+        <!--
+            The way back, whenever an earlier position is on the board. On a
+            short phone screen it is in the bottom bar, so the prompt keeps
+            its height.
+        -->
+        <div v-if="viewed" class="pt-3 short:hidden">
             <AppButton @click="returnToGame">
                 {{
                     status === 'over'
@@ -513,27 +530,47 @@ const moveNumber = computed(() =>
                             <path d="M9 5l7 7-7 7" />
                         </svg>
                     </AppButton>
-                    <AppButton
-                        variant="outline"
-                        :aria-label="delayInWords"
-                        @click="delayPanelOpen = true"
-                    >
-                        <svg
-                            aria-hidden="true"
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.6"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                    <!--
+                        On a short phone screen the way back from an earlier
+                        position takes the reply delay's place.
+                    -->
+                    <span v-if="viewed" class="hidden short:flex">
+                        <AppButton
+                            :aria-label="
+                                status === 'over'
+                                    ? 'Back to the result'
+                                    : 'Back to the game'
+                            "
+                            @click="returnToGame"
                         >
-                            <circle cx="12" cy="12" r="8.5" />
-                            <path d="M12 7.5V12l3 2" />
-                        </svg>
-                        <span class="tabular-nums">{{ delaySeconds }} s</span>
-                    </AppButton>
+                            Back
+                        </AppButton>
+                    </span>
+                    <span class="flex" :class="viewed ? 'short:hidden' : ''">
+                        <AppButton
+                            variant="outline"
+                            :aria-label="delayInWords"
+                            @click="delayPanelOpen = true"
+                        >
+                            <svg
+                                aria-hidden="true"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <circle cx="12" cy="12" r="8.5" />
+                                <path d="M12 7.5V12l3 2" />
+                            </svg>
+                            <span class="tabular-nums">
+                                {{ delaySeconds }} s
+                            </span>
+                        </AppButton>
+                    </span>
                 </div>
             </div>
         </div>
@@ -598,5 +635,12 @@ const moveNumber = computed(() =>
 
 .player-dot.white {
     background-color: var(--color-surface);
+}
+
+/* Narrower buttons on a short phone screen, to keep the three on one line. */
+@media (max-width: 639px) and (max-height: 800px) {
+    .end-actions :deep(.app-button) {
+        padding-inline: 12px;
+    }
 }
 </style>

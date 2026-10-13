@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
         keeps it clear of the resize handle.
     -->
     <section
-        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 sm:pt-6 short:min-h-40 short:pt-2 short:pb-2"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 sm:pt-6 short:min-h-41.25 short:pt-2 short:pb-2"
         aria-live="polite"
     >
         <!-- The label is the first attempt's result, whatever came after. -->
@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
                 {{ ending.heading }}
             </h1>
             <p class="text-muted">{{ ending.note }}</p>
-            <div class="pt-3">
+            <div class="pt-3 short:pt-0">
                 <AppButton variant="outline" @click="redo">Redo</AppButton>
             </div>
         </template>
@@ -228,7 +228,7 @@ onBeforeUnmount(() => {
                 Two moves with the same piece, ending in a capture.
             </p>
 
-            <div v-if="canShowSolution" class="pt-3">
+            <div v-if="canShowSolution" class="pt-3 short:pt-0">
                 <AppButton variant="outline" @click="showSolution">
                     Show solution
                 </AppButton>
