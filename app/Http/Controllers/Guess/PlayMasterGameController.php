@@ -37,6 +37,7 @@ class PlayMasterGameController extends Controller
                 'master' => ['slug' => $winner->slug, 'name' => $winner->name],
                 'master_color' => $found->master_color,
                 'opponent_name' => $found->opponent_name,
+                'opponent_short_name' => $found->opponent_short_name,
                 'year' => $found->year,
                 'event' => $found->event,
                 'ply_count' => $found->ply_count,

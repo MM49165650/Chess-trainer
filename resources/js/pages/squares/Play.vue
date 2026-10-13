@@ -34,7 +34,7 @@ const failure = ref(false);
 // The board is kept short enough for the whole screen to fit without
 // scrolling: the header, the question and the bottom bar all stay in view.
 const page = ref<HTMLElement | null>(null);
-const boardHeightLimit = useBoardHeightLimit(page);
+useBoardHeightLimit(page);
 
 async function fetchJson(url: string): Promise<unknown> {
     const response = await fetch(url, {
@@ -96,12 +96,8 @@ onMounted(() => {
 <template>
     <PageHead :meta="meta" />
 
-    <main
-        ref="page"
-        class="sm:mx-auto sm:w-[560px]"
-        :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
-    >
-        <header class="flex items-center gap-1 py-1 pr-3 pl-1">
+    <main ref="page" class="sm:mx-auto sm:w-[560px]">
+        <header class="flex items-center gap-1 py-1 pr-3 pl-1 short:py-0">
             <!-- Home stands in until the landing page at /squares is built. -->
             <Link
                 href="/"

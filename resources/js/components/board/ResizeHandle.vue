@@ -10,6 +10,8 @@ const emit = defineEmits<{
     drag: [change: number];
     /** One press of an arrow key. */
     step: [change: number];
+    /** The drag is over. */
+    end: [];
 }>();
 
 const KEY_STEP = 16;
@@ -39,7 +41,10 @@ function onPointerMove(event: PointerEvent): void {
 }
 
 function onPointerEnd(): void {
-    origin = null;
+    if (origin !== null) {
+        origin = null;
+        emit('end');
+    }
 }
 
 function onKeyDown(event: KeyboardEvent): void {
@@ -54,7 +59,7 @@ function onKeyDown(event: KeyboardEvent): void {
 </script>
 
 <template>
-    <!-- Hidden on a phone, where the board is always the full width. -->
+    <!-- Hidden on a phone, where the board has no size of its own. -->
     <button
         ref="handle"
         type="button"

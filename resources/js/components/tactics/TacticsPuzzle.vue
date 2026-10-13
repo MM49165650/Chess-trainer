@@ -2,8 +2,9 @@
 // One tactics puzzle being solved: the board, the prompt or the outcome, and
 // the bottom bar with the arrows and the way on to the next puzzle.
 
-import { computed, onBeforeUnmount, onMounted, ref, toRef, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, toRef, watch } from 'vue';
 import ChessBoard from '@/components/board/ChessBoard.vue';
+import { useBoardSize } from '@/components/board/useBoardSize';
 import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import type { PuzzleData } from '@/generated/data';
@@ -26,8 +27,8 @@ const emit = defineEmits<{
     next: [];
 }>();
 
-// Kept in memory only, until the settings arrive.
-const boardSize = ref<number | null>(null);
+// The size outlasts this puzzle: the next one opens at the same size.
+const { boardSize, saveBoardSize } = useBoardSize();
 
 const {
     fen,
@@ -161,16 +162,17 @@ onBeforeUnmount(() => {
         :last-move="lastMove"
         :movable="status === 'solve'"
         @move="move"
+        @resized="saveBoardSize"
     />
 
     <!-- Screen readers hear each prompt and each outcome. -->
     <!--
-        On larger screens the block keeps one height, so the board beside it
-        does not change size as the text changes. The extra room above keeps
-        it clear of the resize handle.
+        The block keeps one height, so the board beside it does not change
+        size as the text changes. The extra room above on larger screens
+        keeps it clear of the resize handle.
     -->
     <section
-        class="flex flex-col gap-1.5 px-5 pt-4 pb-6 sm:min-h-48 sm:pt-6"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 sm:pt-6 short:min-h-41.25 short:pt-2 short:pb-2"
         aria-live="polite"
     >
         <!-- The label is the first attempt's result, whatever came after. -->
@@ -187,7 +189,7 @@ onBeforeUnmount(() => {
                 {{ ending.heading }}
             </h1>
             <p class="text-muted">{{ ending.note }}</p>
-            <div class="pt-3">
+            <div class="pt-3 short:pt-0">
                 <AppButton variant="outline" @click="redo">Redo</AppButton>
             </div>
         </template>
@@ -226,7 +228,7 @@ onBeforeUnmount(() => {
                 Two moves with the same piece, ending in a capture.
             </p>
 
-            <div v-if="canShowSolution" class="pt-3">
+            <div v-if="canShowSolution" class="pt-3 short:pt-0">
                 <AppButton variant="outline" @click="showSolution">
                     Show solution
                 </AppButton>
