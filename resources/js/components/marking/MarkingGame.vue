@@ -10,16 +10,16 @@ import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import type { PracticeGamePlayData } from '@/generated/data';
 import {
-    SQUARE_MOVE_ANIMATION_MS,
-    useSquareGame,
-} from '@/squares/useSquareGame';
+    MARKING_MOVE_ANIMATION_MS,
+    useMarkingGame,
+} from '@/marking/useMarkingGame';
 import {
     moveInWords,
     nextLabel,
     phaseName,
     questionOf,
     verdictOf,
-} from '@/squares/wording';
+} from '@/marking/wording';
 import PhaseTabs from './PhaseTabs.vue';
 
 const props = defineProps<{
@@ -54,7 +54,7 @@ const {
     submit,
     next,
     toggleRewind,
-} = useSquareGame(props.game);
+} = useMarkingGame(props.game);
 
 /** The number a game score gives the move: both sides' first is move 1. */
 const moveNumber = computed(() => Math.ceil(ply.value / 2));
@@ -157,7 +157,7 @@ function onMain(): void {
         :show-last-move="false"
         :mark-phase="markPhase"
         :feedback="feedback"
-        :animation-ms="SQUARE_MOVE_ANIMATION_MS"
+        :animation-ms="MARKING_MOVE_ANIMATION_MS"
         @resized="saveBoardSize"
     />
 

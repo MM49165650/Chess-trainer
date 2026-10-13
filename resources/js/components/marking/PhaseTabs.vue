@@ -5,8 +5,8 @@
 // each, lost and then controlled.
 
 import { computed } from 'vue';
-import type { PhaseStep } from '@/squares/phases';
-import { phaseName, tabsOf } from '@/squares/wording';
+import type { PhaseStep } from '@/marking/phases';
+import { phaseName, tabsOf } from '@/marking/wording';
 
 const props = defineProps<{
     /** The phases of the move, in order. */

@@ -9,7 +9,7 @@ import { parseMove, type Square } from '@/chess/conventions';
 import { positionsOf } from '@/chess/game';
 import type { PracticeGamePlayData } from '@/generated/data';
 import { scoreMarks, stepsOf } from './phases';
-import { FIRST_MOVE_DELAY_MS, useSquareGame } from './useSquareGame';
+import { FIRST_MOVE_DELAY_MS, useMarkingGame } from './useMarkingGame';
 import { nextLabel } from './wording';
 
 /** A game from its moves, with the answers worked out as the import does. */
@@ -63,14 +63,14 @@ const short = madeUpGame(2, ['e2e4', 'e7e5']);
 
 /** A game whose first move has played, ready for marking. */
 function started(game: PracticeGamePlayData) {
-    const state = useSquareGame(game);
+    const state = useMarkingGame(game);
 
     vi.advanceTimersByTime(FIRST_MOVE_DELAY_MS);
 
     return state;
 }
 
-type Game = ReturnType<typeof useSquareGame>;
+type Game = ReturnType<typeof useMarkingGame>;
 
 /** Marks exactly the answer of the phase, submits it and moves on. */
 function passPhase(game: Game): void {
@@ -96,7 +96,7 @@ afterEach(() => {
 });
 
 test('the first move plays after a pause, and marking opens with it', () => {
-    const game = useSquareGame(italian);
+    const game = useMarkingGame(italian);
     const positions = positionsOf(italian.moves);
 
     expect(game.fen.value).toBe(positions[0]);
@@ -218,7 +218,7 @@ test('a submitted phase cannot be marked or submitted again', () => {
 test('every submitted phase is reported once, as it is submitted', () => {
     const reported: string[] = [];
 
-    const game = useSquareGame(italian, (result) => {
+    const game = useMarkingGame(italian, (result) => {
         reported.push(
             `${String(result.ply)} ${result.phase} ${String(result.exact)}`,
         );

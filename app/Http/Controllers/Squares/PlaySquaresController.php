@@ -17,7 +17,7 @@ class PlaySquaresController extends Controller
 {
     public function __invoke(): Response
     {
-        return Inertia::render('squares/Play', [
+        return Inertia::render('marking/Play', [
             'meta' => PageMetaData::squaresPlay(),
         ]);
     }

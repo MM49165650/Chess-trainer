@@ -10,7 +10,7 @@ import ListPracticeGameIdsController from '@/actions/App/Http/Controllers/Api/Li
 import ShowPracticeGameController from '@/actions/App/Http/Controllers/Api/ShowPracticeGameController';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
-import SquareGame from '@/components/squares/SquareGame.vue';
+import MarkingGame from '@/components/marking/MarkingGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type {
     PageMetaData,
@@ -136,7 +136,7 @@ onMounted(() => {
         </div>
 
         <!-- The key starts each game afresh. -->
-        <SquareGame
+        <MarkingGame
             v-else-if="game !== null && !loading"
             :key="game.id"
             :game="game"

@@ -16,7 +16,7 @@ export const FIRST_MOVE_DELAY_MS = 800;
 
 // How long a move takes to play on the board, in milliseconds. The move's
 // squares are not highlighted in this mode, so it is slower than elsewhere.
-export const SQUARE_MOVE_ANIMATION_MS = 450;
+export const MARKING_MOVE_ANIMATION_MS = 450;
 
 /** A submitted phase, as it will count towards the tallies. */
 export type PhaseResult = {
@@ -31,7 +31,7 @@ export type PhaseResult = {
 };
 
 /** `onSubmitted` is called once for every phase, when it is submitted. */
-export function useSquareGame(
+export function useMarkingGame(
     game: PracticeGamePlayData,
     onSubmitted?: (result: PhaseResult) => void,
 ) {
