@@ -240,7 +240,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - The board spans the full screen width, with all controls below it within thumb reach.
 - The three play screens fit a phone without scrolling. Where the screen is too short for a full-width board, the board shrinks just enough and stays centred, down to 280 pixels. Below that the page scrolls. The height that counts is the height on show at that moment, so the fit holds as the browser's address bar comes and goes: the smaller of the dynamic viewport height and the visual viewport's height. The fit is measured again whenever the rest of the screen changes height, in every state: the end of a game, looking back at a move, a failed puzzle with Show solution, and square-control feedback.
-- The visible browser area on most phones is much shorter than the 390 by 844 of the mockups. The standard test sizes are 360×640, 375×550, 390×660 and 412×780, and every play screen is checked at all four. The design targets are 360×640 and 390×660: at those two the board is the full width of the screen and nothing scrolls.
+- The visible browser area on most phones is much shorter than the 390 by 844 of the mockups. The standard test sizes are 360×640, 375×550, 390×660 and 412×780, and every play screen is checked at all four by the fit test. The design targets are 360×640 and 390×660: at those two the board is the full width of the screen and nothing scrolls.
 - At the end of a guess-the-move game the three buttons stay on one line. On a phone they read "Share", "Review" and "Play again"; a larger screen has room for "Review from the start" and "Play it again".
 - On a short phone screen, 800 pixels tall or less, the play screens tighten their spacing to give the board more room; a taller phone keeps the mockup spacing exactly. Tap targets stay 44 pixels.
     - All three: the header is 44 pixels tall with no space above or below its buttons, and the bottom bar has 6 pixels above its content and 8 below.
@@ -448,7 +448,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 
 **Guardrails**
 
-- One check command runs everything below, in CI and before each commit.
+- One check command runs everything below, in CI and before each commit, except the fit test, which takes about a minute and runs in CI only, as `composer check:fit`.
+- Every play screen is checked at the four standard sizes by the fit test. A new play screen, or a new state that changes a screen's height, is added to it.
 - PHP: strict types in every file, Larastan at a high level with no baseline, Pint, Rector, and Pest architecture tests.
 - Laravel: strict models, destructive database commands blocked in production.
 - Postgres: foreign keys, not-null, unique and check constraints throughout. Tests run against real Postgres.
@@ -467,7 +468,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Larastan analyses the app, config, database and routes folders. It does not analyse `tests/`.
 - Route helpers are regenerated on every check and are not committed.
 - The pre-commit hook runs the full check and gitleaks, a secret scanner. It is switched on once per clone with `git config core.hooksPath .githooks`.
-- CI runs the check on every push, then audits production dependencies only.
+- CI runs the check on every push, then the fit test, then audits production dependencies only.
+- The fit test is `composer check:fit`, added on 13 October 2026. It builds the site's assets and runs the Pest browser tests under `tests/Browser`, which the check command leaves out. They use pestphp/pest-plugin-browser and Playwright, with a headless Chromium that is part of the Docker image; the Playwright version in the Dockerfile and in `package.json` must be the same.
 - Stylelint and an ESLint rule reject hard-coded colours everywhere except the tokens file, `resources/css/tokens.css`.
 - The development-only pages under `/dev` are left out of production builds. `npm run build:dev` makes a build that includes them, for checking on a phone.
 
@@ -486,6 +488,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Work through made-up practice games in the square-control phase logic, and confirm each rule: squares are marked and unmarked; a phase scores only when the selection is exactly right, so a missed square and a wrongly marked square both fail it, and marking nothing is right when the answer is empty; a submitted phase cannot be changed; an ordinary move has three phases and a castling move five, each with its own piece and answer; the next move plays after the hanging phase; the game is finished after the last phase of the last move; and rewind keeps the marks and switches off on submit and on a new move.
 - Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
 - Resize the board with a made-up settings store, and confirm each rule: the size is saved once when the resize ends and not during the drag; it is still there for the next puzzle without the settings being read again; a saved size is used on the next visit; and a resize made before the settings arrive is not overwritten by them.
+- Open the three play screens in a headless browser with made-up games and puzzles, at 360×640, 375×550, 390×660 and 412×780, and confirm in each state (playing, after a wrong guess, looking back at a move, the end of a game, a failed puzzle with Show solution, the solution shown, square-control feedback, rewind) that the page does not scroll in either direction, that the board is the full width at 360×640, 390×660 and 412×780, and that it is at least 280 pixels at 375×550.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
