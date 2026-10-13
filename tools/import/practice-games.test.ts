@@ -118,13 +118,14 @@ test('each rule skips its game and reports it, and no name is written', () => {
         piece: 'pawn',
         lost: ['b3'],
         controlled: ['b4'],
+        rook: null,
         hanging: [],
     });
     expect(first).toMatchObject({
         white_rating: 1100,
         black_rating: 1150,
         time_control: '600+0',
-        answers_version: 1,
+        answers_version: 2,
     });
 });
 

@@ -2,7 +2,8 @@
 // move into words. The rules library does the chess.
 
 import { Chess } from 'chess.js';
-import type { Move, MoveParts } from './conventions.ts';
+import { isSquare, type Move, type MoveParts } from './conventions.ts';
+import { pieceTypeAt } from './position.ts';
 
 /**
  * The position before each move of a game, and after its last one: entry 0
@@ -57,4 +58,33 @@ export function isCapture(san: string): boolean {
 /** Whether a written move is castling, on either side. */
 export function isCastling(san: string): boolean {
     return san.startsWith('O-O');
+}
+
+/** The moves where the control rules are easiest to get wrong. */
+export type SpecialMove = 'castling' | 'promotion' | 'en passant';
+
+/**
+ * Whether a move is castling, a promotion or an en passant capture, from
+ * the position before it. A pawn that captures onto an empty square has
+ * captured en passant.
+ */
+export function specialMoveOf(
+    fenBefore: string,
+    move: { uci: Move; san: string },
+): SpecialMove | null {
+    if (isCastling(move.san)) {
+        return 'castling';
+    }
+
+    if (move.san.includes('=')) {
+        return 'promotion';
+    }
+
+    const to = move.uci.slice(2, 4);
+
+    return /^[a-h]x/.test(move.san) &&
+        isSquare(to) &&
+        pieceTypeAt(fenBefore, to) === null
+        ? 'en passant'
+        : null;
 }

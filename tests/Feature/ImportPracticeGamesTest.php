@@ -24,13 +24,14 @@ function practiceGamesFile(array $games): string
             'black_rating' => 1150,
             'time_control' => '600+0',
             'ply_count' => count($moves),
-            'answers_version' => 1,
+            'answers_version' => 2,
             'moves' => array_map(fn (string $move): array => [
                 'uci' => $move,
                 'san' => $move,
                 'piece' => 'pawn',
                 'lost' => ['d3', 'f3'],
                 'controlled' => ['d5', 'f5'],
+                'rook' => null,
                 'hanging' => [],
             ], $moves),
         ]);

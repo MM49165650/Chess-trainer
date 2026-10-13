@@ -264,6 +264,9 @@ watch(
             :feedback="feedback"
         />
 
+        <!-- Something extra drawn over the squares, by the page that asks. -->
+        <slot name="overlay" />
+
         <PromotionPicker
             v-if="promotion !== null"
             :color="promotion.color"

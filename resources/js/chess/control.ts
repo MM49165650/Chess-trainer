@@ -16,10 +16,16 @@ import {
 
 export type Board = ReadonlyMap<Square, Piece>;
 
-export type MoveAnswers = {
-    piece: PieceType;
+/** What one piece lost and now controls by moving. */
+export type PieceAnswers = {
     lost: SquareSet;
     controlled: SquareSet;
+};
+
+export type MoveAnswers = PieceAnswers & {
+    piece: PieceType;
+    /** The rook's answers on a castling move, and null on every other. */
+    rook: PieceAnswers | null;
     hanging: SquareSet;
 };
 
@@ -234,36 +240,32 @@ export function calculateMove(
         throw new Error(`No piece on ${move.from} to move.`);
     }
 
-    // Castling counts the king and the rook together.
-    const moved: (readonly [Square, Square])[] = [[move.from, move.to]];
-    const rook = CASTLING_ROOKS[`${move.from}${move.to}`];
-
-    if (mover.type === 'king' && rook !== undefined) {
-        moved.push(rook);
-    }
-
-    const lost = new Set<Square>();
-    const controlled = new Set<Square>();
-
-    for (const [from, to] of moved) {
+    // What one piece lost and now controls by going from one square to another.
+    const answersOf = (from: Square, to: Square): PieceAnswers => {
         // After a promotion the piece on the destination is the new piece.
-        const afterSet = new Set(attackSet(after, to));
+        const afterSet = attackSet(after, to);
 
-        for (const square of attackSet(before, from)) {
-            if (!afterSet.has(square)) {
-                lost.add(square);
-            }
-        }
+        return {
+            lost: toSquareSet(
+                attackSet(before, from).filter(
+                    (square) => !afterSet.includes(square),
+                ),
+            ),
+            controlled: toSquareSet(afterSet),
+        };
+    };
 
-        for (const square of afterSet) {
-            controlled.add(square);
-        }
-    }
+    // Castling is marked as two pieces: the king's answers are the move's
+    // own, and the rook's are kept apart.
+    const rook = CASTLING_ROOKS[`${move.from}${move.to}`];
 
     return {
         piece: mover.type,
-        lost: toSquareSet(lost),
-        controlled: toSquareSet(controlled),
+        ...answersOf(move.from, move.to),
+        rook:
+            mover.type === 'king' && rook !== undefined
+                ? answersOf(...rook)
+                : null,
         hanging: hangingSquares(after),
     };
 }

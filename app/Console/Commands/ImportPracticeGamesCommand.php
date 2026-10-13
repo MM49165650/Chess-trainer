@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Data\PracticeGameImportData;
 use App\Data\PracticeMoveData;
+use App\Data\PracticeRookAnswersData;
 use App\Models\PracticeGame;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
@@ -134,6 +135,15 @@ class ImportPracticeGamesCommand extends Command
             return $exception->validator->errors()->first();
         }
 
+        // A move must say whether a rook moved with the king, even when the
+        // answer is null. A file written before the rook's answers were kept
+        // apart has no such field, and is refused.
+        foreach (is_array($fields['moves'] ?? null) ? $fields['moves'] : [] as $index => $move) {
+            if (! is_array($move) || ! array_key_exists('rook', $move)) {
+                return 'move '.((int) $index + 1).' has no rook field.';
+            }
+        }
+
         if (count($game->moves) !== $game->ply_count) {
             return 'the moves list has '.count($game->moves).' entries, but ply_count is '.$game->ply_count.'.';
         }
@@ -207,6 +217,10 @@ class ImportPracticeGamesCommand extends Command
                         'piece' => $move->piece,
                         'lost' => $move->lost,
                         'controlled' => $move->controlled,
+                        'rook' => $move->rook instanceof PracticeRookAnswersData ? [
+                            'lost' => $move->rook->lost,
+                            'controlled' => $move->rook->controlled,
+                        ] : null,
                         'hanging' => $move->hanging,
                     ],
                     $game->moves,

@@ -12,8 +12,11 @@ export type GoldenPosition = {
     fen: string;
     move: Move;
     piece: PieceType;
+    /** For castling these two are the king's alone. */
     lost: SquareSet;
     controlled: SquareSet;
+    /** The rook's own answers. Only a castling move has them. */
+    rook?: { lost: SquareSet; controlled: SquareSet };
     hanging: SquareSet;
 };
 
@@ -65,12 +68,16 @@ export const GOLDEN_POSITIONS: readonly GoldenPosition[] = [
     },
     {
         name: 'White castles kingside',
-        covers: 'Requirements example. King and rook are combined, and f1 and h2 are in both answers.',
+        covers: 'Requirements example. The king and the rook are answered apart: the rook loses f1 and h2, which the king controls.',
         fen: '4k3/8/8/8/8/8/3PPPPP/3QK2R w K - 0 1',
         move: 'e1g1',
         piece: 'king',
-        lost: ['d1', 'd2', 'e2', 'f1', 'h2'],
-        controlled: ['d1', 'e1', 'f1', 'f2', 'g1', 'g2', 'h1', 'h2'],
+        lost: ['d1', 'd2', 'e2'],
+        controlled: ['f1', 'f2', 'g2', 'h1', 'h2'],
+        rook: {
+            lost: ['f1', 'h2'],
+            controlled: ['d1', 'e1', 'f2', 'g1'],
+        },
         hanging: [],
     },
     {
@@ -95,23 +102,16 @@ export const GOLDEN_POSITIONS: readonly GoldenPosition[] = [
     },
     {
         name: 'Black castles queenside',
-        covers: 'Castling on the other side and for the other colour. b8, d8 and f8 are in both answers.',
+        covers: 'Castling on the other side and for the other colour. The rook loses b8 and d8, which the king controls, and controls f8, which the king lost.',
         fen: 'r3k3/pppp4/8/8/8/8/8/6K1 b q - 0 1',
         move: 'e8c8',
         piece: 'king',
-        lost: ['a7', 'b8', 'd8', 'e7', 'f7', 'f8'],
-        controlled: [
-            'b7',
-            'b8',
-            'c7',
-            'c8',
-            'd7',
-            'd8',
-            'e8',
-            'f8',
-            'g8',
-            'h8',
-        ],
+        lost: ['e7', 'f7', 'f8'],
+        controlled: ['b7', 'b8', 'c7', 'd7', 'd8'],
+        rook: {
+            lost: ['a7', 'b8', 'd8'],
+            controlled: ['c8', 'd7', 'e8', 'f8', 'g8', 'h8'],
+        },
         hanging: [],
     },
     {

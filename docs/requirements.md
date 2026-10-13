@@ -116,6 +116,8 @@ Each phase is marked and submitted separately, in this order.
 | 2. Squares controlled | Squares the moved piece now controls | Every square it controls after the move, including ones it already controlled |
 | 3. Hanging pieces | Every hanging piece and pawn on the board | Judged after the move, for both sides |
 
+A castling move moves two pieces, so it has five phases, in this order: the king's squares lost, the king's squares controlled, the rook's squares lost, the rook's squares controlled, then hanging pieces. Decided on 13 October 2026.
+
 **Definitions**
 
 These rules are the specification for the import code and its tests.
@@ -134,7 +136,7 @@ These rules are the specification for the import code and its tests.
 
 - The destination square belongs in phase 1, because the piece controlled it before the move and now stands on it.
 - Pawn pushes are the exception that follows from the rule: a pawn never controlled the square it pushes to, so that square is not marked. A pawn capture's destination is marked.
-- Castling counts the king and the rook together in phases 1 and 2. The prompt for a castling move names both pieces. A square may then appear in both phases, lost by one piece and controlled by the other.
+- Castling is marked as two pieces, separately: first the king's lost and controlled squares, then the rook's. Each prompt names the piece it is about. A square is never in both phases of one piece, because a piece's lost squares are the ones it no longer controls. A square can still be lost by one piece and controlled by the other, such as f1 when White castles kingside.
 - Promotion: the before set is the pawn's and the after set is the new piece's. A square the pawn controlled is lost only if the new piece does not control it. A pawn that promotes to a queen by a push loses nothing, because the queen still controls both of the pawn's squares.
 - A hanging piece is marked again on every move for as long as it stays hanging.
 - An empty submission is valid. Many positions have no hanging pieces.
@@ -151,7 +153,7 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 
 - Each phase has its own score: 1 if the selection is exactly right, 0 otherwise. Missed squares and wrongly marked squares both fail the phase.
 - The user sees three running percentages, one per phase, to show which skill is weakest.
-- Tallies are also kept by the type of piece that moved.
+- Tallies are also kept by the type of piece that moved. On a castling move the king's two phases count towards the king, the rook's two towards the rook, and the hanging phase towards the king.
 - Feedback appears after each phase is submitted: missed squares are highlighted, and wrongly marked squares are shown in a second colour.
 
 **Sessions**
@@ -544,7 +546,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | Step | Build | Done when |
 | --- | --- | --- |
 | 24. Table and import on a sample | The `practice_games` migration; `extract:practice` with the calculation from step 7; `import:practice-games`. Done on 13 October 2026 into the local database: 500 games, from the first 1.5 GB of the September 2026 file | The sample loads, and neither the intermediate file nor the database holds a username |
-| 25. Answer viewer | A development-only page that steps through an imported game and shows the three stored answers on the board | You have checked several games by eye and found no wrong answer |
+| 25. Answer viewer | A development-only page at `/dev/answers` that steps through an imported game and shows the stored answers on the board and as lists: three for an ordinary move, five for castling | You have checked several games by eye and found no wrong answer |
 | 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet | A full game can be worked through comfortably on a phone |
 | 27. Session | Next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase |
 | 28. Tallies | The three phase scores and the tallies by piece | The numbers match a session counted by hand |
@@ -639,7 +641,7 @@ Call the position before the move B and the position after it A.
 2. After set: the attack set of the piece now on the destination square, in A. For a promotion this is the new piece.
 3. `lost` is the before set minus the after set.
 4. `controlled` is the after set.
-5. Castling: do steps 1 to 3 separately for the king and for the rook. `lost` is the two lost sets combined, and `controlled` is the two after sets combined.
+5. Castling: do steps 1 to 4 separately for the king and for the rook. `lost` and `controlled` are the king's alone. The rook's two sets are stored apart, as `rook.lost` and `rook.controlled`. On every other move `rook` is null.
 6. `hanging`: look at every piece and pawn in A, of both colours, except the kings. It is attacked if its square is in the attack set of at least one enemy piece, pawn or king. It is defended if its square is in the attack set of at least one other piece, pawn or king of its own colour. If it is attacked and not defended, add its square.
 7. `piece` is the type of the moving piece before the move. For castling it is `king`.
 
@@ -678,10 +680,12 @@ White has the king on e1, a rook on h1, the queen on d1, and pawns on d2, e2, f2
 | King, e1 to g1 | d1, d2, e2, f1, f2 | f1, f2, g2, h1, h2 | d1, d2, e2 |
 | Rook, h1 to f1 | e1, f1, g1, h2 | d1, e1, f2, g1 | f1, h2 |
 
-- `lost`: `d1`, `d2`, `e2`, `f1`, `h2`
-- `controlled`: `d1`, `e1`, `f1`, `f2`, `g1`, `g2`, `h1`, `h2`
+- `lost`, the king's: `d1`, `d2`, `e2`
+- `controlled`, the king's: `f1`, `f2`, `g2`, `h1`, `h2`
+- `rook.lost`: `f1`, `h2`
+- `rook.controlled`: `d1`, `e1`, `f2`, `g1`
 
-The squares `f1` and `h2` appear in both answers: one piece lost them and the other controls them.
+The squares `f1` and `h2` are lost by the rook and controlled by the king. No square is in both answers of the same piece.
 
 All three examples, and the rook example under Mode 2, belong in the golden tests.
 
@@ -732,7 +736,7 @@ A `moves` entry:
 | `black_rating` | smallint | Between 0 and 4000 |
 | `time_control` | text | As given by Lichess, for example `600+0` |
 | `ply_count` | smallint | At least 1 |
-| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers; starts at 1 |
+| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1 and has been 2 since 13 October 2026, when the rook's answers on a castling move were stored apart from the king's |
 | `moves` | jsonb | Array with one entry per ply, in order; its length equals `ply_count` |
 
 A `moves` entry:
@@ -744,9 +748,26 @@ A `moves` entry:
   "piece": "knight",
   "lost": ["e2", "f3", "h3"],
   "controlled": ["d2", "d4", "e1", "e5", "g1", "g5", "h2", "h4"],
+  "rook": null,
   "hanging": ["e5"]
 }
 ```
+
+On a castling move `piece` is `king`, `lost` and `controlled` are the king's alone, and `rook` holds the rook's two sets:
+
+```json
+{
+  "uci": "e1g1",
+  "san": "O-O",
+  "piece": "king",
+  "lost": ["d1", "d2", "e2"],
+  "controlled": ["f1", "f2", "g2", "h1", "h2"],
+  "rook": { "lost": ["f1", "h2"], "controlled": ["d1", "e1", "f2", "g1"] },
+  "hanging": []
+}
+```
+
+Every entry carries the `rook` field, and it is null on every move that is not castling.
 
 No usernames and no Lichess game ID are stored, since the ID links back to the players.
 
@@ -885,7 +906,7 @@ They are options so that the values can change without code changes.
 - A game shorter than `--min-plies` or longer than `--max-plies` is skipped.
 - The games are not taken in file order. Every game that passes the rules above is collected, and `--limit` of them are chosen as described under "Practice games: choosing the games".
 - Player names, the game link, and clock and evaluation comments are dropped.
-- Each move's answers are calculated as in Appendix B.
+- Each move's answers are calculated as in Appendix B. Every move in the intermediate file carries the `rook` field: the rook's two sets on a castling move, and null otherwise. The load refuses a move without it, so a file written before answers version 2 cannot be loaded by mistake.
 
 **Practice games: choosing the games**
 
@@ -1068,7 +1089,7 @@ type MasterGameRecord = {
   current: { guesses: Guess[]; startedAt: string; updatedAt: string } | null
 }
 
-type SquareSession = { gameId: number; ply: number; phase: Phase; updatedAt: string }
+type SquareSession = { gameId: number; ply: number; phase: Phase; rook: boolean; updatedAt: string }
 
 type SquareSeen = { gameId: number; status: 'finished' | 'abandoned'; at: string }
 
@@ -1090,7 +1111,8 @@ type TacticsTallies = Record<PieceType, Tally>
 **Square control**
 
 - `ply` is the move being worked on, and `phase` is the next phase to submit.
-- A phase is added to the tallies at the moment it is submitted, under the type of piece that moved. Resuming continues at the exact phase, so nothing is counted twice.
+- `rook` is true only on a castling move, while the next phase to submit is the rook's lost or controlled phase. With it, `phase` tells the five phases of a castling move apart.
+- A phase is added to the tallies at the moment it is submitted, under the type of piece that moved. On a castling move the king's lost and controlled phases are added under the king, the rook's under the rook, and the hanging phase under the king. The shape of `SquareTallies` does not change. Resuming continues at the exact phase, so nothing is counted twice.
 - Marks that were not submitted are not saved.
 - The percentage shown for a phase is the total across the six piece types.
 - Pressing next game before the end records the game as abandoned.
