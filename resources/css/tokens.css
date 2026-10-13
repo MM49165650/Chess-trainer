@@ -77,6 +77,9 @@
     --color-board-feedback-wrong: #be3232;
     --color-board-feedback-wrong-border: #8a1c1c;
 
+    /* The letter on a square that names its phase, on a dark chip. */
+    --color-board-mark-label: #fbf8ef;
+
     /* A marked square's border is a darker shade of its fill colour. */
     --color-board-mark-lost-border: color-mix(
         in srgb,

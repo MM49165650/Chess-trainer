@@ -3,6 +3,9 @@
 declare(strict_types=1);
 
 use App\Data\PageMetaData;
+use App\Http\Controllers\Dev\ListFollowingPracticeGamesController;
+use App\Http\Controllers\Dev\RandomAnswerViewerController;
+use App\Http\Controllers\Dev\ShowAnswerViewerController;
 use App\Http\Controllers\Guess\ListMasterGamesController;
 use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
@@ -51,4 +54,16 @@ Route::get('/tactics/{piece}', PlayTacticsController::class)
 if (app()->environment('local')) {
     Route::get('/dev/board', fn (): Response => Inertia::render('dev/BoardDemo'))->name('dev.board');
     Route::get('/dev/components', fn (): Response => Inertia::render('dev/ComponentSamples'))->name('dev.components');
+
+    // The answer viewer. The random route is registered above the game
+    // route, and {game} accepts digits only, so the two never clash.
+    Route::get('/dev/answers/random', RandomAnswerViewerController::class)->name('dev.answers.random');
+
+    Route::get('/dev/answers/following/{game}', ListFollowingPracticeGamesController::class)
+        ->where('game', '[0-9]{1,18}')
+        ->name('dev.answers.following');
+
+    Route::get('/dev/answers/{game?}', ShowAnswerViewerController::class)
+        ->where('game', '[0-9]{1,18}')
+        ->name('dev.answers');
 }
