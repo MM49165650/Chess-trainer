@@ -98,6 +98,15 @@ final class PageMetaData extends Data
         );
     }
 
+    public static function squaresPlay(): self
+    {
+        return new self(
+            title: 'Square control',
+            description: 'Watch a beginner game one move at a time. After every move, mark the squares it gave up, the squares it controls, and every hanging piece.',
+            heading: 'Square control',
+        );
+    }
+
     public static function game(Master $master, MasterGame $game): self
     {
         // White's name first. Both players go by family name; an opponent

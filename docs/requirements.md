@@ -1,6 +1,6 @@
 # Chess training site: product requirements
 
-Last updated: 12 October 2026
+Last updated: 13 October 2026
 
 A free, open source, mobile-first chess training site with three modes: guess the move against eleven masters, a square-control drill on beginner games, and short tactics that win material, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
@@ -162,6 +162,20 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 - A next game button serves a random game. There is no browsing. The mode opens on a landing page at /squares that shows the three phase percentages and a Start or Resume button. The exercise itself runs at /squares/play.
 - The board is shown with White at the bottom.
 - A rewind button shows the position before the move. The move's squares are not highlighted in this mode. Phase 1 depends on that earlier position, and a user resuming a session did not just watch the move.
+
+**The marking screen**
+
+Settled in build step 26.
+
+- The move plays on the board from the position before it, with no square highlighted, and phase 1 opens at once. It plays more slowly than moves elsewhere, about 450 milliseconds, so that it can be followed. Before the first move of a game the starting position is shown for about 0.8 seconds. Both are kept as named values. With reduced motion there is no animation.
+- A line above the question names the move in words, with the move number as a game score gives it: "Move 2 · White played Nf3", "Black took on e5", "White took on d6 en passant", "White castled kingside", "White promoted to a queen on e8". The written move keeps its own case inside the uppercase label, because in capitals `bxc4` and `Bxc4` would read the same.
+- The questions are "Which squares does the knight no longer control?", "Which squares does the knight control now?" and "Which pieces are hanging, on either side?". The hanging question always says that both sides count. After a promotion the second question names the new piece: "Which squares does the new queen control?".
+- The phase indicator always has three tabs. On an ordinary move they are Lost, Controls and Hanging. On a castling move they are King, Rook and Hanging: the King and Rook tabs each show two small squares, the first in the lost colour and the second in the controls colour, and the question names the piece. The current tab is underlined in the colour of the phase being marked. Each phase's square turns into a tick when it was exactly right and a cross when it was not.
+- Rewind is a toggle, not a button to hold. While it is on, the button shows as pressed, the board shows the position before the move, and the line above the question starts "Before move 2". Squares can still be marked while the earlier position is shown, in every phase, and the marks are kept when it is switched off. Rewind switches off when a phase is submitted, so the feedback is first seen on the position after the move, and on every new move. It can be switched on again while the feedback is showing.
+- The main button reads "Submit · 6 marked" while marking, and "Submit · none marked" when nothing is marked.
+- After a phase is submitted, the line above reads "Move 2 · Controls · Not quite" in the wrong colour, or "… · Exactly right" in the accent colour, and the heading says how it came out: "Three squares missed, one too many.", "All eight squares.", "Both squares.", "The only square." or "Nothing to mark, and nothing marked.". The hanging phase says "pieces" where the others say "squares". On a castling move the line names the piece, as in "Move 5 · Rook · Lost · Not quite".
+- The main button then names what comes next: "Next: squares controlled", "Next: hanging pieces" and "Next move". On a castling move it reads, in order, "Next: king's squares controlled", "Next: rook's squares lost", "Next: rook's squares controlled" and "Next: hanging pieces". After the hanging phase of a game's last move the line above starts "End of the game" and the button reads "Next game". There is no end-of-game screen.
+- Until sessions are built in step 27, the screen opens a game picked at random from the ID list, from its first move, and "Next game" at the end picks another. The "Next game" button in the header comes with step 27, the three percentages under the board with step 28, and the report a problem link with step 33.
 
 ## Mode 3: Tactics by piece
 
@@ -354,6 +368,7 @@ The light-mode backgrounds were softened on 11 October 2026 after the first valu
 | Wrong | Red fill `#BE3232` with a solid `#8A1C1C` border |
 
 - A legend under the board counts correct, missed and wrong squares, and the main button moves to the next phase.
+- The wrong colour has a text version for the "Not quite" line and the cross in the phase indicator: `#A32A2A` in light mode and `#E58A8A` in dark. Added in build step 26.
 - On the board, the Light column of the phase table and the feedback colours above apply in both modes. The Dark column applies only to these colours where they appear on the page. This was settled in build step 9, after the pale dark-mode values proved unreadable on the olive board.
 - The mockups are saved as images in the repository under `docs/design/`, because the building agent only sees what is in the repository.
 
@@ -460,6 +475,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Choose puzzles from made-up ID lists, and confirm each rule: easiest first with equal ratings by ID; seen puzzles left out; all pieces as one list across the pieces; an empty pool when everything is seen; a puzzle seen in its piece's category left out of all pieces; and clearing one piece leaves the others' seen records alone.
 - Extract made-up practice games, and confirm each rule: a missing rating, an abandoned game, a rules infraction, another time control, a player at the rating limit, a bot player, a game that is too short or too long and an illegal move are each skipped and reported; no player name reaches the output; the family cap and the length bands hold; and the same games are chosen in the same order on every run.
 - Load made-up practice games where one has an answer list holding something that is not a square, and confirm the line is rejected and nothing is written.
+- Work through made-up practice games in the square-control phase logic, and confirm each rule: squares are marked and unmarked; a phase scores only when the selection is exactly right, so a missed square and a wrongly marked square both fail it, and marking nothing is right when the answer is empty; a submitted phase cannot be changed; an ordinary move has three phases and a castling move five, each with its own piece and answer; the next move plays after the hanging phase; the game is finished after the last phase of the last move; and rewind keeps the marks and switches off on submit and on a new move.
+- Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
@@ -1014,6 +1031,41 @@ A fetch-by-IDs response:
   ]
 }
 ```
+
+A practice game ID list response:
+
+```json
+{ "ids": [1, 2, 3] }
+```
+
+A practice game response:
+
+```json
+{
+  "id": 7,
+  "ply_count": 64,
+  "answers_version": 2,
+  "moves": [
+    {
+      "uci": "g1f3",
+      "san": "Nf3",
+      "piece": "knight",
+      "lost": ["e2", "f3", "h3"],
+      "controlled": ["d2", "d4", "e1", "e5", "g1", "g5", "h2", "h4"],
+      "rook": null,
+      "hanging": ["e5"]
+    }
+  ]
+}
+```
+
+**Rules for the practice-game endpoints**
+
+Settled in build step 26.
+
+- The ID list is ordered by ID, so it is the same on every request. With no games loaded it is an empty list, not an error.
+- A game carries only what the screen uses: its ID, `ply_count`, `answers_version` and `moves`, with each move as in Appendix C. The ratings, the time control and the fingerprint are not sent.
+- The ID in the address must be 1 to 18 digits. Anything else is a 404, like an unknown ID.
 
 **Rules for the puzzle endpoints**
 

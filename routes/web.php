@@ -11,6 +11,7 @@ use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
 use App\Http\Controllers\Guess\RandomMasterGameController;
 use App\Http\Controllers\ShowSitemapController;
+use App\Http\Controllers\Squares\PlaySquaresController;
 use App\Http\Controllers\Tactics\ListTacticsCategoriesController;
 use App\Http\Controllers\Tactics\PlayTacticsController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,9 @@ Route::get('/guess/{master}/{game}', PlayMasterGameController::class)
     ->where('master', '[a-z]+')
     ->where('game', '[0-9]{1,18}')
     ->name('guess.play');
+
+// Square control: the exercise. Its landing page at /squares comes later.
+Route::get('/squares/play', PlaySquaresController::class)->name('squares.play');
 
 // Tactics by piece: the categories, then one piece's puzzles or all of them.
 Route::get('/tactics', ListTacticsCategoriesController::class)->name('tactics.categories');
