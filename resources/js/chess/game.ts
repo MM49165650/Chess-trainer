@@ -2,7 +2,7 @@
 // move into words. The rules library does the chess.
 
 import { Chess } from 'chess.js';
-import type { Move, MoveParts } from './conventions';
+import type { Move, MoveParts } from './conventions.ts';
 
 /**
  * The position before each move of a game, and after its last one: entry 0
