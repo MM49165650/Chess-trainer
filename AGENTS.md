@@ -8,6 +8,7 @@ The mockups in `docs/design/` show the intended look.
 - Work on one build step at a time (see "Build order" in the requirements), and stop when its finish line is met.
 - When the requirements are silent or contradict themselves, stop and ask. Do not guess.
 - Run the check command before finishing: `docker compose run --rm app composer check`. Never finish with it failing.
+- Before finishing any change to a play screen, run the fit test as well: `docker compose run --rm app composer check:fit`. It is not part of the check command and otherwise runs only in CI.
 - Do not change the check configuration, the CI workflow or the licence file without approval, and do not add comments that silence a check.
 - Design and review every screen at phone width first, about 390 pixels, in both light and dark mode.
 - Use design tokens only. Do not hard-code colours in components.

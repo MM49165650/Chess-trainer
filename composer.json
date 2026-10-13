@@ -23,6 +23,7 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.9.3",
         "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-browser": "^5.1",
         "pestphp/pest-plugin-laravel": "^5.0",
         "rector/rector": "^2.7"
     },
@@ -52,7 +53,7 @@
             "pint --parallel --test",
             "rector process --dry-run",
             "phpstan analyse --memory-limit=1G",
-            "pest --compact",
+            "pest --compact --exclude-testsuite=Browser",
             "@php artisan wayfinder:generate --with-form",
             "@php artisan typescript:transform",
             "npm run types",
@@ -62,6 +63,11 @@
             "npm run test",
             "npm run licences",
             "npm run silencers"
+        ],
+        "check:fit": [
+            "Composer\\Config::disableProcessTimeout",
+            "npm run build",
+            "pest --compact --testsuite=Browser"
         ],
         "fix": [
             "rector process",

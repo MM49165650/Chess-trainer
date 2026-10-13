@@ -80,6 +80,16 @@ CI runs the same command on every pull request and on `main`. To run it before e
 git config core.hooksPath .githooks
 ```
 
+### The fit test
+
+A second command opens the three play screens in a headless browser at four phone sizes and fails if a screen scrolls or its board is too narrow. It takes about a minute, so it runs in CI and on demand, not before each commit:
+
+```bash
+docker compose run --rm app composer check:fit
+```
+
+It needs the browser that is part of the Docker image. After pulling a change to the `Dockerfile`, rebuild the image with `docker compose build` and run `composer setup` again.
+
 ## Licence
 
 GPL-3.0. See [`LICENSE`](LICENSE). Third-party assets such as piece sets keep their own licences.
