@@ -12,7 +12,7 @@ import {
     type PieceType,
     type Square,
     type SquareSet,
-} from './conventions';
+} from './conventions.ts';
 
 export type Board = ReadonlyMap<Square, Piece>;
 

@@ -11,7 +11,7 @@ The MVP is three training modes served from a read-only library, with nothing to
 **In the MVP**
 
 - Guess the move, with games from eleven masters
-- Square control, on games by players rated under 1000
+- Square control, on games by players rated under 1200
 - Tactics by piece, two moves long, each winning material by a capture
 - Progress, history and settings saved in the browser
 - Command-line imports for all game and puzzle data
@@ -100,7 +100,8 @@ The user watches a beginner game one move at a time and, after every move, marks
 
 **Games**
 
-- Games come from the Lichess open database, from players rated under 1000.
+- Games come from the Lichess open database: rated 10-minute rapid games with no increment, with both players rated under 1200. Games with a bot player are left out. Decided on 13 October 2026.
+- 500 games are loaded, between 30 and 120 plies long, chosen for a mix of openings and game lengths. Appendix E has the exact rule.
 - Usernames are removed at import.
 - The user goes through the whole game move by move, starting at move 1. These are not isolated puzzles.
 - Moves are shown, not guessed. Every move by either side is an exercise.
@@ -455,6 +456,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Extract made-up puzzle rows with hand-written positions, and confirm each rule: four moves only, the same piece on both solver moves, no puzzle ending in checkmate, a capture on the last move with en passant counted, a promoting pawn filed under pawn, castling filed under king, an illegal move rejected, and the same per-piece cut on every run.
 - Play made-up puzzles through the tactics play logic, and confirm each rule: a correct first and second move solves the puzzle; a wrong first move fails it and the retry starts from the same position; a wrong second move after a correct first move fails it; a later correct answer still leaves it failed; show solution plays only the missed move, and the arrows then reach every position from the setup to the end; redo resets the board but keeps the result; auto next moves on only after a solve, and anything pressed during the pause cancels it; and a promotion move counts the promotion piece.
 - Choose puzzles from made-up ID lists, and confirm each rule: easiest first with equal ratings by ID; seen puzzles left out; all pieces as one list across the pieces; an empty pool when everything is seen; a puzzle seen in its piece's category left out of all pieces; and clearing one piece leaves the others' seen records alone.
+- Extract made-up practice games, and confirm each rule: a missing rating, an abandoned game, a rules infraction, another time control, a player at the rating limit, a bot player, a game that is too short or too long and an illegal move are each skipped and reported; no player name reaches the output; the family cap and the length bands hold; and the same games are chosen in the same order on every run.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
@@ -540,12 +542,12 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 | Step | Build | Done when |
 | --- | --- | --- |
-| 24. Table and import on a sample | The `practice_games` migration; `extract:practice` with the calculation from step 7; `import:practice-games` | The sample loads, and neither the intermediate file nor the database holds a username |
+| 24. Table and import on a sample | The `practice_games` migration; `extract:practice` with the calculation from step 7; `import:practice-games`. Done on 13 October 2026 into the local database: 500 games, from the first 1.5 GB of the September 2026 file | The sample loads, and neither the intermediate file nor the database holds a username |
 | 25. Answer viewer | A development-only page that steps through an imported game and shows the three stored answers on the board | You have checked several games by eye and found no wrong answer |
 | 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet | A full game can be worked through comfortably on a phone |
 | 27. Session | Next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase |
 | 28. Tallies | The three phase scores and the tallies by piece | The numbers match a session counted by hand |
-| 29. Full import | All practice games loaded on the server | Needs one open decision: game selection |
+| 29. Full import | All practice games loaded on the server | Needs no further decisions: game selection is settled |
 
 **Stage 6: Finish**
 
@@ -559,13 +561,13 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 
 ## Open decisions and later features
 
-Three decisions are still open. The source of master games, their minimum length and puzzle difficulty are settled. None of them blocks starting the build.
+Two decisions are still open. The source of master games, their minimum length, puzzle difficulty and the selection of practice games are settled. None of them blocks starting the build.
 
 **Open decisions**
 
 | Decision | Applies to | What needs deciding |
 | --- | --- | --- |
-| Game selection | Square control | Whether both players must be under 1000, whether fast time controls are excluded, minimum length, and how many games |
+| Game selection | Square control | Decided on 13 October 2026, after a report on the first 4.9 million games of the September 2026 file: 500 games with the time control `600+0`, both players under 1200, no bot players, 30 to 120 plies, at most 25 per opening family, spread evenly over three length bands. Appendix E has the exact rule |
 | Puzzle difficulty | Tactics by piece | Decided on 12 October 2026: a rating of at most 1500, a popularity of at least 80, at least 500 plays, and 2,000 per piece, taking the most popular, then the most played, then by puzzle ID. Puzzles are served easiest first within a category |
 | Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
@@ -844,17 +846,18 @@ The load stage contains no chess logic.
 
 **Options**
 
-The defaults marked as placeholders stand in for the open decisions. They are options so that the values can change without code changes.
+They are options so that the values can change without code changes.
 
 | Command | Option | Meaning | Default |
 | --- | --- | --- | --- |
 | `extract:masters` | `--min-plies` | Shortest game kept | 2, which leaves out games forfeited after one move. Decided on 12 October 2026 |
 | `extract:masters` | `--exclude-events` | Words in the event or site that exclude a game | sim, simul, blindfold, odds, consultation, blitz, rapid, each matched as a whole word. Digits may follow the word, so "rapid" also matches "rapid45" |
-| `extract:practice` | `--max-rating` | Rating limit | 1000 |
-| `extract:practice` | `--both-players` | Whether both players must be under the limit | Yes, placeholder |
-| `extract:practice` | `--exclude-speeds` | Speeds to skip, read from the game's Event tag | bullet and ultrabullet, placeholder |
-| `extract:practice` | `--min-plies` | Shortest game kept | 30, placeholder |
-| `extract:practice` | `--limit` | Stop after this many accepted games | 300, placeholder |
+| `extract:practice` | `--time-control` | The only time control kept, compared with the game's `TimeControl` tag exactly | `600+0`, which is 10-minute rapid with no increment. Decided on 13 October 2026 |
+| `extract:practice` | `--max-rating` | Rating limit. Both players must be under it | 1200. Decided on 13 October 2026 |
+| `extract:practice` | `--min-plies` | Shortest game kept | 30. Decided on 13 October 2026 |
+| `extract:practice` | `--max-plies` | Longest game kept | 120. Decided on 13 October 2026 |
+| `extract:practice` | `--limit` | How many games are chosen | 500. Decided on 13 October 2026 |
+| `extract:practice` | `--per-family` | Most games chosen per opening family | 25. Decided on 13 October 2026 |
 | `extract:puzzles` | `--max-rating` | Highest puzzle rating kept | 1500. Decided on 12 October 2026 |
 | `extract:puzzles` | `--min-popularity` | Lowest popularity kept | 80. Decided on 12 October 2026 |
 | `extract:puzzles` | `--min-plays` | Fewest plays kept | 500. Decided on 12 October 2026 |
@@ -876,8 +879,26 @@ The defaults marked as placeholders stand in for the open decisions. They are op
 - The source is a monthly file of standard rated games. It is read as a stream while still compressed, so it is never unpacked in full.
 - Ratings come from the `WhiteElo` and `BlackElo` tags. A game missing either is skipped.
 - Games that ended by abandonment or a rules infraction are skipped.
+- A game is kept only if its `TimeControl` tag is exactly `--time-control`, and both ratings are under `--max-rating`. A rating equal to the limit is not under it.
+- A game where either player has the title `BOT`, in the `WhiteTitle` or `BlackTitle` tag, is skipped.
+- A game shorter than `--min-plies` or longer than `--max-plies` is skipped.
+- The games are not taken in file order. Every game that passes the rules above is collected, and `--limit` of them are chosen as described under "Practice games: choosing the games".
 - Player names, the game link, and clock and evaluation comments are dropped.
 - Each move's answers are calculated as in Appendix B.
+
+**Practice games: choosing the games**
+
+Decided on 13 October 2026. The aim is a mix of openings and of game lengths, and the same choice on every run.
+
+- The opening family of a game is its `Opening` tag up to the first colon, so "Sicilian Defense: Bowdler Attack" belongs to "Sicilian Defense". A game with no `Opening` tag belongs to the family `?`.
+- There are three length bands: short, up to 49 plies; medium, 50 to 73 plies; and long, 74 plies or more. With the default limits these are 30 to 49, 50 to 73 and 74 to 120.
+- Each band takes a third of `--limit`. When the limit does not divide by three, the shorter bands take the remainder, so 500 gives 167, 167 and 166.
+- The games are put in order of the SHA-256 of their moves as written in the file: standard notation, joined by single spaces, without move numbers, comments, annotation symbols or the result. This order does not depend on the order in the file.
+- The games are taken in that order. A game is chosen when its band is not full and its family has fewer than `--per-family` games. Otherwise it is passed over.
+- A chosen game is then replayed. One with an illegal move is skipped, and its place stays open for a later game. One with the same moves as a game already chosen is skipped as well.
+- When the input holds too few games to fill a band, fewer than `--limit` are chosen, and the report says how many each band got.
+- The report counts the chosen games by band and by opening family.
+- The same input and options always give the same games in the same order. A different input file gives a different choice; loading it adds games and removes none.
 
 **Puzzles: extract rules**
 

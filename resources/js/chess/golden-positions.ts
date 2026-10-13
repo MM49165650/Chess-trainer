@@ -3,7 +3,7 @@
 // a board, so a change here needs the same care. The tests that run them
 // arrive with the calculation in build step 7.
 
-import type { Move, PieceType, SquareSet } from './conventions';
+import type { Move, PieceType, SquareSet } from './conventions.ts';
 
 export type GoldenPosition = {
     name: string;

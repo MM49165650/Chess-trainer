@@ -16,6 +16,7 @@
         "licences": "node tools/check/licences.ts",
         "silencers": "node tools/check/silencers.ts",
         "extract:masters": "node tools/import/extract-masters.ts",
+        "extract:practice": "node tools/import/extract-practice.ts",
         "extract:puzzles": "node tools/import/extract-puzzles.ts"
     },
     "dependencies": {
