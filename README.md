@@ -1,9 +1,10 @@
 # Chess trainer
 
-A free, open source, mobile-first chess training site focused on beginners with three modes:
+A free, open source, mobile-first chess training site focused on beginners with four modes:
 
 - **Guess the move**: play through a master's win and guess each move.
-- **Square control**: after every move of a beginner game, mark what changed on the board.
+- **Square control**: after every move of a beginner game, mark the squares the piece gave up and the squares it controls now.
+- **Spot the hanging piece**: after every move of the same games, mark every piece left hanging, on either side.
 - **Tactics by piece**: one- and two-move tactics, grouped by the piece that plays them.
 
 The site is being built step by step. So far there is only a placeholder home page.
@@ -82,7 +83,7 @@ git config core.hooksPath .githooks
 
 ### The fit test
 
-A second command opens the three play screens in a headless browser at four phone sizes and fails if a screen scrolls or its board is too narrow. It takes about a minute, so it runs in CI and on demand, not before each commit:
+A second command opens the four play screens in a headless browser at four phone sizes and fails if a screen scrolls or its board is too narrow. It takes about a minute, so it runs in CI and on demand, not before each commit:
 
 ```bash
 docker compose run --rm app composer check:fit
