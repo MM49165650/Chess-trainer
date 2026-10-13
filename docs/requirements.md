@@ -2,16 +2,17 @@
 
 Last updated: 13 October 2026
 
-A free, open source, mobile-first chess training site with three modes: guess the move against eleven masters, a square-control drill on beginner games, and short tactics that win material, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
+A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that win material, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
 ## MVP scope
 
-The MVP is three training modes served from a read-only library, with nothing to log in to. The site is free, not intended to make money beyond possible donations, and its code is public.
+The MVP is four training modes served from a read-only library, with nothing to log in to. The site is free, not intended to make money beyond possible donations, and its code is public.
 
 **In the MVP**
 
 - Guess the move, with games from eleven masters
 - Square control, on games by players rated under 1200
+- Spot the hanging piece, on the same games
 - Tactics by piece, two moves long, each winning material by a capture
 - Progress, history and settings saved in the browser
 - Command-line imports for all game and puzzle data
@@ -96,7 +97,9 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 
 ## Mode 2: Square control
 
-The user watches a beginner game one move at a time and, after every move, marks what changed on the board in three phases.
+The user watches a beginner game one move at a time and, after every move, marks what changed on the board in two phases.
+
+Until 13 October 2026 this mode had a third phase, hanging pieces. On that day, before build step 27, it became a mode of its own: Mode 4, spot the hanging piece. The two modes share the games, the stored answers and the marking screen, and each keeps its own progress.
 
 **Games**
 
@@ -106,7 +109,7 @@ The user watches a beginner game one move at a time and, after every move, marks
 - The user goes through the whole game move by move, starting at move 1. These are not isolated puzzles.
 - Moves are shown, not guessed. Every move by either side is an exercise.
 
-**The three phases**
+**The two phases**
 
 Each phase is marked and submitted separately, in this order.
 
@@ -114,13 +117,12 @@ Each phase is marked and submitted separately, in this order.
 | --- | --- | --- |
 | 1. Squares lost | Squares the moved piece no longer controls | Controlled before the move and not after |
 | 2. Squares controlled | Squares the moved piece now controls | Every square it controls after the move, including ones it already controlled |
-| 3. Hanging pieces | Every hanging piece and pawn on the board | Judged after the move, for both sides |
 
-A castling move moves two pieces, so it has five phases, in this order: the king's squares lost, the king's squares controlled, the rook's squares lost, the rook's squares controlled, then hanging pieces. Decided on 13 October 2026.
+A castling move moves two pieces, so it has four phases, in this order: the king's squares lost, the king's squares controlled, the rook's squares lost, the rook's squares controlled. Decided on 13 October 2026.
 
 **Definitions**
 
-These rules are the specification for the import code and its tests.
+These rules are the specification for the import code and its tests. The two hanging rows are what Mode 4 asks about; the import works out all three answer sets for every move.
 
 | Term | Definition |
 | --- | --- |
@@ -138,8 +140,7 @@ These rules are the specification for the import code and its tests.
 - Pawn pushes are the exception that follows from the rule: a pawn never controlled the square it pushes to, so that square is not marked. A pawn capture's destination is marked.
 - Castling is marked as two pieces, separately: first the king's lost and controlled squares, then the rook's. Each prompt names the piece it is about. A square is never in both phases of one piece, because a piece's lost squares are the ones it no longer controls. A square can still be lost by one piece and controlled by the other, such as f1 when White castles kingside.
 - Promotion: the before set is the pawn's and the after set is the new piece's. A square the pawn controlled is lost only if the new piece does not control it. A pawn that promotes to a queen by a push loses nothing, because the queen still controls both of the pawn's squares.
-- A hanging piece is marked again on every move for as long as it stays hanging.
-- An empty submission is valid. Many positions have no hanging pieces.
+- An empty submission is valid. A pawn that promotes to a queen by a push has no squares lost.
 
 **Worked example**
 
@@ -152,30 +153,35 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 **Scoring and feedback**
 
 - Each phase has its own score: 1 if the selection is exactly right, 0 otherwise. Missed squares and wrongly marked squares both fail the phase.
-- The user sees three running percentages, one per phase, to show which skill is weakest.
-- Tallies are also kept by the type of piece that moved. On a castling move the king's two phases count towards the king, the rook's two towards the rook, and the hanging phase towards the king.
+- The user sees two running percentages, squares lost and squares controlled, to show which skill is weaker.
+- Tallies are also kept by the type of piece that moved. On a castling move the king's two phases count towards the king and the rook's two towards the rook.
 - Feedback appears after each phase is submitted: missed squares are highlighted, and wrongly marked squares are shown in a second colour.
+- A phase submitted exactly right moves on by itself after about 0.6 seconds, a named value, showing the tick and "Exactly right" first. After the last phase of a move, the next move plays. If anything is missed or wrong, it stops on the feedback and the button continues. Decided on 13 October 2026.
+- Nothing moves on just because the marks match the answer: the Submit button always stays, and only a submitted phase is scored.
+- Rewind during the pause cancels the move on. The feedback then stays, and the button continues. Pressing the button during the pause moves on at once.
+- The end of a game never moves on by itself: after the last phase of the last move it stops on "Next game", even when the phase was exactly right.
 
 **Sessions**
 
 - Sessions are open-ended. The user goes for as long as they like, and returning resumes at the same move.
-- A next game button serves a random game. There is no browsing. The mode opens on a landing page at /squares that shows the three phase percentages and a Start or Resume button. The exercise itself runs at /squares/play.
+- A next game button serves a random game. There is no browsing. The mode opens on a landing page at /squares that shows the two phase percentages and a Start or Resume button. The exercise itself runs at /squares/play.
+- The session, the seen games and the scores are this mode's own. A game played in spot the hanging piece is not used up here.
 - The board is shown with White at the bottom.
 - A rewind button shows the position before the move. The move's squares are not highlighted in this mode. Phase 1 depends on that earlier position, and a user resuming a session did not just watch the move.
 
 **The marking screen**
 
-Settled in build step 26.
+Settled in build step 26, and shared with spot the hanging piece since 13 October 2026. What differs there is listed under Mode 4.
 
 - The move plays on the board from the position before it, with no square highlighted, and phase 1 opens at once. It plays more slowly than moves elsewhere, about 450 milliseconds, so that it can be followed. Before the first move of a game the starting position is shown for about 0.8 seconds. Both are kept as named values. With reduced motion there is no animation.
 - A line above the question names the move in words, with the move number as a game score gives it: "Move 2 · White played Nf3", "Black took on e5", "White took on d6 en passant", "White castled kingside", "White promoted to a queen on e8". The written move keeps its own case inside the uppercase label, because in capitals `bxc4` and `Bxc4` would read the same.
-- The questions are "Which squares does the knight no longer control?", "Which squares does the knight control now?" and "Which pieces are hanging, on either side?". The hanging question always says that both sides count. After a promotion the second question names the new piece: "Which squares does the new queen control?".
-- The phase indicator always has three tabs. On an ordinary move they are Lost, Controls and Hanging. On a castling move they are King, Rook and Hanging: the King and Rook tabs each show two small squares, the first in the lost colour and the second in the controls colour, and the question names the piece. The current tab is underlined in the colour of the phase being marked. Each phase's square turns into a tick when it was exactly right and a cross when it was not.
+- The questions are "Which squares does the knight no longer control?" and "Which squares does the knight control now?". After a promotion the second question names the new piece: "Which squares does the new queen control?".
+- The phase indicator has two tabs. On an ordinary move they are Lost and Controls. On a castling move they are King and Rook: each shows two small squares, the first in the lost colour and the second in the controls colour, and the question names the piece. The current tab is underlined in the colour of the phase being marked. Each phase's square turns into a tick when it was exactly right and a cross when it was not.
 - Rewind is a toggle, not a button to hold. While it is on, the button shows as pressed, the board shows the position before the move, and the line above the question starts "Before move 2". Squares can still be marked while the earlier position is shown, in every phase, and the marks are kept when it is switched off. Rewind switches off when a phase is submitted, so the feedback is first seen on the position after the move, and on every new move. It can be switched on again while the feedback is showing.
 - The main button reads "Submit · 6 marked" while marking, and "Submit · none marked" when nothing is marked.
-- After a phase is submitted, the line above reads "Move 2 · Controls · Not quite" in the wrong colour, or "… · Exactly right" in the accent colour, and the heading says how it came out: "Three squares missed, one too many.", "All eight squares.", "Both squares.", "The only square." or "Nothing to mark, and nothing marked.". The hanging phase says "pieces" where the others say "squares". On a castling move the line names the piece, as in "Move 5 · Rook · Lost · Not quite".
-- The main button then names what comes next: "Next: squares controlled", "Next: hanging pieces" and "Next move". On a castling move it reads, in order, "Next: king's squares controlled", "Next: rook's squares lost", "Next: rook's squares controlled" and "Next: hanging pieces". After the hanging phase of a game's last move the line above starts "End of the game" and the button reads "Next game". There is no end-of-game screen.
-- Until sessions are built in step 27, the screen opens a game picked at random from the ID list, from its first move, and "Next game" at the end picks another. The "Next game" button in the header comes with step 27, the three percentages under the board with step 28, and the report a problem link with step 33.
+- After a phase is submitted, the line above reads "Move 2 · Controls · Not quite" in the wrong colour, or "… · Exactly right" in the accent colour, and the heading says how it came out: "Three squares missed, one too many.", "All eight squares.", "Both squares.", "The only square." or "Nothing to mark, and nothing marked.". On a castling move the line names the piece, as in "Move 5 · Rook · Lost · Not quite".
+- The main button then names what comes next: "Next: squares controlled" and "Next move". On a castling move it reads, in order, "Next: king's squares controlled", "Next: rook's squares lost", "Next: rook's squares controlled" and "Next move". After the last phase of a game's last move the line above starts "End of the game" and the button reads "Next game". There is no end-of-game screen.
+- Until sessions are built in step 27, the screen opens a game picked at random from the ID list, from its first move, and "Next game" at the end picks another. The "Next game" button in the header comes with step 27, the percentages under the board with step 28, and the report a problem link with step 33.
 
 ## Mode 3: Tactics by piece
 
@@ -232,6 +238,47 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 - The user sees running tallies per piece category. A result in all pieces counts towards the tally of the puzzle's own piece.
 - There is no rating for the user.
 
+## Mode 4: Spot the hanging piece
+
+The user watches a beginner game one move at a time and, after every move, marks every piece and pawn that is hanging. Decided on 13 October 2026, when the hanging phase was taken out of square control. It is numbered after tactics so that earlier references to Mode 3 still hold; the order of the modes on the home and progress pages is decided in build step 33.
+
+**Games**
+
+- The games are the 500 practice games of square control, with the same stored answers. Nothing is imported again, and the mode has no import command of its own.
+- The user goes through the whole game move by move, starting at move 1. Moves are shown, not guessed, and every move by either side is an exercise.
+
+**The one phase**
+
+- Each move has one phase: mark every hanging piece and pawn on the board, of both sides, judged after the move. A castling move has one phase as well.
+- The rules for hanging are those of Mode 2's definitions and Appendix B: attacked by at least one enemy piece and defended by no friendly piece, with pins ignored and kings left out. The answer is the stored `hanging` set.
+- A hanging piece is marked again on every move for as long as it stays hanging.
+- The piece that just moved can itself be hanging.
+- An empty submission is valid. Many positions have no hanging pieces.
+
+**Scoring and feedback**
+
+- The phase scores 1 if the selection is exactly right, and 0 otherwise. Missed pieces and wrongly marked squares both fail it.
+- The user sees one running percentage.
+- There is one tally for the mode. It is not split by piece: the answer is about the whole board, not about the piece that moved.
+- Feedback and moving on work as in square control. A phase submitted exactly right plays the next move by itself after about 0.6 seconds, the same named value, showing the tick and "Exactly right" first. If anything is missed or wrong, it stops on the feedback and the button continues. Submit always stays, rewind during the pause cancels the move on, and the end of a game stops on "Next game".
+
+**Sessions**
+
+- Sessions are open-ended, and returning resumes at the same move.
+- A next game button serves a random game. There is no browsing. The mode opens on a landing page at /hanging that shows the percentage and a Start or Resume button. The exercise itself runs at /hanging/play.
+- The session, the seen games and the scores are this mode's own. A game played in square control is not used up here.
+
+**The marking screen**
+
+The screen is square control's, with these differences.
+
+- The question is always "Which pieces are hanging, on either side?", so it always says that both sides count.
+- The phase indicator has the one tab, Hanging, in the hanging colour. Its square turns into a tick or a cross as in square control.
+- After the phase is submitted, the line above reads "Move 2 · Hanging · Not quite" or "… · Exactly right", and the heading says "pieces" where square control says "squares": "One piece missed.", "Both pieces.", "Nothing to mark, and nothing marked.".
+- The main button then reads "Next move", or "Next game" after a game's last move.
+- Rewind, the move in words, the legend and the board are the same. The board is shown with White at the bottom, and the move's squares are not highlighted.
+- Until sessions are built in step 27, the screen opens a game picked at random from the ID list, as square control does.
+
 ## Site-wide requirements
 
 Most users are on phones, so phone width is the primary design target for every screen.
@@ -239,16 +286,16 @@ Most users are on phones, so phone width is the primary design target for every 
 **Mobile**
 
 - The board spans the full screen width, with all controls below it within thumb reach.
-- The three play screens fit a phone without scrolling. Where the screen is too short for a full-width board, the board shrinks just enough and stays centred, down to 280 pixels. Below that the page scrolls. The height that counts is the height on show at that moment, so the fit holds as the browser's address bar comes and goes: the smaller of the dynamic viewport height and the visual viewport's height. The fit is measured again whenever the rest of the screen changes height, in every state: the end of a game, looking back at a move, a failed puzzle with Show solution, and square-control feedback.
+- The four play screens fit a phone without scrolling. Where the screen is too short for a full-width board, the board shrinks just enough and stays centred, down to 280 pixels. Below that the page scrolls. The height that counts is the height on show at that moment, so the fit holds as the browser's address bar comes and goes: the smaller of the dynamic viewport height and the visual viewport's height. The fit is measured again whenever the rest of the screen changes height, in every state: the end of a game, looking back at a move, a failed puzzle with Show solution, and the feedback of the two marking modes.
 - The visible browser area on most phones is much shorter than the 390 by 844 of the mockups. The standard test sizes are 360×640, 375×550, 390×660 and 412×780, and every play screen is checked at all four by the fit test. The design targets are 360×640 and 390×660: at those two the board is the full width of the screen and nothing scrolls.
 - At the end of a guess-the-move game the three buttons stay on one line. On a phone they read "Share", "Review" and "Play again"; a larger screen has room for "Review from the start" and "Play it again".
 - On a short phone screen, 800 pixels tall or less, the play screens tighten their spacing to give the board more room; a taller phone keeps the mockup spacing exactly. Tap targets stay 44 pixels.
-    - All three: the header is 44 pixels tall with no space above or below its buttons, and the bottom bar has 6 pixels above its content and 8 below.
+    - All four: the header is 44 pixels tall with no space above or below its buttons, and the bottom bar has 6 pixels above its content and 8 below.
     - Guess the move: the two players share one row under the board, 26 pixels tall, with the master on the left and the opponent and its note on the right; both go by family name ("Morphy", not "Paul Morphy"), the master's own note and "Your guess" are left out, and a name that still does not fit is cut short. The prompt is at least 118 pixels tall, with 8 pixels above its text and 8 below: room for the label, a one-line heading and either a two-line note or one row of buttons. The end-of-game buttons have 12 pixels of padding at each side and sit straight under the heading. While an earlier position is on the board, the way back is a "Back" button in the bottom bar, in the reply delay's place, so the prompt keeps its height in every state. The progress ticks are 6 pixels tall and sit 6 pixels above the score.
     - Tactics: the prompt is at least 165 pixels tall, with 8 pixels above its text and 8 below: room for the label, a one-line heading, a two-line note and the Show solution or Redo button, which sits straight under the note.
-    - Square control: the phase tabs have 4 pixels above and 6 below, the question has 8 above and 6 below, and the legend is at least 30 pixels tall with 6 above.
-- A fixed bar at the bottom holds the main action: the phase indicator and submit button in square control, and the equivalent controls in the other modes.
-- Squares are tapped to mark them in square control, with no zooming needed.
+    - Square control and spot the hanging piece: the phase tabs have 4 pixels above and 6 below, the question has 8 above and 6 below, and the legend is at least 30 pixels tall with 6 above.
+- A fixed bar at the bottom holds the main action: the phase indicator and submit button in the two marking modes, and the equivalent controls in the other modes.
+- Squares are tapped to mark them in square control and spot the hanging piece, with no zooming needed.
 - Moves can be made by tapping a piece and then a square, or by dragging.
 - Nothing depends on hovering, and the page does not scroll while a piece is dragged.
 - Game lists are rows separated by hairlines, with filters in a slide-up panel.
@@ -257,22 +304,22 @@ Most users are on phones, so phone width is the primary design target for every 
 **Larger screens**
 
 - The layout is the same single column on every screen size. Nothing is rearranged for desktop.
-- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, or wider than the screen width minus 32 pixels, so it always fits without scrolling; the user's chosen size is kept. The three play screens measure their limit instead, at every screen width: the board is never taller than the visible screen height minus everything else on the screen (the header, the prompt, the bottom bar, and the player rows, phase tabs or legend where there are any), so the whole screen fits without scrolling. The prompt area keeps one height at every width so the board does not change size as its text changes. Below the minimum board size the page scrolls: 320 pixels on larger screens, 280 on a phone. Settled in build step 13, and extended to phones after build step 26.
+- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, or wider than the screen width minus 32 pixels, so it always fits without scrolling; the user's chosen size is kept. The four play screens measure their limit instead, at every screen width: the board is never taller than the visible screen height minus everything else on the screen (the header, the prompt, the bottom bar, and the player rows, phase tabs or legend where there are any), so the whole screen fits without scrolling. The prompt area keeps one height at every width so the board does not change size as its text changes. Below the minimum board size the page scrolls: 320 pixels on larger screens, 280 on a phone. Settled in build step 13, and extended to phones after build step 26.
 - The board can be resized by dragging a handle at its corner, between 320 and 720 pixels wide. The default is 560 pixels. Resizing changes the board only. Text and controls stay in a fixed column 560 pixels wide, and the board is centred on the same line, so it may be narrower or wider than the column.
-- The chosen board size is saved with the other settings, as `boardSizePx`, when a resize ends: when the handle is let go, or an arrow key is pressed on it. It is not saved during a drag. It is read when a play screen opens, and one value serves all three modes, so the size stays the same from one puzzle or game to the next, across modes and across visits. On a phone there is no handle, and the board is the full width of the screen unless the screen is too short (see Mobile).
+- The chosen board size is saved with the other settings, as `boardSizePx`, when a resize ends: when the handle is let go, or an arrow key is pressed on it. It is not saved during a drag. It is read when a play screen opens, and one value serves all four modes, so the size stays the same from one puzzle or game to the next, across modes and across visits. On a phone there is no handle, and the board is the full width of the screen unless the screen is too short (see Mobile).
 
 **Board**
 
 - When a king is in check, its square shows the red highlight used on Lichess. Chessground provides this.
-- The check highlight appears in all three modes, including square control, because it describes the position and does not reveal the move.
+- The check highlight appears in all four modes, including the two marking modes, because it describes the position and does not reveal the move.
 
 **Pages**
 
-- Home, with the three modes
+- Home, with the four modes
 - A landing page per mode
-- A progress page with the user's stats: guess-the-move accuracy by master, the three square-control percentages, and tactics tallies by piece
+- A progress page with the user's stats: guess-the-move accuracy by master, the two square-control percentages, the spot the hanging piece percentage, and tactics tallies by piece
 - Settings
-- About, at `/about`: what the site is, how the three modes work, and that it is free and open source
+- About, at `/about`: what the site is, how the four modes work, and that it is free and open source
 - Credits, with a link to the source code
 - Privacy, a short page saying that progress is stored only in the browser and that Cloudflare analytics is used
 
@@ -283,7 +330,7 @@ Most users are on phones, so phone width is the primary design target for every 
 - Sound on or off. The sound source is undecided: Lichess's licence file lists most of its sounds as exceptions without a free licence, so they are not used unless that is cleared
 - Move input: tap, drag, or both
 - Opponent move delay in guess the move: 1 to 5 seconds in whole seconds, default 3. It is set with a slider that moves in whole seconds and shows the chosen value, such as "3 s", both on the play screen and in settings
-- Marking colours for square control, including at least one colour-blind-friendly palette
+- Marking colours for square control and spot the hanging piece, including at least one colour-blind-friendly palette
 
 **Progress**
 
@@ -295,7 +342,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - A reset progress button in settings, with a confirmation step.
 - When a game or puzzle fails to load, the user sees a clear message and a retry button.
-- Every exercise has a report a problem link that opens a GitHub issue pre-filled with the game or puzzle and the move number. The link is shown only once there is something to report, so it never gets in the way while playing: at the end of a master game and in its review, after a puzzle is solved or failed, and in square control with the feedback for each move. Decided on 12 October 2026.
+- Every exercise has a report a problem link that opens a GitHub issue pre-filled with the game or puzzle and the move number. The link is shown only once there is something to report, so it never gets in the way while playing: at the end of a master game and in its review, after a puzzle is solved or failed, and in square control and spot the hanging piece with the feedback for each move. Decided on 12 October 2026.
 - The site is in English only.
 
 ## Visual design
@@ -314,7 +361,7 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 
 - The board is the centrepiece. Everything around it is quiet, with one accent colour and few borders.
 - The default board, olive, looks the same in light and dark mode for now. It is not dimmed or swapped in dark mode.
-- The square-control marking colours must be clear in both modes and on every board theme.
+- The marking colours of square control and spot the hanging piece must be clear in both modes and on every board theme.
 - One or two typefaces, with care for numbers, since scores and tallies appear everywhere.
 - Motion is quick and subtle.
 
@@ -371,7 +418,7 @@ The light-mode backgrounds were softened on 11 October 2026 after the first valu
 
 | Square | Drawn as |
 | --- | --- |
-| Correct | Blue fill with a solid border, the same in all three phases |
+| Correct | Blue fill with a solid border, the same in every phase of both marking modes |
 | Missed | Dashed blue border, no fill |
 | Wrong | Red fill `#BE3232` with a solid `#8A1C1C` border |
 
@@ -389,12 +436,12 @@ The light-mode backgrounds were softened on 11 October 2026 after the first valu
 
 ## Data and imports
 
-All content is loaded by command-line import, one command per mode. Nothing can be added through the website. Appendix E has the exact commands, options and file format.
+All content is loaded by command-line import, one command per set of content. Square control and spot the hanging piece share one. Nothing can be added through the website. Appendix E has the exact commands, options and file format.
 
 | Mode | Source | Stored per item |
 | --- | --- | --- |
 | Guess the move | Game files of the eleven masters | Game details, and the full move list stored on the game |
-| Square control | Lichess open database | Game details, and one list on the game holding each move with its three answer sets |
+| Square control and spot the hanging piece | Lichess open database | Game details, and one list on the game holding each move with its three answer sets |
 | Tactics by piece | Lichess puzzle database | The position, the solution moves, the piece category, the puzzle's rating, and Lichess's theme labels |
 
 **Every import command**
@@ -485,10 +532,12 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Choose puzzles from made-up ID lists, and confirm each rule: easiest first with equal ratings by ID; seen puzzles left out; all pieces as one list across the pieces; an empty pool when everything is seen; a puzzle seen in its piece's category left out of all pieces; and clearing one piece leaves the others' seen records alone.
 - Extract made-up practice games, and confirm each rule: a missing rating, an abandoned game, a rules infraction, another time control, a player at the rating limit, a bot player, a game that is too short or too long and an illegal move are each skipped and reported; no player name reaches the output; the family cap and the length bands hold; and the same games are chosen in the same order on every run.
 - Load made-up practice games where one has an answer list holding something that is not a square, and confirm the line is rejected and nothing is written.
-- Work through made-up practice games in the square-control phase logic, and confirm each rule: squares are marked and unmarked; a phase scores only when the selection is exactly right, so a missed square and a wrongly marked square both fail it, and marking nothing is right when the answer is empty; a submitted phase cannot be changed; an ordinary move has three phases and a castling move five, each with its own piece and answer; the next move plays after the hanging phase; the game is finished after the last phase of the last move; and rewind keeps the marks and switches off on submit and on a new move.
+- Work through made-up practice games in the square-control phase logic, and confirm each rule: squares are marked and unmarked; a phase scores only when the selection is exactly right, so a missed square and a wrongly marked square both fail it, and marking nothing is right when the answer is empty; a submitted phase cannot be changed; an ordinary move has two phases and a castling move four, each with its own piece and answer; the next move plays after the last phase of a move; the game is finished after the last phase of the last move; and rewind keeps the marks and switches off on submit and on a new move.
+- Work through the same made-up games in spot the hanging piece, and confirm each rule: every move has one phase, castling as well; a hanging piece of either side is in the answer; marking nothing is right when nothing hangs; the next move plays after each phase; and the game is finished after the last move.
+- In both marking modes, confirm moving on by itself: a phase that is exactly right moves on after the pause and not before, to the next phase or the next move; a phase with a square missed or wrong never does; marks that match the answer do nothing until they are submitted; rewind during the pause cancels it for good; the button during the pause moves on at once and only once; and the end of a game waits for the button.
 - Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
 - Resize the board with a made-up settings store, and confirm each rule: the size is saved once when the resize ends and not during the drag; it is still there for the next puzzle without the settings being read again; a saved size is used on the next visit; and a resize made before the settings arrive is not overwritten by them.
-- Open the three play screens in a headless browser with made-up games and puzzles, at 360×640, 375×550, 390×660 and 412×780, and confirm in each state (playing, after a wrong guess, looking back at a move, the end of a game, a failed puzzle with Show solution, the solution shown, square-control feedback, rewind) that the page does not scroll in either direction, that the board is the full width at 360×640, 390×660 and 412×780, and that it is at least 280 pixels at 375×550.
+- Open the four play screens in a headless browser with made-up games and puzzles, at 360×640, 375×550, 390×660 and 412×780, and confirm in each state (playing, after a wrong guess, looking back at a move, the end of a game, a failed puzzle with Show solution, the solution shown, the feedback and rewind of both marking modes) that the page does not scroll in either direction, that the board is the full width at 360×640, 390×660 and 412×780, and that it is at least 280 pixels at 375×550.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
@@ -570,25 +619,25 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 22. Categories and progress | The category page with the all pieces option; the easiest-first order; seen tracking; tallies; the reset when a category runs out | No puzzle repeats within a category until it is exhausted |
 | 23. Full import | All puzzles loaded on the server, from the same intermediate file loaded locally in step 19 (`data/intermediate/puzzles.jsonl`, kept safe outside the repository), so the selection does not change. Refreshing from a newer Lichess file is not planned: imports never delete, so each refresh would add puzzles without removing any | Needs no further decisions: puzzle difficulty is settled |
 
-**Stage 5: Square control**
+**Stage 5: Square control and spot the hanging piece**
 
 | Step | Build | Done when |
 | --- | --- | --- |
 | 24. Table and import on a sample | The `practice_games` migration; `extract:practice` with the calculation from step 7; `import:practice-games`. Done on 13 October 2026 into the local database: 500 games, from the first 1.5 GB of the September 2026 file | The sample loads, and neither the intermediate file nor the database holds a username |
 | 25. Answer viewer | A development-only page at `/dev/answers` that steps through an imported game and shows the stored answers on the board and as lists: three for an ordinary move, five for castling | You have checked several games by eye and found no wrong answer |
-| 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet | A full game can be worked through comfortably on a phone |
-| 27. Session | Next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase |
-| 28. Tallies | The three phase scores and the tallies by piece | The numbers match a session counted by hand |
+| 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet. After the step, on 13 October 2026, the screen was split into the two modes: two phases in square control, one in spot the hanging piece, and moving on by itself after a phase that is exactly right | A full game can be worked through comfortably on a phone |
+| 27. Session | For both modes, each with its own progress: next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase in each mode, and a game finished in one mode is still served in the other |
+| 28. Tallies | For square control, the two phase scores and the tallies by piece; for spot the hanging piece, its one score | The numbers match a session counted by hand |
 | 29. Full import | All practice games loaded on the server, from the same intermediate file loaded locally in step 24 (`data/intermediate/practice-games.jsonl`, kept safe outside the repository), so the 500 games do not change | Needs no further decisions: game selection is settled |
 
 **Stage 6: Finish**
 
 | Step | Build | Done when |
 | --- | --- | --- |
-| 30. Progress page | Stats for the three modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
+| 30. Progress page | Stats for the four modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
 | 32. Installable | The web app manifest and icons | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
-| 33. Remaining pages and states | The home page with the three modes (plain links to `/guess` and `/tactics` stand in from steps 16 and 22); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
+| 33. Remaining pages and states | The home page with the four modes, in an order decided in this step (plain links to `/guess`, `/tactics`, `/squares/play` and `/hanging/play` stand in until then); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
 ## Open decisions and later features
@@ -616,7 +665,7 @@ Two decisions are still open. The source of master games, their minimum length, 
 - Leaderboards, which need answers checked on the server and would start fresh from that point
 - A featured set of famous games shown first for each master
 - Showing puzzle theme labels
-- Automated browser tests at phone size for the three core flows
+- Automated browser tests at phone size for the four core flows
 - More board themes and piece sets
 - A desktop layout with the board beside a panel, which needs its own mockups
 
@@ -635,7 +684,7 @@ The import scripts, the database, the data endpoints and the browser all use the
 | Piece type | Full lowercase name | `pawn`, `knight`, `bishop`, `rook`, `queen`, `king` |
 | Position | FEN string |  |
 | Ply | Half-move number starting at 1; odd plies are White's | Ply 1 is White's first move |
-| Phase name | `lost`, `controlled`, `hanging` |  |
+| Phase name | `lost`, `controlled`, `hanging`: the three stored answer sets. The first two are the phases of square control, and the third is the one phase of spot the hanging piece |  |
 | ID | Integer assigned by the database |  |
 
 **Rules**
@@ -649,7 +698,7 @@ The import scripts, the database, the data endpoints and the browser all use the
 
 ## Appendix B: The control and hanging calculation
 
-This is the exact procedure the import follows for every move of a practice game. It turns the definitions under Mode 2 into steps.
+This is the exact procedure the import follows for every move of a practice game. It turns the definitions under Mode 2 into steps. Square control asks for `lost` and `controlled`, and spot the hanging piece for `hanging`.
 
 **The attack set of one piece**
 
@@ -880,7 +929,7 @@ The load stage contains no chess logic.
 | Mode | Extract | Load |
 | --- | --- | --- |
 | Guess the move | `npm run extract:masters` | `php artisan import:master-games` |
-| Square control | `npm run extract:practice` | `php artisan import:practice-games` |
+| Square control and spot the hanging piece | `npm run extract:practice` | `php artisan import:practice-games` |
 | Tactics | `npm run extract:puzzles` | `php artisan import:puzzles` |
 
 - Every extract command takes `--input` and `--out`.
@@ -973,13 +1022,15 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 
 | Path | Page |
 | --- | --- |
-| `/` | Home, with the three modes |
+| `/` | Home, with the four modes |
 | `/guess` | The masters |
 | `/guess/{master}` | Game list for one master, by slug |
 | `/guess/{master}/random` | Redirects to a random game by that master |
 | `/guess/{master}/{game}` | Play a master game |
-| `/squares` | Square control landing page: the three phase percentages and a Start or Resume button |
+| `/squares` | Square control landing page: the two phase percentages and a Start or Resume button |
 | `/squares/play` | The square-control exercise |
+| `/hanging` | Spot the hanging piece landing page: the percentage and a Start or Resume button |
+| `/hanging/play` | The spot the hanging piece exercise |
 | `/tactics` | The piece categories |
 | `/tactics/{piece}` | Play tactics; `piece` is one of the six piece types or `all` |
 | `/progress`, `/settings`, `/credits`, `/privacy` | As named |
@@ -1094,7 +1145,7 @@ Settled in build step 20.
 
 **How the browser chooses**
 
-- Square control: the browser fetches the ID list, picks at random an ID it has not played, and fetches that game.
+- Square control and spot the hanging piece: the browser fetches the ID list, picks at random an ID it has not played in that mode, and fetches that game. Both modes use the same two endpoints.
 - Tactics: the browser fetches the ID list for the category, removes the puzzles it has seen, takes the lowest-rated of the rest, and fetches the next few in one request. For the all pieces option it combines the six lists into one, by rating and then by puzzle ID.
 - This makes "no repeats until the category runs out" exact, and every response the same for every visitor.
 - Ratings are in the ID list so that the easiest-first order is worked out in the browser alone.
@@ -1111,7 +1162,7 @@ Settled in build step 20.
 
 ## Appendix G: Browser storage
 
-All user data lives in one IndexedDB database in the browser, opened through the `idb` library. The database is named `chess-training` until the site has a name, and starts at version 1.
+All user data lives in one IndexedDB database in the browser, opened through the `idb` library. The database is named `chess-training` until the site has a name. It started at version 1 and has been at version 2 since 13 October 2026, when the three `hanging` stores were added for spot the hanging piece. Nothing had been written to the three `square` stores by then, so their record shapes changed without a conversion.
 
 **Stores**
 
@@ -1121,8 +1172,11 @@ All user data lives in one IndexedDB database in the browser, opened through the
 | `settings` | Fixed key `settings` | The user's settings. Only the settings that have been chosen are stored; a setting that is missing takes its default |
 | `masterGames` | `gameId` | One record per master game started: the attempt in progress and the last finished result |
 | `squareSession` | Fixed key `current` | Where the user is in square control |
-| `squareSeen` | `gameId` | Practice games finished or abandoned |
+| `squareSeen` | `gameId` | Practice games finished or abandoned in square control |
 | `squareTallies` | Fixed key `tallies` | Attempts and correct answers per phase and per piece |
+| `hangingSession` | Fixed key `current` | Where the user is in spot the hanging piece |
+| `hangingSeen` | `gameId` | Practice games finished or abandoned in spot the hanging piece |
+| `hangingTallies` | Fixed key `tallies` | Attempts and correct answers in spot the hanging piece |
 | `puzzlesSeen` | `puzzleId` | Puzzles attempted |
 | `tacticsTallies` | Fixed key `tallies` | Attempts and solves per piece |
 
@@ -1130,7 +1184,7 @@ All user data lives in one IndexedDB database in the browser, opened through the
 
 ```ts
 type PieceType = 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king'
-type Phase = 'lost' | 'controlled' | 'hanging'
+type SquarePhase = 'lost' | 'controlled'
 type Tally = { attempts: number; correct: number }
 type Guess = { uci: string; correct: boolean }
 
@@ -1153,11 +1207,17 @@ type MasterGameRecord = {
   current: { guesses: Guess[]; startedAt: string; updatedAt: string } | null
 }
 
-type SquareSession = { gameId: number; ply: number; phase: Phase; rook: boolean; updatedAt: string }
+type SquareSession = { gameId: number; ply: number; phase: SquarePhase; rook: boolean; updatedAt: string }
 
 type SquareSeen = { gameId: number; status: 'finished' | 'abandoned'; at: string }
 
-type SquareTallies = Record<Phase, Record<PieceType, Tally>>
+type SquareTallies = Record<SquarePhase, Record<PieceType, Tally>>
+
+type HangingSession = { gameId: number; ply: number; updatedAt: string }
+
+type HangingSeen = { gameId: number; status: 'finished' | 'abandoned'; at: string }
+
+type HangingTally = Tally // the one record in hangingTallies
 
 type PuzzleSeen = { puzzleId: number; piece: PieceType; solved: boolean; at: string }
 
@@ -1175,12 +1235,21 @@ type TacticsTallies = Record<PieceType, Tally>
 **Square control**
 
 - `ply` is the move being worked on, and `phase` is the next phase to submit.
-- `rook` is true only on a castling move, while the next phase to submit is the rook's lost or controlled phase. With it, `phase` tells the five phases of a castling move apart.
-- A phase is added to the tallies at the moment it is submitted, under the type of piece that moved. On a castling move the king's lost and controlled phases are added under the king, the rook's under the rook, and the hanging phase under the king. The shape of `SquareTallies` does not change. Resuming continues at the exact phase, so nothing is counted twice.
+- `rook` is true only on a castling move, while the next phase to submit is the rook's lost or controlled phase. With it, `phase` tells the four phases of a castling move apart.
+- A phase is added to the tallies at the moment it is submitted, under the type of piece that moved. On a castling move the king's lost and controlled phases are added under the king, and the rook's under the rook. Resuming continues at the exact phase, so nothing is counted twice.
+- The session is saved when a phase is submitted, pointing at what comes next. Leaving during the pause after a phase that was exactly right therefore resumes at the next phase or move.
 - Marks that were not submitted are not saved.
 - The percentage shown for a phase is the total across the six piece types.
 - Pressing next game before the end records the game as abandoned.
 - When every practice game is in `squareSeen`, that store is cleared.
+
+**Spot the hanging piece**
+
+- The mode's progress is its own. Nothing here reads or writes the three `square` stores, and square control does not touch the three `hanging` stores, so a game seen in one mode is still unseen in the other.
+- `ply` is the move being worked on. Each move has one phase, so the move is all that is needed to resume.
+- The phase is added to the one tally at the moment it is submitted. There is no split by piece.
+- The session, unsubmitted marks, next game and abandoned games work as in square control.
+- When every practice game is in `hangingSeen`, that store is cleared.
 
 **Tactics**
 
@@ -1229,6 +1298,7 @@ Suggested, to be adjusted to what the starter kit creates.
 | `resources/js/pages/` | The Vue pages |
 | `resources/js/components/board/` | The Chessground wrapper and the square-marking layer |
 | `resources/js/chess/` | Shared TypeScript chess code: conventions, the calculation in Appendix B, move comparison, and the golden tests |
+| `resources/js/marking/` | The phase logic and the wording shared by square control and spot the hanging piece |
 | `resources/js/storage/` | The browser storage module |
 | `tools/import/` | The extract scripts, which use the shared chess code |
 | `docs/requirements.md` | This document |

@@ -1,22 +1,26 @@
-// One practice game in square control, worked through move by move. Each
-// move is shown and then marked in its phases: three for an ordinary move
-// and five for castling. Every phase is submitted and scored by itself.
-// Nothing is saved here.
+// One practice game in a marking mode, worked through move by move. Each
+// move is shown and then marked in its phases. Square control has two for an
+// ordinary move and four for castling; spot the hanging piece has one. Every
+// phase is submitted and scored by itself. Nothing is saved here.
 
 import { computed, onScopeDispose, ref } from 'vue';
 import type { PieceType, Phase, Ply, Square } from '@/chess/conventions';
 import { positionsOf } from '@/chess/game';
 import type { MarkFeedback } from '@/components/board/types';
 import type { PracticeGamePlayData } from '@/generated/data';
-import { scoreMarks, stepsOf } from './phases';
+import { scoreMarks, stepsOf, type MarkingMode } from './phases';
 
 // How long the starting position is shown before the first move plays, in
 // milliseconds, so that the move is seen.
 export const FIRST_MOVE_DELAY_MS = 800;
 
 // How long a move takes to play on the board, in milliseconds. The move's
-// squares are not highlighted in this mode, so it is slower than elsewhere.
-export const SQUARE_MOVE_ANIMATION_MS = 450;
+// squares are not highlighted in these modes, so it is slower than elsewhere.
+export const MARKING_MOVE_ANIMATION_MS = 450;
+
+// How long a phase that was exactly right stays on show before the game
+// moves on by itself, in milliseconds, so that the tick is seen.
+export const EXACT_ADVANCE_DELAY_MS = 600;
 
 /** A submitted phase, as it will count towards the tallies. */
 export type PhaseResult = {
@@ -24,15 +28,16 @@ export type PhaseResult = {
     phase: Phase;
     /** True for the rook's two phases of a castling move. */
     rook: boolean;
-    /** The type of piece the phase counts towards. */
+    /** The piece that moved, or the rook in the rook's two phases. */
     piece: PieceType;
     /** Whether the selection was exactly right. */
     exact: boolean;
 };
 
 /** `onSubmitted` is called once for every phase, when it is submitted. */
-export function useSquareGame(
+export function useMarkingGame(
     game: PracticeGamePlayData,
+    mode: MarkingMode,
     onSubmitted?: (result: PhaseResult) => void,
 ) {
     // Entry 0 is the starting position and entry n the one after n plies.
@@ -62,7 +67,7 @@ export function useSquareGame(
     const move = computed(() => game.moves[ply.value - 1] ?? null);
 
     const steps = computed(() =>
-        move.value === null ? [] : stepsOf(move.value),
+        move.value === null ? [] : stepsOf(move.value, mode),
     );
 
     const step = computed(() => steps.value[stepIndex.value] ?? null);
@@ -127,13 +132,30 @@ export function useSquareGame(
         started.value = true;
     }, FIRST_MOVE_DELAY_MS);
 
+    let advanceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    /** True while a phase that was exactly right waits to move on by itself. */
+    const advancePending = ref(false);
+
+    function cancelAdvance(): void {
+        if (advanceTimer !== null) {
+            clearTimeout(advanceTimer);
+            advanceTimer = null;
+        }
+
+        advancePending.value = false;
+    }
+
     onScopeDispose(() => {
         clearTimeout(timer);
+        cancelAdvance();
     }, true);
 
     /**
      * Scores the marked squares. An empty selection is a valid answer. The
-     * outcome is shown on the position after the move.
+     * outcome is shown on the position after the move. A phase that was
+     * exactly right moves on by itself after a pause, except at the end of
+     * the game.
      */
     function submit(): void {
         const current = step.value;
@@ -156,6 +178,11 @@ export function useSquareGame(
         rewound.value = false;
         results.value.push(result);
         onSubmitted?.(result);
+
+        if (score.exact && !finished.value) {
+            advancePending.value = true;
+            advanceTimer = setTimeout(next, EXACT_ADVANCE_DELAY_MS);
+        }
     }
 
     /**
@@ -164,6 +191,8 @@ export function useSquareGame(
      * is nowhere to go.
      */
     function next(): void {
+        cancelAdvance();
+
         if (feedback.value === null || finished.value) {
             return;
         }
@@ -180,9 +209,13 @@ export function useSquareGame(
         feedback.value = null;
     }
 
-    /** Shows the position before the move, or goes back to the one after. */
+    /**
+     * Shows the position before the move, or goes back to the one after.
+     * Either way, a phase waiting to move on by itself no longer does.
+     */
     function toggleRewind(): void {
         if (started.value) {
+            cancelAdvance();
             rewound.value = !rewound.value;
         }
     }
@@ -204,6 +237,7 @@ export function useSquareGame(
         moveResults,
         results,
         rewound,
+        advancePending,
         isLastMove,
         finished,
         submit,

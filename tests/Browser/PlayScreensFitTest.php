@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Vite;
 use Pest\Browser\Api\PendingAwaitablePage;
 
 /*
- * The fit test: the three play screens, opened in a headless browser at the
+ * The fit test: the four play screens, opened in a headless browser at the
  * four standard phone sizes and taken through their tall states. In every
  * state the page must not scroll in either direction, and the board must be
  * the full width of the screen, or at least 280 pixels at 375×550. The games
@@ -220,8 +220,12 @@ test('tactics fits the screen in every state', function (int $width, int $height
     expectFit($page, 'tactics, the puzzle played to the end', $width, $height, $fullWidth);
 })->with('phone sizes');
 
-test('square control fits the screen in every state', function (int $width, int $height, bool $fullWidth): void {
-    // Made up: three moves, with the answers of Appendix B's examples.
+/**
+ * Made up: three moves, with the answers of Appendix B's examples. Both
+ * marking modes work through the same game.
+ */
+function madeUpPracticeGame(): void
+{
     PracticeGame::query()->create([
         'fingerprint' => str_repeat('b', 64),
         'white_rating' => 1010,
@@ -259,6 +263,12 @@ test('square control fits the screen in every state', function (int $width, int 
             ],
         ],
     ]);
+}
+
+// The feedback is measured on an answer that is not right. One that is
+// exactly right shows the same lines, and moves on before it can be measured.
+test('square control fits the screen in every state', function (int $width, int $height, bool $fullWidth): void {
+    madeUpPracticeGame();
 
     $page = openAt('/squares/play', $width, $height);
 
@@ -279,5 +289,29 @@ test('square control fits the screen in every state', function (int $width, int 
     $page->assertSee('Which squares does the pawn control now?');
     pressButton($page, 'Show the position before the move');
     $page->assertSee('Before move 1');
-    expectFit($page, 'square control, marking with rewind on', $width, $height, $fullWidth);
+    expectFit($page, 'square control, marking the second phase with rewind on', $width, $height, $fullWidth);
+})->with('phone sizes');
+
+test('spot the hanging piece fits the screen in every state', function (int $width, int $height, bool $fullWidth): void {
+    madeUpPracticeGame();
+
+    $page = openAt('/hanging/play', $width, $height);
+
+    $page->assertSee('Which pieces are hanging, on either side?');
+    expectFit($page, 'spot the hanging piece, marking', $width, $height, $fullWidth);
+
+    pressButton($page, 'e4, empty');
+    pressButton($page, 'Submit · 1 marked');
+    $page->assertSee('Not quite');
+    expectFit($page, 'spot the hanging piece, feedback', $width, $height, $fullWidth);
+
+    pressButton($page, 'Show the position before the move');
+    expectFit($page, 'spot the hanging piece, feedback with rewind on', $width, $height, $fullWidth);
+
+    pressButton($page, 'Show the position before the move');
+    pressButton($page, 'Next move');
+    $page->assertSee('Black played');
+    pressButton($page, 'Show the position before the move');
+    $page->assertSee('Before move 1');
+    expectFit($page, 'spot the hanging piece, marking the next move with rewind on', $width, $height, $fullWidth);
 })->with('phone sizes');

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// One practice game in square control: the phase tabs, the move in words
+// One practice game in a marking mode: the phase tabs, the move in words
 // with the question or the outcome, the board with its marks, the legend,
 // and the bottom bar with the rewind button and the main action.
 
@@ -9,21 +9,24 @@ import { useBoardSize } from '@/components/board/useBoardSize';
 import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import type { PracticeGamePlayData } from '@/generated/data';
+import type { MarkingMode } from '@/marking/phases';
 import {
-    SQUARE_MOVE_ANIMATION_MS,
-    useSquareGame,
-} from '@/squares/useSquareGame';
+    MARKING_MOVE_ANIMATION_MS,
+    useMarkingGame,
+} from '@/marking/useMarkingGame';
 import {
     moveInWords,
     nextLabel,
     phaseName,
     questionOf,
     verdictOf,
-} from '@/squares/wording';
+} from '@/marking/wording';
 import PhaseTabs from './PhaseTabs.vue';
 
 const props = defineProps<{
     game: PracticeGamePlayData;
+    /** Square control, or spot the hanging piece. */
+    mode: MarkingMode;
 }>();
 
 const emit = defineEmits<{
@@ -54,7 +57,7 @@ const {
     submit,
     next,
     toggleRewind,
-} = useSquareGame(props.game);
+} = useMarkingGame(props.game, props.mode);
 
 /** The number a game score gives the move: both sides' first is move 1. */
 const moveNumber = computed(() => Math.ceil(ply.value / 2));
@@ -157,7 +160,7 @@ function onMain(): void {
         :show-last-move="false"
         :mark-phase="markPhase"
         :feedback="feedback"
-        :animation-ms="SQUARE_MOVE_ANIMATION_MS"
+        :animation-ms="MARKING_MOVE_ANIMATION_MS"
         @resized="saveBoardSize"
     />
 

@@ -10,15 +10,17 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * GET /squares/play: the square-control exercise. The page gets no game; the
+ * GET /squares/play: the square-control exercise. The page is shared with
+ * spot the hanging piece and told which mode it is in. It gets no game; the
  * browser picks one and fetches it from the data endpoints.
  */
 class PlaySquaresController extends Controller
 {
     public function __invoke(): Response
     {
-        return Inertia::render('squares/Play', [
+        return Inertia::render('marking/Play', [
             'meta' => PageMetaData::squaresPlay(),
+            'mode' => 'squares',
         ]);
     }
 }

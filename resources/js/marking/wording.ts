@@ -1,4 +1,4 @@
-// Everything square control says in words: the move that was played, the
+// Everything the marking modes say in words: the move that was played, the
 // question of each phase, the outcome of a submitted phase, and what the
 // main button offers next.
 
@@ -127,32 +127,35 @@ export function phaseName(
 ): string {
     const name = PHASE_NAMES[step.phase];
 
-    return steps.length > 3 && step.phase !== 'hanging'
-        ? `${capitalised(step.piece)} · ${name}`
-        : name;
+    return hasRookPhases(steps) ? `${capitalised(step.piece)} · ${name}` : name;
+}
+
+/** True for the four phases of a castling move in square control. */
+function hasRookPhases(steps: readonly PhaseStep[]): boolean {
+    return steps.some((step) => step.rook);
 }
 
 /** A tab of the phase indicator, with the phases it stands for. */
 export type PhaseTab = { label: string; steps: number[] };
 
 /**
- * The three tabs of the phase indicator. An ordinary move has one phase to
- * a tab. A castling move keeps three tabs, King, Rook and Hanging, and the
- * first two stand for two phases each.
+ * The tabs of the phase indicator. There is one phase to a tab: Lost and
+ * Controls in square control, and Hanging alone in spot the hanging piece.
+ * A castling move in square control has the tabs King and Rook, which stand
+ * for two phases each.
  */
 export function tabsOf(steps: readonly PhaseStep[]): PhaseTab[] {
-    if (steps.length <= 3) {
-        return steps.map((step, index) => ({
-            label: PHASE_NAMES[step.phase],
-            steps: [index],
-        }));
+    if (hasRookPhases(steps)) {
+        return [
+            { label: 'King', steps: [0, 1] },
+            { label: 'Rook', steps: [2, 3] },
+        ];
     }
 
-    return [
-        { label: 'King', steps: [0, 1] },
-        { label: 'Rook', steps: [2, 3] },
-        { label: 'Hanging', steps: [4] },
-    ];
+    return steps.map((step, index) => ({
+        label: PHASE_NAMES[step.phase],
+        steps: [index],
+    }));
 }
 
 /**
@@ -205,14 +208,10 @@ export function nextLabel(
         return lastMove ? 'Next game' : 'Next move';
     }
 
-    if (next.phase === 'hanging') {
-        return 'Next: hanging pieces';
-    }
-
     const what = next.phase === 'lost' ? 'lost' : 'controlled';
 
     // On a castling move the button says whose squares come next.
-    return steps.length > 3
+    return hasRookPhases(steps)
         ? `Next: ${next.piece}'s squares ${what}`
         : `Next: squares ${what}`;
 }

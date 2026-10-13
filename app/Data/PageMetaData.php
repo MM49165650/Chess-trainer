@@ -31,7 +31,7 @@ final class PageMetaData extends Data
     {
         return new self(
             title: '',
-            description: 'Free, open source chess training in three modes: guess the move, square control and tactics by piece.',
+            description: 'Free, open source chess training in four modes: guess the move, square control, spot the hanging piece and tactics by piece.',
             heading: Config::string('app.name'),
         );
     }
@@ -102,8 +102,17 @@ final class PageMetaData extends Data
     {
         return new self(
             title: 'Square control',
-            description: 'Watch a beginner game one move at a time. After every move, mark the squares it gave up, the squares it controls, and every hanging piece.',
+            description: 'Watch a beginner game one move at a time. After every move, mark the squares the piece gave up and the squares it controls now.',
             heading: 'Square control',
+        );
+    }
+
+    public static function hangingPlay(): self
+    {
+        return new self(
+            title: 'Spot the hanging piece',
+            description: 'Watch a beginner game one move at a time. After every move, mark every piece and pawn left hanging, on either side.',
+            heading: 'Spot the hanging piece',
         );
     }
 

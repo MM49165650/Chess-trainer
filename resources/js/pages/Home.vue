@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import ListMastersController from '@/actions/App/Http/Controllers/Guess/ListMastersController';
+import PlayHangingController from '@/actions/App/Http/Controllers/Hanging/PlayHangingController';
 import PlaySquaresController from '@/actions/App/Http/Controllers/Squares/PlaySquaresController';
 import ListTacticsCategoriesController from '@/actions/App/Http/Controllers/Tactics/ListTacticsCategoriesController';
 import PageHead from '@/components/PageHead.vue';
@@ -28,6 +29,11 @@ defineProps<{
         <p class="mt-2">
             <Link :href="PlaySquaresController.url()" class="underline">
                 Square control
+            </Link>
+        </p>
+        <p class="mt-2">
+            <Link :href="PlayHangingController.url()" class="underline">
+                Spot the hanging piece
             </Link>
         </p>
         <p class="mt-2">
