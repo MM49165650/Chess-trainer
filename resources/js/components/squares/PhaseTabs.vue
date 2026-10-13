@@ -145,9 +145,9 @@ const currentPhase = computed(() => props.steps[props.index]?.phase ?? null);
 }
 
 /* Less room on a short phone screen, so the board has more. */
-@media (max-width: 639px) and (max-height: 760px) {
+@media (max-width: 639px) and (max-height: 800px) {
     .phase-tab {
-        padding: 6px 0 8px;
+        padding: 4px 0 6px;
     }
 }
 

@@ -119,7 +119,7 @@ function onMain(): void {
         keeps room for two lines, so the board does not move as it changes.
     -->
     <section
-        class="flex flex-col gap-1 px-5 pt-4 pb-3.5 short:pt-2 short:pb-2"
+        class="flex flex-col gap-1 px-5 pt-4 pb-3.5 short:pt-2 short:pb-1.5"
         aria-live="polite"
     >
         <p
@@ -210,10 +210,10 @@ function onMain(): void {
 }
 
 /* Less room on a short phone screen, so the board has more. */
-@media (max-width: 639px) and (max-height: 760px) {
+@media (max-width: 639px) and (max-height: 800px) {
     .legend {
-        min-height: 40px;
-        padding-top: 8px;
+        min-height: 30px;
+        padding-top: 6px;
     }
 }
 

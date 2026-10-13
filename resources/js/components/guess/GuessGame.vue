@@ -263,8 +263,9 @@ const moveNumber = computed(() =>
         Your progress will not be saved in this browser.
     </p>
 
+    <!-- On a short phone screen the opponent joins the row under the board. -->
     <div
-        class="flex items-center justify-between px-5 py-2 text-caption text-muted short:py-1"
+        class="flex items-center justify-between px-5 py-2 text-caption text-muted short:hidden"
     >
         <span class="flex items-center gap-2">
             <span
@@ -291,23 +292,39 @@ const moveNumber = computed(() =>
 
     <!-- Extra room above on larger screens, clear of the resize handle. -->
     <div
-        class="flex items-center justify-between px-5 py-2 text-caption sm:pt-4 short:py-1"
+        class="flex items-center justify-between gap-3 px-5 py-2 text-caption sm:pt-4 short:py-1"
     >
-        <span class="flex items-center gap-2 font-semibold">
+        <span class="flex min-w-0 items-center gap-2 font-semibold">
             <span
                 class="player-dot"
                 :class="game.master_color"
                 aria-hidden="true"
             />
-            {{ game.master.name }}
+            <span class="truncate">{{ game.master.name }}</span>
         </span>
         <span
             v-if="status === 'guess' && viewed === null"
-            class="font-semibold text-accent"
+            class="font-semibold text-accent short:hidden"
         >
             Your guess
         </span>
-        <span v-else class="text-muted tabular-nums">{{ masterNote }}</span>
+        <span v-else class="text-muted tabular-nums short:hidden">
+            {{ masterNote }}
+        </span>
+
+        <!--
+            The one row of a short phone screen: the master on the left and
+            the opponent, with its note, on the right.
+        -->
+        <span class="hidden min-w-0 items-center gap-2 text-muted short:flex">
+            <span
+                class="player-dot"
+                :class="opponentColor"
+                aria-hidden="true"
+            />
+            <span class="truncate">{{ game.opponent_name }}</span>
+            <span class="flex-none tabular-nums">{{ opponentNote }}</span>
+        </span>
     </div>
 
     <!-- Screen readers hear each result and each new question. -->
@@ -316,7 +333,7 @@ const moveNumber = computed(() =>
         size as the text changes.
     -->
     <section
-        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 short:min-h-43 short:pt-2 short:pb-3"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 short:min-h-29 short:pt-2 short:pb-2"
         aria-live="polite"
     >
         <!--
@@ -422,7 +439,7 @@ const moveNumber = computed(() =>
     </section>
 
     <BottomBar>
-        <div class="flex min-w-0 flex-1 flex-col gap-3 short:gap-2">
+        <div class="flex min-w-0 flex-1 flex-col gap-3 short:gap-1.5">
             <div
                 class="flex gap-0.5"
                 role="img"
@@ -431,7 +448,7 @@ const moveNumber = computed(() =>
                 <span
                     v-for="index in game.guess_count"
                     :key="index"
-                    class="h-3 min-w-0 flex-1 rounded-tick"
+                    class="h-3 min-w-0 flex-1 rounded-tick short:h-1.5"
                     :class="[
                         guesses[index - 1] === undefined
                             ? 'bg-hairline'

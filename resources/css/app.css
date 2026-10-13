@@ -31,7 +31,7 @@
  * A short phone screen, where a play screen cannot show a full-width board:
  * the spacing around the board is tightened to give the board more room.
  */
-@custom-variant short (@media (max-width: 639px) and (max-height: 760px));
+@custom-variant short (@media (max-width: 639px) and (max-height: 800px));
 
 /* Small labels: uppercase with wide letter spacing. */
 @utility label-caps {

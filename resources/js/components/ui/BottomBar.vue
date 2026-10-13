@@ -58,9 +58,9 @@ onBeforeUnmount(() => {
 }
 
 /* Less room on a short phone screen, so the board has more. */
-@media (max-width: 639px) and (max-height: 760px) {
+@media (max-width: 639px) and (max-height: 800px) {
     .bottom-bar-content {
-        padding: 8px 20px 10px;
+        padding: 6px 20px 8px;
     }
 }
 
