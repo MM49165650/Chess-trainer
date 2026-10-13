@@ -62,6 +62,9 @@
     --color-feedback-correct: #2b66a6;
     --color-feedback-wrong: #be3232;
 
+    /* The wrong colour as text. The one above is for fills and borders. */
+    --color-feedback-wrong-text: #a32a2a;
+
     /*
      * Everything drawn on the board. The board looks the same in light and
      * dark mode, so these keep one value in both.
@@ -166,5 +169,6 @@
 
         --color-feedback-correct: #8ec0ee;
         --color-feedback-wrong: #e58a8a;
+        --color-feedback-wrong-text: #e58a8a;
     }
 }
