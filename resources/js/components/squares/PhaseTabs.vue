@@ -144,6 +144,13 @@ const currentPhase = computed(() => props.steps[props.index]?.phase ?? null);
     line-height: 1.2;
 }
 
+/* Less room on a short phone screen, so the board has more. */
+@media (max-width: 639px) and (max-height: 760px) {
+    .phase-tab {
+        padding: 6px 0 8px;
+    }
+}
+
 /* The last tab sits against the right edge, as the first sits on the left. */
 .phase-tab:last-child {
     justify-content: flex-end;

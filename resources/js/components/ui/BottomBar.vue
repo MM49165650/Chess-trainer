@@ -57,6 +57,13 @@ onBeforeUnmount(() => {
     padding: 12px 20px 16px;
 }
 
+/* Less room on a short phone screen, so the board has more. */
+@media (max-width: 639px) and (max-height: 760px) {
+    .bottom-bar-content {
+        padding: 8px 20px 10px;
+    }
+}
+
 /* On larger screens the content lines up with the page's column. */
 @media (min-width: 640px) {
     .bottom-bar-content {

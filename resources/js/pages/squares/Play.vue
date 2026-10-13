@@ -101,7 +101,7 @@ onMounted(() => {
         class="sm:mx-auto sm:w-[560px]"
         :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
     >
-        <header class="flex items-center gap-1 py-1 pr-3 pl-1">
+        <header class="flex items-center gap-1 py-1 pr-3 pl-1 short:py-0">
             <!-- Home stands in until the landing page at /squares is built. -->
             <Link
                 href="/"

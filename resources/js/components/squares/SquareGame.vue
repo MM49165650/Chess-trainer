@@ -118,7 +118,10 @@ function onMain(): void {
         Screen readers hear each question and each outcome. The heading
         keeps room for two lines, so the board does not move as it changes.
     -->
-    <section class="flex flex-col gap-1 px-5 pt-4 pb-3.5" aria-live="polite">
+    <section
+        class="flex flex-col gap-1 px-5 pt-4 pb-3.5 short:pt-2 short:pb-2"
+        aria-live="polite"
+    >
         <p
             v-if="showsOutcome && step !== null"
             class="label-caps"
@@ -204,6 +207,14 @@ function onMain(): void {
     display: flex;
     min-height: 54px;
     padding: 16px 20px 0;
+}
+
+/* Less room on a short phone screen, so the board has more. */
+@media (max-width: 639px) and (max-height: 760px) {
+    .legend {
+        min-height: 40px;
+        padding-top: 8px;
+    }
 }
 
 .legend-item {

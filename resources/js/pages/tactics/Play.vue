@@ -246,7 +246,7 @@ onMounted(async () => {
     >
         <!-- The two sides are the same width, so the title stays centred. -->
         <header
-            class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 py-1 pr-3 pl-1"
+            class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 py-1 pr-3 pl-1 short:py-0"
         >
             <Link
                 :href="ListTacticsCategoriesController.url()"

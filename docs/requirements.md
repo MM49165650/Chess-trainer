@@ -240,6 +240,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - The board spans the full screen width, with all controls below it within thumb reach.
 - The three play screens fit a phone without scrolling. Where the screen is too short for a full-width board, the board shrinks just enough and stays centred, down to 280 pixels. Below that the page scrolls. The height that counts is the height on show at that moment, so the fit holds as the browser's address bar comes and goes.
+- On a short phone screen, 760 pixels tall or less, the play screens tighten their spacing to give the board more room; a taller phone keeps the mockup spacing exactly. The header is 44 pixels tall with no space above or below its buttons, and the bottom bar has 8 pixels above its content and 10 below. In guess the move and tactics the prompt is at least 172 pixels tall, with 8 pixels above its text and 12 below; in guess the move each player row has 4 pixels above and below, and the tick row sits 8 pixels above the score. In square control the phase tabs have 6 pixels above and 8 below, the question has 8 above and 8 below, and the legend is at least 40 pixels tall with 8 above. Tap targets stay 44 pixels.
 - A fixed bar at the bottom holds the main action: the phase indicator and submit button in square control, and the equivalent controls in the other modes.
 - Squares are tapped to mark them in square control, with no zooming needed.
 - Moves can be made by tapping a piece and then a square, or by dragging.

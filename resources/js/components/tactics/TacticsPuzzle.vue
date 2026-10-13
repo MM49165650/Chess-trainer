@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
         keeps it clear of the resize handle.
     -->
     <section
-        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 sm:pt-6"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 sm:pt-6 short:min-h-43 short:pt-2 short:pb-3"
         aria-live="polite"
     >
         <!-- The label is the first attempt's result, whatever came after. -->

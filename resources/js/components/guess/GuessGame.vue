@@ -264,7 +264,7 @@ const moveNumber = computed(() =>
     </p>
 
     <div
-        class="flex items-center justify-between px-5 py-2 text-caption text-muted"
+        class="flex items-center justify-between px-5 py-2 text-caption text-muted short:py-1"
     >
         <span class="flex items-center gap-2">
             <span
@@ -291,7 +291,7 @@ const moveNumber = computed(() =>
 
     <!-- Extra room above on larger screens, clear of the resize handle. -->
     <div
-        class="flex items-center justify-between px-5 py-2 text-caption sm:pt-4"
+        class="flex items-center justify-between px-5 py-2 text-caption sm:pt-4 short:py-1"
     >
         <span class="flex items-center gap-2 font-semibold">
             <span
@@ -316,7 +316,7 @@ const moveNumber = computed(() =>
         size as the text changes.
     -->
     <section
-        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6 short:min-h-43 short:pt-2 short:pb-3"
         aria-live="polite"
     >
         <!--
@@ -422,7 +422,7 @@ const moveNumber = computed(() =>
     </section>
 
     <BottomBar>
-        <div class="flex min-w-0 flex-1 flex-col gap-3">
+        <div class="flex min-w-0 flex-1 flex-col gap-3 short:gap-2">
             <div
                 class="flex gap-0.5"
                 role="img"

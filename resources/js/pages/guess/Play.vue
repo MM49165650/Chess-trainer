@@ -101,7 +101,7 @@ onMounted(load);
         class="sm:mx-auto sm:w-[560px]"
         :style="{ '--board-height-limit': boardHeightLimit ?? undefined }"
     >
-        <header class="flex items-center gap-1 p-1">
+        <header class="flex items-center gap-1 p-1 short:py-0">
             <Link
                 :href="backUrl"
                 class="flex size-11 flex-none items-center justify-center"
