@@ -1,14 +1,22 @@
 // One practice game in a marking mode, worked through move by move. Each
 // move is shown and then marked in its phases. Square control has two for an
 // ordinary move and four for castling; spot the hanging piece has one. Every
-// phase is submitted and scored by itself. Nothing is saved here.
+// phase is scored by itself, once, when it ends. Square control checks a
+// phase as it is marked: it ends when the marks match the answer, or when
+// the button is pressed. Spot the hanging piece ends a phase only on Submit.
+// Nothing is saved here.
 
 import { computed, onScopeDispose, ref } from 'vue';
 import type { PieceType, Phase, Ply, Square } from '@/chess/conventions';
 import { positionsOf } from '@/chess/game';
 import type { MarkFeedback } from '@/components/board/types';
 import type { PracticeGamePlayData } from '@/generated/data';
-import { scoreMarks, stepsOf, type MarkingMode } from './phases';
+import {
+    scoreMarks,
+    stepsOf,
+    type MarkingMode,
+    type PhaseStep,
+} from './phases';
 
 // How long the starting position is shown before the first move plays, in
 // milliseconds, so that the move is seen.
@@ -22,7 +30,7 @@ export const MARKING_MOVE_ANIMATION_MS = 450;
 // moves on by itself, in milliseconds, so that the tick is seen.
 export const EXACT_ADVANCE_DELAY_MS = 600;
 
-/** A submitted phase, as it will count towards the tallies. */
+/** A phase that has ended, as it will count towards the tallies. */
 export type PhaseResult = {
     ply: Ply;
     phase: Phase;
@@ -30,11 +38,14 @@ export type PhaseResult = {
     rook: boolean;
     /** The piece that moved, or the rook in the rook's two phases. */
     piece: PieceType;
-    /** Whether the selection was exactly right. */
+    /**
+     * Whether the phase scores: the selection was exactly right and, in
+     * square control, no wrong square was marked on the way to it.
+     */
     exact: boolean;
 };
 
-/** `onSubmitted` is called once for every phase, when it is submitted. */
+/** `onSubmitted` is called once for every phase, when it ends. */
 export function useMarkingGame(
     game: PracticeGamePlayData,
     mode: MarkingMode,
@@ -43,6 +54,9 @@ export function useMarkingGame(
     // Entry 0 is the starting position and entry n the one after n plies.
     const positions = positionsOf(game.moves);
     const lastPly = game.moves.length;
+
+    /** Square control checks a phase as it is marked. */
+    const checksAsMarked = mode === 'squares';
 
     /** The move being worked on. */
     const ply = ref<Ply>(1);
@@ -55,7 +69,14 @@ export function useMarkingGame(
 
     const marked = ref<Square[]>([]);
 
-    /** The outcome of the phase, once it has been submitted. */
+    /**
+     * True once a square that is not in the answer has been marked in this
+     * phase of square control. The phase then counts as failed, whatever
+     * is marked afterwards.
+     */
+    const slipped = ref(false);
+
+    /** The outcome of the phase, once it has ended. */
     const feedback = ref<MarkFeedback | null>(null);
 
     /** True while the position before the move is shown. */
@@ -82,22 +103,41 @@ export function useMarkingGame(
     /** The position the move was played from. */
     const fenBefore = computed(() => positions[ply.value - 1] ?? '');
 
-    /** Squares can be marked until the phase is submitted. */
+    /** Squares can be marked until the phase has ended. */
     const canMark = computed(
         () => started.value && step.value !== null && feedback.value === null,
     );
 
     /**
      * The squares marked in the phase so far. They are not saved, and they
-     * cannot be changed once the phase is submitted.
+     * cannot be changed once the phase has ended. In square control every
+     * change is checked against the answer.
      */
     const marks = computed<Square[]>({
         get: () => marked.value,
         set: (squares) => {
-            if (canMark.value) {
-                marked.value = squares;
+            if (!canMark.value) {
+                return;
+            }
+
+            marked.value = squares;
+
+            if (checksAsMarked) {
+                checkMarks();
             }
         },
+    });
+
+    /**
+     * In square control, the marked squares that are not in the answer.
+     * They are shown as wrong at once, while the phase is still open.
+     */
+    const wrongMarks = computed<Square[]>(() => {
+        const answer = step.value?.answer ?? [];
+
+        return checksAsMarked && feedback.value === null
+            ? marked.value.filter((square) => !answer.includes(square))
+            : [];
     });
 
     /** The phase open for marking, or null when none is. */
@@ -105,12 +145,19 @@ export function useMarkingGame(
         canMark.value ? (step.value?.phase ?? null) : null,
     );
 
-    /** Whether the phase just submitted was exactly right. */
+    /**
+     * Whether the selection the phase ended on was exactly right. In square
+     * control the phase can still have failed, by a wrong square marked
+     * and taken off again; `moveResults` has how it scored.
+     */
     const exact = computed(() =>
-        feedback.value === null ? null : (results.value.at(-1)?.exact ?? null),
+        feedback.value === null
+            ? null
+            : feedback.value.missed.length === 0 &&
+              feedback.value.wrong.length === 0,
     );
 
-    /** How the phases of this move came out so far, in their order. */
+    /** How the phases of this move scored so far, in their order. */
     const moveResults = computed(() =>
         results.value
             .filter((result) => result.ply === ply.value)
@@ -123,7 +170,7 @@ export function useMarkingGame(
 
     const isLastMove = computed(() => ply.value >= lastPly);
 
-    /** True once the last phase of the last move has been submitted. */
+    /** True once the last phase of the last move has ended. */
     const finished = computed(
         () => feedback.value !== null && isLastStep.value && isLastMove.value,
     );
@@ -152,18 +199,46 @@ export function useMarkingGame(
     }, true);
 
     /**
-     * Scores the marked squares. An empty selection is a valid answer. The
-     * outcome is shown on the position after the move. A phase that was
-     * exactly right moves on by itself after a pause, except at the end of
-     * the game.
+     * Square control: checks the marks as they change. A wrong square fails
+     * the phase but leaves it open, so it can be taken off again. Marks
+     * that match the answer end the phase, unless nothing is marked: an
+     * empty answer is only confirmed with the button.
+     */
+    function checkMarks(): void {
+        const current = step.value;
+
+        if (current === null) {
+            return;
+        }
+
+        if (wrongMarks.value.length > 0) {
+            slipped.value = true;
+        } else if (
+            marked.value.length > 0 &&
+            scoreMarks(marked.value, current.answer).exact
+        ) {
+            endPhase(current);
+        }
+    }
+
+    /**
+     * Ends the phase on the squares marked, as the main button does. An
+     * empty selection is a valid answer.
      */
     function submit(): void {
         const current = step.value;
 
-        if (!canMark.value || current === null) {
-            return;
+        if (canMark.value && current !== null) {
+            endPhase(current);
         }
+    }
 
+    /**
+     * Scores the phase, once, and shows the outcome on the position after
+     * the move. A selection that is exactly right moves on by itself after
+     * a pause, except at the end of the game.
+     */
+    function endPhase(current: PhaseStep): void {
         const score = scoreMarks(marked.value, current.answer);
 
         const result: PhaseResult = {
@@ -171,7 +246,7 @@ export function useMarkingGame(
             phase: current.phase,
             rook: current.rook,
             piece: current.piece,
-            exact: score.exact,
+            exact: score.exact && !slipped.value,
         };
 
         feedback.value = score.feedback;
@@ -186,9 +261,9 @@ export function useMarkingGame(
     }
 
     /**
-     * Moves on from a submitted phase: to the move's next phase, or to the
-     * next move, which then plays on the board. After the last move there
-     * is nowhere to go.
+     * Moves on from a phase that has ended: to the move's next phase, or to
+     * the next move, which then plays on the board. After the last move
+     * there is nowhere to go.
      */
     function next(): void {
         cancelAdvance();
@@ -206,6 +281,7 @@ export function useMarkingGame(
         }
 
         marked.value = [];
+        slipped.value = false;
         feedback.value = null;
     }
 
@@ -230,6 +306,7 @@ export function useMarkingGame(
         fen,
         fenBefore,
         marks,
+        wrongMarks,
         markPhase,
         canMark,
         feedback,

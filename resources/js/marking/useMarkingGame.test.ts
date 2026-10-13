@@ -1,7 +1,8 @@
 // One practice game, worked through in the two marking modes: marking,
-// submitting, scoring, the phases of each mode, moving on by itself after a
-// phase that was exactly right, rewinding and moving on to the next move.
-// The games are made up for the test.
+// scoring, the phases of each mode, moving on by itself after a selection
+// that was exactly right, rewinding and moving on to the next move. Square
+// control checks a phase as it is marked; spot the hanging piece waits for
+// Submit. The games are made up for the test.
 
 import { Chess } from 'chess.js';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -15,7 +16,7 @@ import {
     FIRST_MOVE_DELAY_MS,
     useMarkingGame,
 } from './useMarkingGame';
-import { nextLabel, tabsOf } from './wording';
+import { markingLabel, nextLabel, tabsOf } from './wording';
 
 /** A game from its moves, with the answers worked out as the import does. */
 function madeUpGame(id: number, ucis: readonly string[]): PracticeGamePlayData {
@@ -66,6 +67,20 @@ const italian = madeUpGame(1, [
 // Two moves only, so that the end of the game is soon reached.
 const short = madeUpGame(2, ['e2e4', 'e7e5']);
 
+// White's h-pawn promotes to a queen by a push on the ninth ply, and so
+// loses no square: the one phase of square control with an empty answer.
+const promotion = madeUpGame(3, [
+    'h2h4',
+    'g7g5',
+    'h4g5',
+    'h7h6',
+    'g5h6',
+    'g8f6',
+    'h6h7',
+    'h8g8',
+    'h7h8q',
+]);
+
 /** A game whose first move has played, ready for marking. */
 function started(game: PracticeGamePlayData, mode: MarkingMode = 'squares') {
     const state = useMarkingGame(game, mode);
@@ -77,7 +92,11 @@ function started(game: PracticeGamePlayData, mode: MarkingMode = 'squares') {
 
 type Game = ReturnType<typeof useMarkingGame>;
 
-/** Marks exactly the answer of the phase and submits it. */
+/**
+ * Marks exactly the answer of the phase and presses the button. In square
+ * control the marks end the phase by themselves unless the answer is empty,
+ * and the press then does nothing.
+ */
 function answer(game: Game): void {
     game.marks.value = [...(game.step.value?.answer ?? [])];
     game.submit();
@@ -145,12 +164,18 @@ test('square control: an ordinary move has two phases, lost then controlled', ()
     ]);
 });
 
-test('a selection that is exactly right scores, in any order', () => {
+test('square control: marks that match the answer end the phase at once, in any order', () => {
     const game = started(italian);
 
-    game.marks.value = ['f3', 'd3'];
-    game.submit();
+    game.marks.value = ['f3'];
 
+    // One square of the two: the phase stays open.
+    expect(game.feedback.value).toBeNull();
+    expect(game.results.value).toEqual([]);
+
+    game.marks.value = ['f3', 'd3'];
+
+    expect(game.markPhase.value).toBeNull();
     expect(game.exact.value).toBe(true);
     expect(game.feedback.value).toEqual({
         correct: ['d3', 'f3'],
@@ -162,13 +187,14 @@ test('a selection that is exactly right scores, in any order', () => {
     ]);
 });
 
-test('a missed square fails the phase', () => {
+test('pressing the button with a square missed fails the phase', () => {
     const game = started(italian);
 
     game.marks.value = ['d3'];
     game.submit();
 
     expect(game.exact.value).toBe(false);
+    expect(game.moveResults.value).toEqual([false]);
     expect(game.feedback.value).toEqual({
         correct: ['d3'],
         missed: ['f3'],
@@ -176,19 +202,123 @@ test('a missed square fails the phase', () => {
     });
 });
 
-test('a wrongly marked square fails the phase', () => {
+test('square control: a wrong square is shown at once, and the phase stays open', () => {
     const game = started(italian);
 
     // The square the pawn pushed to is not one it controlled.
-    game.marks.value = ['d3', 'f3', 'e4'];
+    game.marks.value = ['d3', 'e4'];
+
+    expect(game.wrongMarks.value).toEqual(['e4']);
+    expect(game.markPhase.value).toBe('lost');
+    expect(game.feedback.value).toBeNull();
+    expect(game.results.value).toEqual([]);
+
+    // The button ends the phase, with the missed and the wrong square.
     game.submit();
 
+    expect(game.wrongMarks.value).toEqual([]);
     expect(game.exact.value).toBe(false);
     expect(game.feedback.value).toEqual({
-        correct: ['d3', 'f3'],
-        missed: [],
+        correct: ['d3'],
+        missed: ['f3'],
         wrong: ['e4'],
     });
+});
+
+test('square control: a wrong square taken off again still fails the phase, which moves on once completed', () => {
+    const reported: boolean[] = [];
+
+    const game = useMarkingGame(italian, 'squares', (result) => {
+        reported.push(result.exact);
+    });
+
+    vi.advanceTimersByTime(FIRST_MOVE_DELAY_MS);
+
+    game.marks.value = ['e4'];
+    game.marks.value = [];
+
+    expect(game.wrongMarks.value).toEqual([]);
+    expect(game.feedback.value).toBeNull();
+
+    game.marks.value = ['d3'];
+    game.marks.value = ['d3', 'f3'];
+
+    // The selection is exactly right, and the phase has failed all the same.
+    expect(game.exact.value).toBe(true);
+    expect(game.moveResults.value).toEqual([false]);
+    expect(game.advancePending.value).toBe(true);
+
+    vi.advanceTimersByTime(EXACT_ADVANCE_DELAY_MS);
+
+    expect(game.step.value?.phase).toBe('controlled');
+    expect(game.feedback.value).toBeNull();
+
+    // The next phase starts clean, and the failed one was scored once.
+    game.marks.value = ['d5', 'f5'];
+
+    expect(game.moveResults.value).toEqual([false, true]);
+    expect(reported).toEqual([false, true]);
+});
+
+test('square control: an empty answer is only confirmed with the button', () => {
+    const game = started(promotion);
+
+    for (let ply = 1; ply < 9; ply += 1) {
+        passMove(game);
+    }
+
+    expect(game.move.value?.san).toBe('h8=Q');
+    expect(game.step.value?.answer).toEqual([]);
+
+    // Nothing is marked and nothing is to be marked, and it waits.
+    vi.advanceTimersByTime(10 * EXACT_ADVANCE_DELAY_MS);
+
+    expect(game.feedback.value).toBeNull();
+    expect(game.results.value).toHaveLength(16);
+
+    game.submit();
+
+    expect(game.exact.value).toBe(true);
+    expect(game.results.value.at(-1)?.exact).toBe(true);
+    expect(game.feedback.value).toEqual({ correct: [], missed: [], wrong: [] });
+
+    // Being exactly right, it moves on by itself like any other.
+    expect(game.advancePending.value).toBe(true);
+
+    vi.advanceTimersByTime(EXACT_ADVANCE_DELAY_MS);
+
+    expect(game.step.value?.phase).toBe('controlled');
+});
+
+test('square control: a square marked where the answer is empty fails the phase, even taken off again', () => {
+    const game = started(promotion);
+
+    for (let ply = 1; ply < 9; ply += 1) {
+        passMove(game);
+    }
+
+    game.marks.value = ['g8'];
+
+    expect(game.wrongMarks.value).toEqual(['g8']);
+
+    game.marks.value = [];
+    game.submit();
+
+    expect(game.exact.value).toBe(true);
+    expect(game.results.value.at(-1)?.exact).toBe(false);
+});
+
+test('the main button says what a press will do while marking', () => {
+    expect([0, 1, 6].map((count) => markingLabel('squares', count))).toEqual([
+        'Nothing',
+        'Show me',
+        'Show me',
+    ]);
+
+    expect([0, 6].map((count) => markingLabel('hanging', count))).toEqual([
+        'Submit · none marked',
+        'Submit · 6 marked',
+    ]);
 });
 
 test('marking something is wrong when the answer is empty', () => {
@@ -198,7 +328,7 @@ test('marking something is wrong when the answer is empty', () => {
     });
 });
 
-test('a submitted phase cannot be marked or submitted again', () => {
+test('a phase that has ended cannot be marked or submitted again', () => {
     const game = started(italian);
 
     game.marks.value = ['d3'];
@@ -213,7 +343,7 @@ test('a submitted phase cannot be marked or submitted again', () => {
     expect(game.results.value).toHaveLength(1);
 });
 
-test('every submitted phase is reported once, as it is submitted', () => {
+test('every phase is reported once, as it ends', () => {
     const reported: string[] = [];
 
     const game = useMarkingGame(italian, 'squares', (result) => {
@@ -234,13 +364,12 @@ test('every submitted phase is reported once, as it is submitted', () => {
 test('the next phase starts with no marks, and cannot be skipped to', () => {
     const game = started(italian);
 
-    // Moving on needs a submitted phase.
+    // Moving on needs a phase that has ended.
     game.next();
 
     expect(game.stepIndex.value).toBe(0);
 
     game.marks.value = ['d3', 'f3'];
-    game.submit();
     game.next();
 
     expect(game.step.value?.phase).toBe('controlled');
@@ -311,7 +440,7 @@ test('square control: a castling move has four phases, the king then the rook', 
     ]);
 });
 
-test('the four phases of castling are submitted and scored one by one', () => {
+test('the four phases of castling are marked and scored one by one', () => {
     const game = started(italian);
 
     for (let ply = 1; ply < 7; ply += 1) {
@@ -331,6 +460,8 @@ test('the four phases of castling are submitted and scored one by one', () => {
 
     for (const selection of selections) {
         game.marks.value = selection;
+
+        // Only the selection that is not right needs the button.
         game.submit();
         labels.push(nextLabel(game.steps.value, game.stepIndex.value, true));
         game.next();
@@ -492,7 +623,8 @@ test('square control: a phase that is exactly right moves on by itself after a p
     const game = started(italian);
     const positions = positionsOf(italian.moves);
 
-    answer(game);
+    // The marks are enough: the button is not pressed.
+    game.marks.value = ['d3', 'f3'];
 
     // The tick and the outcome are on show first.
     expect(game.exact.value).toBe(true);
@@ -512,7 +644,7 @@ test('square control: a phase that is exactly right moves on by itself after a p
     expect(game.marks.value).toEqual([]);
 
     // After the last phase of the move, the next move plays.
-    answer(game);
+    game.marks.value = ['d5', 'f5'];
     vi.advanceTimersByTime(EXACT_ADVANCE_DELAY_MS);
 
     expect(game.ply.value).toBe(2);
@@ -567,22 +699,39 @@ test.each(MARKING_MODES)(
     },
 );
 
-test.each(MARKING_MODES)(
-    '%s: marks that match the answer do nothing until they are submitted',
-    (mode) => {
-        const game = started(italian, mode);
+test('spot the hanging piece: marks that match the answer do nothing until they are submitted', () => {
+    const game = started(italian, 'hanging');
 
-        game.marks.value = [...(game.step.value?.answer ?? [])];
+    passMove(game);
+    passMove(game);
 
-        vi.advanceTimersByTime(10 * EXACT_ADVANCE_DELAY_MS);
+    // After 2. Nf3 the pawn on e5 hangs.
+    game.marks.value = ['e5'];
 
-        expect(game.advancePending.value).toBe(false);
-        expect(game.feedback.value).toBeNull();
-        expect(game.results.value).toEqual([]);
-        expect(game.ply.value).toBe(1);
-        expect(game.stepIndex.value).toBe(0);
-    },
-);
+    vi.advanceTimersByTime(10 * EXACT_ADVANCE_DELAY_MS);
+
+    expect(game.advancePending.value).toBe(false);
+    expect(game.wrongMarks.value).toEqual([]);
+    expect(game.feedback.value).toBeNull();
+    expect(game.results.value).toHaveLength(2);
+    expect(game.ply.value).toBe(3);
+});
+
+test('spot the hanging piece: a wrong square is not shown until the phase is submitted', () => {
+    const game = started(italian, 'hanging');
+
+    game.marks.value = ['e4'];
+
+    expect(game.wrongMarks.value).toEqual([]);
+
+    // Taken off again before Submit, it does not count against the phase.
+    game.marks.value = [];
+    game.submit();
+
+    expect(game.results.value).toEqual([
+        { ply: 1, phase: 'hanging', rook: false, piece: 'pawn', exact: true },
+    ]);
+});
 
 test.each(MARKING_MODES)(
     '%s: rewind during the pause cancels the move on, for good',
@@ -636,6 +785,7 @@ test.each(MARKING_MODES)(
 
         expect([game.ply.value, game.stepIndex.value]).toEqual(reached);
         expect(game.feedback.value).toBeNull();
+        expect(game.results.value).toHaveLength(1);
     },
 );
 
@@ -671,15 +821,15 @@ test('rewind shows the position before the move, and keeps the marks', () => {
 
     passMove(game);
 
-    game.marks.value = ['d6'];
     game.toggleRewind();
 
     expect(game.rewound.value).toBe(true);
     expect(game.fen.value).toBe(positions[1]);
     expect(game.fenBefore.value).toBe(positions[1]);
 
-    // Squares can still be marked while the earlier position is shown.
-    game.marks.value = ['d6', 'f6'];
+    // Squares can still be marked while the earlier position is shown:
+    // one of the two here, so that the phase stays open.
+    game.marks.value = ['d6'];
 
     expect(game.markPhase.value).toBe('lost');
 
@@ -687,16 +837,15 @@ test('rewind shows the position before the move, and keeps the marks', () => {
 
     expect(game.rewound.value).toBe(false);
     expect(game.fen.value).toBe(positions[2]);
-    expect(game.marks.value).toEqual(['d6', 'f6']);
+    expect(game.marks.value).toEqual(['d6']);
 });
 
-test('submitting goes back to the position after the move', () => {
+test('the end of a phase goes back to the position after the move', () => {
     const game = started(italian);
     const positions = positionsOf(italian.moves);
 
     game.toggleRewind();
     game.marks.value = ['d3', 'f3'];
-    game.submit();
 
     expect(game.rewound.value).toBe(false);
     expect(game.fen.value).toBe(positions[1]);

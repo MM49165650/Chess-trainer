@@ -15,6 +15,7 @@ import {
     useMarkingGame,
 } from '@/marking/useMarkingGame';
 import {
+    markingLabel,
     moveInWords,
     nextLabel,
     phaseName,
@@ -47,6 +48,7 @@ const {
     fen,
     fenBefore,
     marks,
+    wrongMarks,
     markPhase,
     feedback,
     exact,
@@ -98,9 +100,7 @@ const mainLabel = computed(() => {
         return nextLabel(steps.value, stepIndex.value, isLastMove.value);
     }
 
-    const count = marks.value.length;
-
-    return `Submit · ${count === 0 ? 'none' : String(count)} marked`;
+    return markingLabel(props.mode, marks.value.length);
 });
 
 function onMain(): void {
@@ -160,6 +160,7 @@ function onMain(): void {
         :show-last-move="false"
         :mark-phase="markPhase"
         :feedback="feedback"
+        :wrong-marks="wrongMarks"
         :animation-ms="MARKING_MOVE_ANIMATION_MS"
         @resized="saveBoardSize"
     />

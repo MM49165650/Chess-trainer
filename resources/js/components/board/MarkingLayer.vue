@@ -9,6 +9,8 @@ const props = defineProps<{
     phase: Phase | null;
     /** When set, the feedback is drawn in place of the marks. */
     feedback: MarkFeedback | null;
+    /** Marked squares drawn as wrong at once, while the phase is still open. */
+    wrongMarks: readonly Square[];
 }>();
 
 const marks = defineModel<Square[]>('marks', { required: true });
@@ -33,7 +35,11 @@ type State = 'marked' | 'correct' | 'missed' | 'wrong' | 'empty';
 
 function stateOf(square: Square): State {
     if (props.feedback === null) {
-        return marks.value.includes(square) ? 'marked' : 'empty';
+        if (!marks.value.includes(square)) {
+            return 'empty';
+        }
+
+        return props.wrongMarks.includes(square) ? 'wrong' : 'marked';
     }
 
     if (props.feedback.correct.includes(square)) {
@@ -64,7 +70,7 @@ function toggle(square: Square): void {
             :class="stateOf(square)"
             :disabled="!canMark"
             :aria-label="`${square}, ${stateOf(square)}`"
-            :aria-pressed="canMark ? stateOf(square) === 'marked' : undefined"
+            :aria-pressed="canMark ? marks.includes(square) : undefined"
             @click="toggle(square)"
         />
     </div>

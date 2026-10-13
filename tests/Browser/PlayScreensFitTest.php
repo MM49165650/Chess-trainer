@@ -275,9 +275,13 @@ test('square control fits the screen in every state', function (int $width, int 
     $page->assertSee('Which squares does the pawn no longer control?');
     expectFit($page, 'square control, marking', $width, $height, $fullWidth);
 
+    // The pawn never controlled e4, so the square shows as wrong at once.
     pressButton($page, 'd3, empty');
     pressButton($page, 'e4, empty');
-    pressButton($page, 'Submit · 2 marked');
+    $page->assertPresent('.mark-square.wrong')->assertSee('Show me');
+    expectFit($page, 'square control, a wrong square shown', $width, $height, $fullWidth);
+
+    pressButton($page, 'Show me');
     $page->assertSee('Not quite');
     expectFit($page, 'square control, feedback', $width, $height, $fullWidth);
 

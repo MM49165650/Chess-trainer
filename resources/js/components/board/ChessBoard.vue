@@ -54,6 +54,8 @@ const props = withDefaults(
         markPhase?: Phase | null;
         /** Feedback on a submitted phase, drawn in place of the marks. */
         feedback?: MarkFeedback | null;
+        /** Marked squares to draw as wrong while the phase is still open. */
+        wrongMarks?: readonly Square[];
         /** Whether larger screens get a handle to resize the board. */
         resizable?: boolean;
         /** How long the next change of position takes to animate. */
@@ -67,6 +69,7 @@ const props = withDefaults(
         showLastMove: true,
         markPhase: null,
         feedback: null,
+        wrongMarks: () => [],
         resizable: false,
         animationMs: MOVE_ANIMATION_MS,
     },
@@ -269,6 +272,7 @@ watch(
             :orientation="orientation"
             :phase="markPhase"
             :feedback="feedback"
+            :wrong-marks="wrongMarks"
         />
 
         <!-- Something extra drawn over the squares, by the page that asks. -->
