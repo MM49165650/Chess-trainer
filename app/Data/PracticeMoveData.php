@@ -10,8 +10,9 @@ use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\LiteralTypeScriptType;
 
 /**
- * One entry of a practice game's moves list, with its three answer sets:
- * Appendix C of the requirements.
+ * One entry of a practice game's moves list, with its answer sets: Appendix C
+ * of the requirements. On a castling move lost and controlled are the king's
+ * alone, and the rook's are kept apart.
  */
 final class PracticeMoveData extends Data
 {
@@ -36,6 +37,8 @@ final class PracticeMoveData extends Data
         public array $controlled,
         /** Every hanging piece and pawn after the move, of both sides. */
         public array $hanging,
+        /** The rook's answers on a castling move, and null on every other. */
+        public ?PracticeRookAnswersData $rook,
     ) {}
 
     /**

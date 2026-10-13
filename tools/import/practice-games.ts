@@ -14,7 +14,7 @@ import { replayPgn } from '../../resources/js/chess/replay.ts';
 import type { PracticeGameImportData } from '../../resources/js/generated/data.ts';
 
 /** The version of the calculation in Appendix B that the answers come from. */
-export const ANSWERS_VERSION = 1;
+export const ANSWERS_VERSION = 2;
 
 export type PracticeOptions = {
     /** The only time control kept, as in the TimeControl tag. */
@@ -194,6 +194,14 @@ function toPracticeGame(candidate: Candidate): PracticeGameImportData | null {
                 piece: answers.piece,
                 lost: [...answers.lost],
                 controlled: [...answers.controlled],
+                // Only a castling move has a rook that moved as well.
+                rook:
+                    answers.rook === null
+                        ? null
+                        : {
+                              lost: [...answers.rook.lost],
+                              controlled: [...answers.rook.controlled],
+                          },
                 hanging: [...answers.hanging],
             };
         });

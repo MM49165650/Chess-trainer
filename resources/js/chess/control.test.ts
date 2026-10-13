@@ -33,6 +33,7 @@ test.each(GOLDEN_POSITIONS)('$name', (golden) => {
         piece: golden.piece,
         lost: golden.lost,
         controlled: golden.controlled,
+        rook: golden.rook ?? null,
         hanging: golden.hanging,
     });
 });
