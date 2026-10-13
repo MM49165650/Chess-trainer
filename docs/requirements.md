@@ -548,7 +548,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet | A full game can be worked through comfortably on a phone |
 | 27. Session | Next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase |
 | 28. Tallies | The three phase scores and the tallies by piece | The numbers match a session counted by hand |
-| 29. Full import | All practice games loaded on the server | Needs no further decisions: game selection is settled |
+| 29. Full import | All practice games loaded on the server, from the same intermediate file loaded locally in step 24 (`data/intermediate/practice-games.jsonl`, kept safe outside the repository), so the 500 games do not change | Needs no further decisions: game selection is settled |
 
 **Stage 6: Finish**
 
