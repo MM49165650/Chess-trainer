@@ -67,3 +67,23 @@ test('importing the same practice games twice keeps every ID', function (): void
 
     expect($idsByFingerprint())->toBe($first);
 });
+
+test('a practice game with an invalid square is rejected and nothing is written', function (): void {
+    $file = practiceGamesFile([
+        ['e2e4', 'e7e5', 'g1f3'],
+        ['d2d4', 'd7d5', 'c2c4', 'e7e6'],
+    ]);
+
+    // The second game's last move gets a square that is not on the board.
+    $lines = file($file, FILE_IGNORE_NEW_LINES);
+    $game = json_decode($lines[2], true);
+    $game['moves'][3]['hanging'] = ['e5', 'i9'];
+    $lines[2] = json_encode($game);
+    file_put_contents($file, implode("\n", $lines)."\n");
+
+    $this->artisan('import:practice-games', ['file' => $file])
+        ->expectsOutputToContain('Line 3')
+        ->assertFailed();
+
+    expect(PracticeGame::query()->count())->toBe(0);
+});

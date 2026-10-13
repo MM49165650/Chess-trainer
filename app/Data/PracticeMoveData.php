@@ -40,16 +40,21 @@ final class PracticeMoveData extends Data
 
     /**
      * An answer set may be empty, so the three lists must be there but need
-     * not hold anything.
+     * not hold anything. Every entry must be a square such as e4.
      *
      * @return array<string, list<string>>
      */
     public static function rules(): array
     {
+        $square = ['string', 'regex:/^[a-h][1-8]$/'];
+
         return [
-            'lost' => ['present', 'array'],
-            'controlled' => ['present', 'array'],
-            'hanging' => ['present', 'array'],
+            'lost' => ['present', 'list'],
+            'lost.*' => $square,
+            'controlled' => ['present', 'list'],
+            'controlled.*' => $square,
+            'hanging' => ['present', 'list'],
+            'hanging.*' => $square,
         ];
     }
 }

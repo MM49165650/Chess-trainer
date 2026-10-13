@@ -31,8 +31,6 @@ class ImportPracticeGamesCommand extends Command
 
     private const int FORMAT = 1;
 
-    private const string SQUARE = '/^[a-h][1-8]$/';
-
     public function handle(): int
     {
         $path = $this->argument('file');
@@ -140,29 +138,7 @@ class ImportPracticeGamesCommand extends Command
             return 'the moves list has '.count($game->moves).' entries, but ply_count is '.$game->ply_count.'.';
         }
 
-        foreach ($game->moves as $index => $move) {
-            foreach (['lost' => $move->lost, 'controlled' => $move->controlled, 'hanging' => $move->hanging] as $name => $squares) {
-                if (! $this->isSquareList($squares)) {
-                    return 'move '.($index + 1).': '.$name.' must be a list of squares.';
-                }
-            }
-        }
-
         return $game;
-    }
-
-    /**
-     * Whether the value is a list holding only squares such as e4.
-     *
-     * @param  array<mixed>  $squares
-     */
-    private function isSquareList(array $squares): bool
-    {
-        if (! array_is_list($squares)) {
-            return false;
-        }
-
-        return array_all($squares, fn ($square): bool => is_string($square) && preg_match(self::SQUARE, $square) === 1);
     }
 
     /**
