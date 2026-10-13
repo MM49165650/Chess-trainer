@@ -4,6 +4,9 @@
 
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
+    HangingSeen,
+    HangingSession,
+    HangingTally,
     MasterGameRecord,
     Meta,
     PuzzleSeen,
@@ -21,7 +24,7 @@ const NAME = 'chess-training';
  * A change to the structure raises this number and adds an upgrade step
  * below. Stores are never deleted to make a change.
  */
-const VERSION = 1;
+const VERSION = 2;
 
 interface Schema extends DBSchema {
     meta: { key: 'meta'; value: Meta };
@@ -31,6 +34,9 @@ interface Schema extends DBSchema {
     squareSession: { key: 'current'; value: SquareSession };
     squareSeen: { key: number; value: SquareSeen };
     squareTallies: { key: 'tallies'; value: SquareTallies };
+    hangingSession: { key: 'current'; value: HangingSession };
+    hangingSeen: { key: number; value: HangingSeen };
+    hangingTallies: { key: 'tallies'; value: HangingTally };
     puzzlesSeen: { key: number; value: PuzzleSeen };
     tacticsTallies: { key: 'tallies'; value: TacticsTallies };
 }
@@ -45,7 +51,14 @@ export function now(): string {
 // On first use, the date is noted and the browser is asked to keep the data
 // rather than clear it when space runs short.
 async function noteFirstUse(db: Database): Promise<void> {
-    if ((await db.get('meta', 'meta')) !== undefined) {
+    const meta = await db.get('meta', 'meta');
+
+    if (meta !== undefined) {
+        // After an upgrade the noted version follows the database's.
+        if (meta.schemaVersion !== VERSION) {
+            await db.put('meta', { ...meta, schemaVersion: VERSION }, 'meta');
+        }
+
         return;
     }
 
@@ -79,6 +92,16 @@ async function open(): Promise<Database | null> {
                         keyPath: 'puzzleId',
                     });
                     upgrading.createObjectStore('tacticsTallies');
+                }
+
+                // Spot the hanging piece became a mode of its own, with its
+                // own progress.
+                if (oldVersion < 2) {
+                    upgrading.createObjectStore('hangingSession');
+                    upgrading.createObjectStore('hangingSeen', {
+                        keyPath: 'gameId',
+                    });
+                    upgrading.createObjectStore('hangingTallies');
                 }
             },
         });

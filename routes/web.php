@@ -10,6 +10,7 @@ use App\Http\Controllers\Guess\ListMasterGamesController;
 use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
 use App\Http\Controllers\Guess\RandomMasterGameController;
+use App\Http\Controllers\Hanging\PlayHangingController;
 use App\Http\Controllers\ShowSitemapController;
 use App\Http\Controllers\Squares\PlaySquaresController;
 use App\Http\Controllers\Tactics\ListTacticsCategoriesController;
@@ -45,6 +46,10 @@ Route::get('/guess/{master}/{game}', PlayMasterGameController::class)
 
 // Square control: the exercise. Its landing page at /squares comes later.
 Route::get('/squares/play', PlaySquaresController::class)->name('squares.play');
+
+// Spot the hanging piece: the exercise. Its landing page at /hanging comes
+// later.
+Route::get('/hanging/play', PlayHangingController::class)->name('hanging.play');
 
 // Tactics by piece: the categories, then one piece's puzzles or all of them.
 Route::get('/tactics', ListTacticsCategoriesController::class)->name('tactics.categories');

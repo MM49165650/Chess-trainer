@@ -1,8 +1,9 @@
 <script setup lang="ts">
-// The phase indicator of square control: three tabs that show which phase
-// is being marked and how the earlier ones came out. On a castling move the
-// tabs are King, Rook and Hanging, and the first two stand for two phases
-// each, lost and then controlled.
+// The phase indicator of the marking modes: tabs that show which phase is
+// being marked and how the earlier ones came out. Square control has Lost
+// and Controls, or King and Rook on a castling move, where each tab stands
+// for two phases, lost and then controlled. Spot the hanging piece has the
+// one tab, Hanging.
 
 import { computed } from 'vue';
 import type { PhaseStep } from '@/marking/phases';
@@ -151,8 +152,11 @@ const currentPhase = computed(() => props.steps[props.index]?.phase ?? null);
     }
 }
 
-/* The last tab sits against the right edge, as the first sits on the left. */
-.phase-tab:last-child {
+/*
+ * The last tab sits against the right edge, as the first sits on the left.
+ * A tab by itself is the first.
+ */
+.phase-tab:last-child:not(:first-child) {
     justify-content: flex-end;
 }
 

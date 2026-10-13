@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// Square control: watch a beginner game one move at a time and mark what
-// each move changed. The page fetches the list of game IDs, picks one at
+// The play page of the two marking modes, square control and spot the
+// hanging piece: watch a beginner game one move at a time and mark what the
+// mode asks about. The page fetches the list of game IDs, picks one at
 // random and fetches that game. Nothing is saved yet, so every visit starts
 // a game from its first move.
 
@@ -17,8 +18,11 @@ import type {
     PracticeGameIdListData,
     PracticeGamePlayData,
 } from '@/generated/data';
+import type { MarkingMode } from '@/marking/phases';
 
 defineProps<{
+    /** Which of the two modes the page is in. */
+    mode: MarkingMode;
     meta: PageMetaData;
 }>();
 
@@ -98,7 +102,7 @@ onMounted(() => {
 
     <main ref="page" class="sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 py-1 pr-3 pl-1 short:py-0">
-            <!-- Home stands in until the landing page at /squares is built. -->
+            <!-- Home stands in until the landing pages are built. -->
             <Link
                 href="/"
                 class="flex size-11 items-center justify-center"
@@ -139,6 +143,7 @@ onMounted(() => {
         <MarkingGame
             v-else-if="game !== null && !loading"
             :key="game.id"
+            :mode="mode"
             :game="game"
             @next="load"
         />

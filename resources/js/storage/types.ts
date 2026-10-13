@@ -37,10 +37,16 @@ export type MasterGameRecord = {
     current: { guesses: Guess[]; startedAt: string; updatedAt: string } | null;
 };
 
+/** The two phases of square control. Hanging pieces are a mode of their own. */
+export type SquarePhase = Exclude<Phase, 'hanging'>;
+
 export type SquareSession = {
     gameId: number;
     ply: number;
-    phase: Phase;
+    /** The next phase to submit. */
+    phase: SquarePhase;
+    /** True on a castling move while the next phase is one of the rook's. */
+    rook: boolean;
     updatedAt: string;
 };
 
@@ -50,7 +56,15 @@ export type SquareSeen = {
     at: string;
 };
 
-export type SquareTallies = Record<Phase, Record<PieceType, Tally>>;
+export type SquareTallies = Record<SquarePhase, Record<PieceType, Tally>>;
+
+/** Spot the hanging piece has one phase per move, so the move is enough. */
+export type HangingSession = { gameId: number; ply: number; updatedAt: string };
+
+export type HangingSeen = SquareSeen;
+
+/** One tally for the mode, with no split by piece. */
+export type HangingTally = Tally;
 
 export type PuzzleSeen = {
     puzzleId: number;
