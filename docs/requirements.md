@@ -546,7 +546,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | Step | Build | Done when |
 | --- | --- | --- |
 | 24. Table and import on a sample | The `practice_games` migration; `extract:practice` with the calculation from step 7; `import:practice-games`. Done on 13 October 2026 into the local database: 500 games, from the first 1.5 GB of the September 2026 file | The sample loads, and neither the intermediate file nor the database holds a username |
-| 25. Answer viewer | A development-only page that steps through an imported game and shows the three stored answers on the board | You have checked several games by eye and found no wrong answer |
+| 25. Answer viewer | A development-only page at `/dev/answers` that steps through an imported game and shows the stored answers on the board and as lists: three for an ordinary move, five for castling | You have checked several games by eye and found no wrong answer |
 | 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet | A full game can be worked through comfortably on a phone |
 | 27. Session | Next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase |
 | 28. Tallies | The three phase scores and the tallies by piece | The numbers match a session counted by hand |

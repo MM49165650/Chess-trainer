@@ -22,7 +22,7 @@ import ChessBoard from '@/components/board/ChessBoard.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type { PracticeGameData, PracticeGameMovesData } from '@/generated/data';
 import AnswerLayer from './AnswerLayer.vue';
-import type { AnswerSet } from './answer-set';
+import { search, type AnswerSet } from './answer-set';
 
 const props = defineProps<{
     game: PracticeGameData | null;
@@ -262,8 +262,11 @@ async function findSpecial(): Promise<void> {
                 const at = firstWanted(specialsOf(game.moves), 0);
 
                 if (at !== null) {
+                    // The message is set once the game has opened. It is
+                    // kept out of the address so a reload does not repeat it.
+                    search.arriving = true;
                     router.visit(
-                        `/dev/answers/${String(game.id)}?ply=${String(at)}&found=1`,
+                        `/dev/answers/${String(game.id)}?ply=${String(at)}`,
                     );
 
                     return;
@@ -277,8 +280,7 @@ async function findSpecial(): Promise<void> {
     }
 }
 
-// A new game starts at the move named in the address, or at move 1. A
-// search that ended in this game says what it found.
+// A new game starts at the move named in the address, or at move 1.
 watch(
     () => props.game?.id,
     () => {
@@ -287,7 +289,9 @@ watch(
         before.value = false;
         setPly(Number(query.get('ply')) || 1);
 
-        if (query.has('found')) {
+        // A search that ended in this game says what it found.
+        if (search.arriving) {
+            search.arriving = false;
             sayFound();
         } else {
             found.value = '';
