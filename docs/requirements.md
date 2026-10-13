@@ -239,6 +239,7 @@ Most users are on phones, so phone width is the primary design target for every 
 **Mobile**
 
 - The board spans the full screen width, with all controls below it within thumb reach.
+- The three play screens fit a phone without scrolling. Where the screen is too short for a full-width board, the board shrinks just enough and stays centred, down to 280 pixels. Below that the page scrolls. The height that counts is the height on show at that moment, so the fit holds as the browser's address bar comes and goes.
 - A fixed bar at the bottom holds the main action: the phase indicator and submit button in square control, and the equivalent controls in the other modes.
 - Squares are tapped to mark them in square control, with no zooming needed.
 - Moves can be made by tapping a piece and then a square, or by dragging.
@@ -249,9 +250,9 @@ Most users are on phones, so phone width is the primary design target for every 
 **Larger screens**
 
 - The layout is the same single column on every screen size. Nothing is rearranged for desktop.
-- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, or wider than the screen width minus 32 pixels, so it always fits without scrolling; the user's chosen size is kept. The guess-the-move play screen measures its limit instead: the board is never taller than the screen height minus the header, the player rows, the prompt and the bottom bar, so the whole screen fits without scrolling. The prompt area keeps one height so the board does not change size as its text changes. Below the 320-pixel minimum the page scrolls. Settled in build step 13.
+- On a screen 640 pixels wide or more, the column is centred and the page background fills the rest. The board is never shown taller than the screen height minus 120 pixels, or wider than the screen width minus 32 pixels, so it always fits without scrolling; the user's chosen size is kept. The three play screens measure their limit instead, at every screen width: the board is never taller than the visible screen height minus everything else on the screen (the header, the prompt, the bottom bar, and the player rows, phase tabs or legend where there are any), so the whole screen fits without scrolling. The prompt area keeps one height at every width so the board does not change size as its text changes. Below the minimum board size the page scrolls: 320 pixels on larger screens, 280 on a phone. Settled in build step 13, and extended to phones after build step 26.
 - The board can be resized by dragging a handle at its corner, between 320 and 720 pixels wide. The default is 560 pixels. Resizing changes the board only. Text and controls stay in a fixed column 560 pixels wide, and the board is centred on the same line, so it may be narrower or wider than the column.
-- The chosen board size is saved with the other settings. On a phone the board is always the full width of the screen and there is no handle.
+- The chosen board size is saved with the other settings, as `boardSizePx`, when a resize ends: when the handle is let go, or an arrow key is pressed on it. It is not saved during a drag. It is read when a play screen opens, and one value serves all three modes, so the size stays the same from one puzzle or game to the next, across modes and across visits. On a phone there is no handle, and the board is the full width of the screen unless the screen is too short (see Mobile).
 
 **Board**
 
@@ -477,6 +478,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Load made-up practice games where one has an answer list holding something that is not a square, and confirm the line is rejected and nothing is written.
 - Work through made-up practice games in the square-control phase logic, and confirm each rule: squares are marked and unmarked; a phase scores only when the selection is exactly right, so a missed square and a wrongly marked square both fail it, and marking nothing is right when the answer is empty; a submitted phase cannot be changed; an ordinary move has three phases and a castling move five, each with its own piece and answer; the next move plays after the hanging phase; the game is finished after the last phase of the last move; and rewind keeps the marks and switches off on submit and on a new move.
 - Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
+- Resize the board with a made-up settings store, and confirm each rule: the size is saved once when the resize ends and not during the drag; it is still there for the next puzzle without the settings being read again; a saved size is used on the next visit; and a resize made before the settings arrive is not overwritten by them.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**

@@ -13,7 +13,7 @@ export type MarkFeedback = {
 };
 
 // The board's width on larger screens, in pixels. On a phone the board is
-// always the full width of the screen.
+// the full width of the screen, or less where the screen is too short.
 export const BOARD_SIZE_MIN = 320;
 export const BOARD_SIZE_MAX = 720;
 export const BOARD_SIZE_DEFAULT = 560;

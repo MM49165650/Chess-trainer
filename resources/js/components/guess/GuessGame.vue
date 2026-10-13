@@ -7,6 +7,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { colorOfPly } from '@/chess/conventions';
 import { isCapture, isCastling } from '@/chess/game';
 import ChessBoard from '@/components/board/ChessBoard.vue';
+import { useBoardSize } from '@/components/board/useBoardSize';
 import {
     CORRECTION_ANIMATION_MS,
     MOVE_ANIMATION_MS,
@@ -34,9 +35,11 @@ const props = defineProps<{
     canSave: boolean;
 }>();
 
-// Both are kept in memory only, until the settings arrive.
+// Kept in memory only, until the settings arrive.
 const delaySeconds = ref(REPLY_DELAY_DEFAULT);
-const boardSize = ref<number | null>(null);
+
+// The size outlasts this game: the next one opens at the same size.
+const { boardSize, saveBoardSize } = useBoardSize();
 const delayPanelOpen = ref(false);
 
 const {
@@ -283,6 +286,7 @@ const moveNumber = computed(() =>
         :movable="status === 'guess' && viewed === null"
         :animation-ms="animationMs"
         @move="guess"
+        @resized="saveBoardSize"
     />
 
     <!-- Extra room above on larger screens, clear of the resize handle. -->
@@ -308,11 +312,11 @@ const moveNumber = computed(() =>
 
     <!-- Screen readers hear each result and each new question. -->
     <!--
-        On larger screens the block keeps one height, so the board beside it
-        does not change size as the text changes.
+        The block keeps one height, so the board beside it does not change
+        size as the text changes.
     -->
     <section
-        class="flex flex-col gap-1.5 px-5 pt-4 pb-6 sm:min-h-48"
+        class="flex min-h-48 flex-col gap-1.5 px-5 pt-4 pb-6"
         aria-live="polite"
     >
         <!--

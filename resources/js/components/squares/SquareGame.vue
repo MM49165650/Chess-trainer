@@ -3,8 +3,9 @@
 // with the question or the outcome, the board with its marks, the legend,
 // and the bottom bar with the rewind button and the main action.
 
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import ChessBoard from '@/components/board/ChessBoard.vue';
+import { useBoardSize } from '@/components/board/useBoardSize';
 import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import type { PracticeGamePlayData } from '@/generated/data';
@@ -30,8 +31,8 @@ const emit = defineEmits<{
     next: [];
 }>();
 
-// Kept in memory only, until the settings arrive.
-const boardSize = ref<number | null>(null);
+// The size outlasts this game: the next one opens at the same size.
+const { boardSize, saveBoardSize } = useBoardSize();
 
 const {
     ply,
@@ -154,6 +155,7 @@ function onMain(): void {
         :mark-phase="markPhase"
         :feedback="feedback"
         :animation-ms="SQUARE_MOVE_ANIMATION_MS"
+        @resized="saveBoardSize"
     />
 
     <!-- The legend keeps its room, so nothing below the board moves. -->

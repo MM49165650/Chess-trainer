@@ -74,6 +74,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
     move: [move: MoveParts];
+    /** A resize has ended: a drag was let go, or an arrow key pressed. */
+    resized: [];
 }>();
 
 const marks = defineModel<Square[]>('marks', { default: () => [] });
@@ -216,6 +218,11 @@ function onResizeDrag(change: number): void {
 
 function onResizeStep(change: number): void {
     resizeTo(currentWidth() + change);
+    emit('resized');
+}
+
+function onResizeEnd(): void {
+    emit('resized');
 }
 
 onMounted(() => {
@@ -279,14 +286,24 @@ watch(
             @start="onResizeStart"
             @drag="onResizeDrag"
             @step="onResizeStep"
+            @end="onResizeEnd"
         />
     </div>
 </template>
 
 <style scoped>
+/*
+ * A page that knows how much room it has says so with --board-height-limit,
+ * and the board is never shown taller than that. On a phone the board is the
+ * full width of the screen unless the limit makes it smaller, down to 280
+ * pixels, and it stays centred.
+ */
 .chess-board {
+    --shown-size: min(100%, max(280px, var(--board-height-limit, 100%)));
+
     position: relative;
-    width: 100%;
+    width: var(--shown-size);
+    margin-inline: calc((100% - var(--shown-size)) / 2);
     aspect-ratio: 1;
     user-select: none;
     -webkit-user-select: none;
@@ -296,8 +313,7 @@ watch(
 /*
  * On larger screens the board has its own width and is centred on the column
  * it sits in, so it may be narrower or wider than that column. It is never
- * shown taller than the screen allows, whatever size was chosen. A page that
- * knows how much room it has says so with --board-height-limit.
+ * shown taller than the screen allows, whatever size was chosen.
  */
 @media (min-width: 640px) {
     .chess-board {
@@ -305,13 +321,10 @@ watch(
             320px,
             min(
                 var(--board-size),
-                var(--board-height-limit, calc(100vh - 120px)),
+                var(--board-height-limit, calc(100dvh - 120px)),
                 100vw - 2rem
             )
         );
-
-        width: var(--shown-size);
-        margin-inline: calc((100% - var(--shown-size)) / 2);
     }
 }
 

@@ -1,7 +1,7 @@
 // Keeps a whole screen on show without scrolling: the board inside a
-// container may be no taller than the window, less everything else in the
-// container. The limit is given to the board as a CSS variable, and it only
-// has an effect on larger screens, where the board has a size of its own.
+// container may be no taller than the visible screen, less everything else in
+// the container. The limit is given to the board as a CSS variable, at every
+// screen width.
 
 import { onBeforeUnmount, onMounted, ref, type Ref } from 'vue';
 
@@ -21,9 +21,14 @@ export function useBoardHeightLimit(container: Ref<HTMLElement | null>) {
 
         // The container's height without the board is everything else on
         // the screen: it does not change when the board is resized.
-        const others = element.offsetHeight - board.offsetHeight;
+        const others = Math.ceil(
+            element.getBoundingClientRect().height -
+                board.getBoundingClientRect().height,
+        );
 
-        limit.value = `${String(window.innerHeight - others)}px`;
+        // The dynamic viewport height is what is on show at this moment, so
+        // the browser keeps the fit as a phone's address bar comes and goes.
+        limit.value = `calc(100dvh - ${String(others)}px)`;
     }
 
     onMounted(() => {
@@ -33,12 +38,10 @@ export function useBoardHeightLimit(container: Ref<HTMLElement | null>) {
 
         observer = new ResizeObserver(measure);
         observer.observe(container.value);
-        window.addEventListener('resize', measure);
     });
 
     onBeforeUnmount(() => {
         observer?.disconnect();
-        window.removeEventListener('resize', measure);
     });
 
     return limit;
