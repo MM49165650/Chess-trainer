@@ -125,7 +125,7 @@ onBeforeUnmount(() => {
                 Small title, 18: Capablanca vs. Marshall
             </p>
             <p class="font-serif text-title-small italic">
-                Small title, italic: [Site name]
+                Small title, italic: Asanfa
             </p>
             <p class="text-button font-semibold">Button text, 16</p>
             <p>
