@@ -358,9 +358,23 @@ Most users are on phones, so phone width is the primary design target for every 
 - Clearing browser data or switching devices loses progress. This is accepted for the MVP.
 - Safari erases a site's stored data after seven days without a visit. Installing the site to the home screen avoids this, and the progress page explains how.
 
+**The progress page**
+
+Settled in build step 30.
+
+- The page is at `/progress`. Its title is "Progress", its heading "Your progress", and its meta description "Your scores in the four modes, kept only in this browser." The home page links to it.
+- It shows the four modes in their numbering for now: guess the move, square control, tactics by piece, spot the hanging piece. Step 33 decides the order for the home page and this page together.
+- Guess the move lists accuracy by master as described under its scoring. The percentage is rounded down, like the marking percentages. Masters with the same accuracy are listed with more moves first, then in the fixed master order. With no finished game the section shows one line: "No finished games yet."
+- Square control shows its two percentages, "Squares lost" and "Squares controlled", and spot the hanging piece its one, "Hanging pieces", as on their landing pages: rounded down, with a dash until something is counted. The tallies by piece of square control are not shown.
+- Tactics shows solved out of attempted, as "14 / 20": an "All pieces" total row first, as on the category page, then the six pieces in their order. A row shows a dash before any attempt.
+- The Safari note reads "Safari deletes a site's saved data after seven days without a visit. Visiting at least once a week keeps your progress." It is shown only in Safari, on any device.
+- The install note waits for step 32, when the site becomes installable and the carry-over question is tested. It is not shown when the site is already installed.
+- If storage is unavailable, the page shows the notice that progress will not be saved, and the marking modes' figures show what was counted during the visit.
+- The reset progress button sits at the foot of the page. It is shown whenever there is something to clear, stored or counted in memory during the visit, and hidden otherwise. It opens the slide-up panel with the heading "Reset all progress?", the text "This clears your scores, history and saved games in every mode, in this browser. Your settings stay. This cannot be undone." and two buttons, "Reset progress", marked as destructive, and "Cancel". After a reset the page shows its empty state and the line "Progress reset."
+
 **Other**
 
-- A reset progress button in settings, with a confirmation step.
+- A reset progress button, with a confirmation step. It is on the progress page from build step 30, and the same component goes into settings as well in step 31, so it lives in both. Settled in build step 30.
 - When a game or puzzle fails to load, the user sees a clear message and a retry button.
 - Every exercise has a report a problem link that opens a GitHub issue pre-filled with the game or puzzle and the move number. The link is shown only once there is something to report, so it never gets in the way while playing: at the end of a master game and in its review, after a puzzle is solved or failed, and in square control and spot the hanging piece with the feedback for each move. Decided on 12 October 2026.
 - The site is in English only.
@@ -658,7 +672,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | --- | --- | --- |
 | 30. Progress page | Stats for the four modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
-| 32. Installable | The web app manifest and icons | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
+| 32. Installable | The web app manifest and icons; the install note on the progress page, worded once the carry-over question is answered, and not shown when the site is already installed | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
 | 33. Remaining pages and states | The home page with the four modes, in an order decided in this step (plain links to `/guess`, `/tactics`, `/squares` and `/hanging` stand in until then); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
@@ -1296,7 +1310,7 @@ type TacticsTallies = Record<PieceType, Tally>
 
 - All reading and writing goes through one storage module. Pages never use IndexedDB directly.
 - Dates are stored as ISO 8601 text in UTC.
-- The reset progress button clears every store except `settings` and `meta`.
+- The reset progress button clears every store except `settings` and `meta`: `masterGames`, `squareSession`, `squareSeen`, `squareTallies`, `hangingSession`, `hangingSeen`, `hangingTallies`, `puzzlesSeen` and `tacticsTallies`, in one transaction. It also clears what the marking modes counted in memory during the visit. Settled in build step 30.
 - On first use, the site asks the browser for persistent storage where that is supported.
 - If storage is unavailable, as in some private browsing modes, the site still works for the visit and shows a notice that progress will not be saved.
 - A change to the structure raises the database version and runs an upgrade step. Stores are never deleted to make a change.

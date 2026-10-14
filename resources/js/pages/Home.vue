@@ -4,6 +4,7 @@ import ListMastersController from '@/actions/App/Http/Controllers/Guess/ListMast
 import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHangingController';
 import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSquaresController';
 import ListTacticsCategoriesController from '@/actions/App/Http/Controllers/Tactics/ListTacticsCategoriesController';
+import ShowProgressController from '@/actions/App/Http/Controllers/ShowProgressController';
 import PageHead from '@/components/PageHead.vue';
 import type { PageMetaData } from '@/generated/data';
 
@@ -42,6 +43,11 @@ defineProps<{
                 class="underline"
             >
                 Tactics by piece
+            </Link>
+        </p>
+        <p class="mt-2">
+            <Link :href="ShowProgressController.url()" class="underline">
+                Progress
             </Link>
         </p>
     </main>
