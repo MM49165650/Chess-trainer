@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // The progress page: the user's stats in the four modes, read from the
-// browser, with the Safari note and reset progress. The modes follow their
-// numbering until step 33 decides the order for this page and the home page.
+// browser, with the Safari and install notes and reset progress. The modes
+// follow their numbering until step 33 decides the order for this page and
+// the home page.
 
 import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
@@ -42,8 +43,13 @@ const canSave = ref(true);
  */
 const inSafari = ref(false);
 
-// The install note waits for step 32, when the site becomes installable and
-// whether Safari's progress carries over to the installed site is tested.
+/**
+ * Whether the site is open as an installed app: the display mode from the
+ * manifest, or Safari's own flag on an iPhone. The install note is left out
+ * then. It is a placeholder until the iPhone test finds whether progress
+ * made in Safari carries over to the installed site.
+ */
+const installed = ref(true);
 
 function familyName(name: string): string {
     return name.split(' ').at(-1) ?? name;
@@ -111,6 +117,9 @@ onMounted(async () => {
     inSafari.value =
         /Safari\//.test(agent) &&
         !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg\/|OPR|Android/.test(agent);
+    installed.value =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        Reflect.get(navigator, 'standalone') === true;
     canSave.value = await storageAvailable();
     await read();
 });
@@ -152,6 +161,9 @@ onMounted(async () => {
             <p v-if="inSafari" class="text-caption text-muted">
                 Safari deletes a site's saved data after seven days without a
                 visit. Visiting at least once a week keeps your progress.
+            </p>
+            <p v-if="!installed" class="text-caption text-muted">
+                [Install note]
             </p>
         </div>
 

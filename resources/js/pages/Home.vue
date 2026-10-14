@@ -8,6 +8,7 @@ import ShowProgressController from '@/actions/App/Http/Controllers/ShowProgressC
 import ShowSettingsController from '@/actions/App/Http/Controllers/ShowSettingsController';
 import PageHead from '@/components/PageHead.vue';
 import type { PageMetaData } from '@/generated/data';
+import { SITE_SHORT_NAME } from '@/site';
 
 defineProps<{
     meta: PageMetaData;
@@ -17,11 +18,14 @@ defineProps<{
 <template>
     <PageHead :meta="meta" />
 
-    <main class="p-5">
-        <h1 class="text-2xl font-semibold">{{ $page.props.name }}</h1>
-        <p class="mt-2">
-            A free, open source chess training site. Coming soon.
-        </p>
+    <header class="flex h-11 items-center px-5 pt-2">
+        <h1 class="font-serif text-title-small italic">
+            {{ SITE_SHORT_NAME }}
+        </h1>
+    </header>
+
+    <main class="px-5 pt-4 pb-5">
+        <p>A free, open source chess training site. Coming soon.</p>
         <!-- Stands in until the home page is built in step 33. -->
         <p class="mt-2">
             <Link :href="ListMastersController.url()" class="underline">

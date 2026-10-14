@@ -25,5 +25,5 @@ Each screen is a standalone `.html` file and a `.png` render of it.
   fonts (Newsreader and Instrument Sans) and are the reference for typography.
 - **Font hosting.** The `.html` files load fonts from Google Fonts for convenience.
   The real site serves its fonts from its own server.
-- **Sample content.** "[Site name]" is a placeholder, and the scores and
+- **Sample content.** "[Site name]" is a placeholder for "Asanfa", and the scores and
   percentages are sample numbers.

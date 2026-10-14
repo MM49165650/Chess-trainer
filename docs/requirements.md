@@ -395,9 +395,19 @@ Settled in build step 30.
 - Square control shows its two percentages, "Squares lost" and "Squares controlled", and spot the hanging piece its one, "Hanging pieces", as on their landing pages: rounded down, with a dash until something is counted. The tallies by piece of square control are not shown.
 - Tactics shows solved out of attempted, as "14 / 20": an "All pieces" total row first, as on the category page, then the six pieces in their order. A row shows a dash before any attempt.
 - The Safari note reads "Safari deletes a site's saved data after seven days without a visit. Visiting at least once a week keeps your progress." It is shown only in Safari, on any device.
-- The install note waits for step 32, when the site becomes installable and the carry-over question is tested. It is not shown when the site is already installed.
+- The install note is a placeholder, "[Install note]", from step 32 until the iPhone test answers the carry-over question and the note is worded. It is not shown when the site is already installed.
 - If storage is unavailable, the page shows the notice that progress will not be saved, and the marking modes' figures show what was counted during the visit.
 - The reset progress button sits at the foot of the page. It is shown whenever there is something to clear, stored or counted in memory during the visit, and hidden otherwise. It opens the slide-up panel with the heading "Reset all progress?", the text "This clears your scores, history and saved games in every mode, in this browser. Your settings stay. This cannot be undone." and two buttons, "Reset progress", marked as destructive, and "Cancel". After a reset the page shows its empty state and the line "Progress reset."
+
+**Name and installing**
+
+Settled in build step 32.
+
+- The site is called Asanfa Chess Trainer, Asanfa for short. Page titles and the share summary use the full name. The home page header shows "Asanfa" in the small italic serif title, where the mockups have "[Site name]".
+- The icon is a cream pawn on the accent green, an original design made for this project that needs no credit. Its two SVG sources are in `public/icons/`: `favicon.svg`, with rounded corners, and `app-icon.svg`, full-bleed with the pawn at 80% so it stays inside the maskable safe zone.
+- The favicon is the SVG, with a 32-pixel PNG fallback. The manifest icons (192 and 512 pixels, the 512 one listed a second time as maskable) and the 180-pixel Apple touch icon are opaque PNGs made from the app icon, in the same folder.
+- The manifest is `public/manifest.webmanifest`: the name and short name above, `display: standalone`, and the page background token as its theme and background colour, light mode's in the manifest and both modes' in the page head, so the browser's own bar matches the page. When the appearance is set to light or dark rather than matching the device, the page head follows that setting.
+- There is no service worker and nothing works offline. Browsers no longer need one to install a site.
 
 **Other**
 
@@ -565,7 +575,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 
 - Hosting: a Hetzner server running Docker, with Cloudflare in front for caching, HTTPS and analytics.
 - Browser storage: IndexedDB.
-- Installable: the site can be added to the phone's home screen. There is no install prompt on the first visit; the option is mentioned only on the progress page.
+- Installable: the site can be added to the phone's home screen. There is no install prompt on the first visit; the option is mentioned only on the progress page. See Name and installing above.
 - Data delivery: Inertia handles pages and navigation. Game and puzzle data come from separate data endpoints, cached for a long time because a game never changes.
 - TypeScript tests: Vitest, run by the check command. The control and hanging-piece golden tests are TypeScript, since that logic runs in the import scripts.
 - Search engines: every public page's title and description are written into the page source by the server, so search engines and link previews can read them. Full server rendering of the app (Inertia's SSR, which needs a separate Node process) is not used; it can be switched on later if needed.
@@ -671,6 +681,15 @@ The whole repository is public under GPL-3.0 from the first commit, because Ches
 
 The build is 34 steps in six stages. Each step is one request to an agent, with a finish line to check before the next step begins. Guess the move is built first among the modes so it becomes the pattern the others copy.
 
+The steps follow their numbers, except that deployment waits until the build is done. Decided on 14 October 2026. After step 31 the order is:
+
+1. Step 32, installable.
+2. Step 33, the remaining pages and states.
+3. Step 4, the first deployment.
+4. The full imports on the server: the master games loaded locally in step 18, and steps 23 and 29.
+5. The iPhone carry-over test, listed in Stage 6.
+6. Step 34, the launch check.
+
 **Stage 1: Foundation**
 
 | Step | Build | Done when |
@@ -678,7 +697,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 1. Repository | The starter kit with Vue, Inertia and TypeScript, with its login and registration pages removed; Docker for PHP, Node and Postgres; the GPL-3.0 licence file; a public GitHub repository with secret scanning | The home page loads in Docker from a fresh clone |
 | 2. Check command and CI | Pint, Larastan, Rector, Pest architecture tests, the TypeScript checker, ESLint, Vitest and the licence check, behind one command; CI and a pre-commit hook that run it | CI passes on the empty app and fails on a deliberate violation of each tool |
 | 3. Agent setup | This document saved as `docs/requirements.md`; `AGENTS.md` written from Appendix H; Laravel Boost installed | An agent given a trivial task reads both files and runs the check command |
-| 4. First deployment | The Hetzner server with Docker; Cloudflare in front with trusted forwarding headers; debug mode off; database backups | A merge to the main branch puts a placeholder home page on the public address |
+| 4. First deployment | Done after step 33, once the build is done. The Hetzner server with Docker; Cloudflare in front with trusted forwarding headers; debug mode off; database backups; the site on a subdomain of a domain the owner already has, given at this step | A merge to the main branch puts the site on the public address |
 
 **Stage 2: Chess core**
 
@@ -731,13 +750,14 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | --- | --- | --- |
 | 30. Progress page | Stats for the four modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
-| 32. Installable | The web app manifest and icons; the install note on the progress page, worded once the carry-over question is answered, and not shown when the site is already installed | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
+| 32. Installable | The web app manifest and icons; the site name in the page header; the install note on the progress page as a placeholder, not shown when the site is already installed | The site installs from the desktop browser or a local network address and opens without the address bar |
 | 33. Remaining pages and states | The home page with the four modes, in an order decided in this step (plain links to `/guess`, `/tactics`, `/squares` and `/hanging` stand in until then); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
+| iPhone test | Done after the full imports on the server. Whether progress made in Safari carries over to the site installed on an iPhone's home screen, tested on a real phone; the install note on the progress page worded from the answer | The carry-over question is answered, and the install note says what the test found |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
 ## Open decisions and later features
 
-Two decisions are still open. The source of master games, their minimum length, puzzle difficulty and the selection of practice games are settled. None of them blocks starting the build.
+One decision is still open: whether progress carries over after installing on an iPhone, which the iPhone test answers. The source of master games, their minimum length, puzzle difficulty, the selection of practice games, and the name and domain are settled.
 
 **Open decisions**
 
@@ -747,8 +767,8 @@ Two decisions are still open. The source of master games, their minimum length, 
 | Puzzle difficulty | Tactics by piece | Decided on 12 October 2026: a rating of at most 1500, a popularity of at least 80, at least 500 plays, and 2,000 per piece, taking the most popular, then the most played, then by puzzle ID. Puzzles are served easiest first within a category |
 | Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
-| Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone |
-| Name and domain | Whole site | What the site is called |
+| Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone, the iPhone test in the build order |
+| Name and domain | Whole site | Decided on 14 October 2026: the site is called Asanfa Chess Trainer, Asanfa for short, and lives on a subdomain of a domain the owner already has, given at the first deployment |
 
 **Later features**
 
@@ -1381,7 +1401,7 @@ These are the remaining details an agent would otherwise have to guess.
 **Share summary**
 
 ```text
-Chess training · Guess the move
+Asanfa Chess Trainer · Guess the move
 José Raúl Capablanca vs. Frank Marshall, 1918
 23/36
 (squares, ten per line)

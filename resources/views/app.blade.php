@@ -5,15 +5,30 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="color-scheme" content="light dark">
 
+        {{-- The icons and the manifest, for installing the site. The colour of
+             the browser's own bar is the page background token from
+             resources/css/tokens.css, in each mode. --}}
+        <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+        <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+        <link rel="manifest" href="/manifest.webmanifest">
+        <meta name="apple-mobile-web-app-title" content="Asanfa">
+        <meta name="theme-color" content="#ede8dc" media="(prefers-color-scheme: light)" data-mode="light">
+        <meta name="theme-color" content="#1b1a17" media="(prefers-color-scheme: dark)" data-mode="dark">
+
         {{-- The appearance setting, applied before anything is drawn so a reload
              does not flash the wrong mode. Settings live in IndexedDB, which
              cannot be read in time; this is a copy of that one choice, kept by
-             resources/js/settings/useSettings.ts under the same key. --}}
+             resources/js/settings/useSettings.ts under the same key. The bar
+             colour follows it as resources/js/settings/applyToPage.ts does. --}}
         <script>
             try {
                 var appearance = localStorage.getItem('chess-training:appearance');
                 if (appearance === 'light' || appearance === 'dark') {
                     document.documentElement.dataset.appearance = appearance;
+                    document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+                        meta.media = meta.dataset.mode === appearance ? 'all' : 'not all';
+                    });
                 }
             } catch (error) {}
         </script>
