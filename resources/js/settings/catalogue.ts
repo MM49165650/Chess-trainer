@@ -60,13 +60,15 @@ export const PIECE_SETS = [
         },
     },
     {
-        id: 'cburnett',
-        name: 'Cburnett',
+        id: 'fantasy',
+        name: 'Fantasy',
         credit: {
-            author: 'Colin M.L. Burnett',
-            authorUrl: 'https://en.wikipedia.org/wiki/User:Cburnett',
-            ...GPL_2_OR_LATER,
-            sourceUrl: `${LILA}/piece/cburnett`,
+            author: 'Maurizio Monge',
+            authorUrl: 'https://github.com/maurimo/chess-art',
+            licence: 'MIT',
+            licenceUrl:
+                'https://github.com/maurimo/chess-art/blob/main/LICENSE',
+            sourceUrl: `${LILA}/piece/fantasy`,
         },
     },
     {

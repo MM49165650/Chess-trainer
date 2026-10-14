@@ -80,57 +80,57 @@
     background-image: url('../pieces/maestro/bP.svg');
 }
 
-/* Piece set: Cburnett. See resources/pieces/cburnett/LICENSE.md. */
-.pieces-cburnett :is(piece, .piece-image) {
+/* Piece set: Fantasy. See resources/pieces/fantasy/LICENSE.md. */
+.pieces-fantasy :is(piece, .piece-image) {
     background-size: cover;
 }
 
-.pieces-cburnett :is(piece, .piece-image).white.king {
-    background-image: url('../pieces/cburnett/wK.svg');
+.pieces-fantasy :is(piece, .piece-image).white.king {
+    background-image: url('../pieces/fantasy/wK.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).white.queen {
-    background-image: url('../pieces/cburnett/wQ.svg');
+.pieces-fantasy :is(piece, .piece-image).white.queen {
+    background-image: url('../pieces/fantasy/wQ.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).white.rook {
-    background-image: url('../pieces/cburnett/wR.svg');
+.pieces-fantasy :is(piece, .piece-image).white.rook {
+    background-image: url('../pieces/fantasy/wR.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).white.bishop {
-    background-image: url('../pieces/cburnett/wB.svg');
+.pieces-fantasy :is(piece, .piece-image).white.bishop {
+    background-image: url('../pieces/fantasy/wB.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).white.knight {
-    background-image: url('../pieces/cburnett/wN.svg');
+.pieces-fantasy :is(piece, .piece-image).white.knight {
+    background-image: url('../pieces/fantasy/wN.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).white.pawn {
-    background-image: url('../pieces/cburnett/wP.svg');
+.pieces-fantasy :is(piece, .piece-image).white.pawn {
+    background-image: url('../pieces/fantasy/wP.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).black.king {
-    background-image: url('../pieces/cburnett/bK.svg');
+.pieces-fantasy :is(piece, .piece-image).black.king {
+    background-image: url('../pieces/fantasy/bK.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).black.queen {
-    background-image: url('../pieces/cburnett/bQ.svg');
+.pieces-fantasy :is(piece, .piece-image).black.queen {
+    background-image: url('../pieces/fantasy/bQ.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).black.rook {
-    background-image: url('../pieces/cburnett/bR.svg');
+.pieces-fantasy :is(piece, .piece-image).black.rook {
+    background-image: url('../pieces/fantasy/bR.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).black.bishop {
-    background-image: url('../pieces/cburnett/bB.svg');
+.pieces-fantasy :is(piece, .piece-image).black.bishop {
+    background-image: url('../pieces/fantasy/bB.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).black.knight {
-    background-image: url('../pieces/cburnett/bN.svg');
+.pieces-fantasy :is(piece, .piece-image).black.knight {
+    background-image: url('../pieces/fantasy/bN.svg');
 }
 
-.pieces-cburnett :is(piece, .piece-image).black.pawn {
-    background-image: url('../pieces/cburnett/bP.svg');
+.pieces-fantasy :is(piece, .piece-image).black.pawn {
+    background-image: url('../pieces/fantasy/bP.svg');
 }
 
 /* Piece set: Merida. See resources/pieces/merida/LICENSE.md. */

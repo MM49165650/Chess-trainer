@@ -364,7 +364,7 @@ Settled in build step 31.
 | --- | --- | --- | --- |
 | Appearance | Light, Dark, Match device | Match device | Every page |
 | Board | Olive, Brown, Blue, Green | Olive | Every board |
-| Pieces | Maestro, Cburnett, Merida, Cardinal | Maestro | Every board, and the promotion picker |
+| Pieces | Maestro, Fantasy, Merida, Cardinal | Maestro | Every board, and the promotion picker |
 | Marking colours | Standard, Colour-blind friendly | Standard | The board, phase tabs and legend of square control and spot the hanging piece |
 | Sound | Off, On | Off | Every board |
 | Move input | Tap, Drag, Both | Both | The boards where a move is made: guess the move and tactics. Marking is always by tap |
@@ -642,12 +642,13 @@ The whole repository is public under GPL-3.0 from the first commit, because Ches
 | --- | --- | --- |
 | Boards: olive, brown, blue, green | The lila authors and pirouetti | AGPL-3.0 or later |
 | Pieces: Maestro | sadsnake1 | CC BY-NC-SA 4.0 |
-| Pieces: Cburnett | Colin M.L. Burnett | GPL-2.0 or later |
+| Pieces: Fantasy | Maurizio Monge | MIT, with the copyright notice and licence text in its folder |
 | Pieces: Merida | Armando Hernandez Marroquin | GPL-2.0 or later |
 | Pieces: Cardinal | sadsnake1 | CC BY-NC-SA 4.0 |
 | Sounds: Move and Capture from the sfx set | Enigmahack | AGPL-3.0 or later |
 
 - After build step 31, Cardinal replaced the Chessnut piece set and the green board replaced the maple board. The Chessnut and maple files were removed. A saved choice of Chessnut or maple falls back to the default, Maestro or olive.
+- Later, Fantasy replaced the Cburnett piece set, and the Cburnett files and their GPL notice were removed. A saved choice of Cburnett falls back to Maestro, which stays the default. Fantasy is under the MIT licence, which requires its copyright notice and licence text to ship with the files, so `LICENSE.txt` from Maurizio Monge's repository is kept in its folder.
 - Cardinal, like Maestro, is non-commercial and share-alike (CC BY-NC-SA 4.0). While either is offered, the site must stay free, with no commercial use, and their SVG files must be used unmodified.
 - Lichess's licence file lists the sfx set under `public/sounds/`, while the folder is `public/sound/`; the file spells it both ways, and they are taken as the same folder. Lichess's other sounds, including its standard set, are listed without a free licence and are not used.
 - Lichess is credited for the board and for the game and puzzle data, following the terms of each data set.
@@ -1284,7 +1285,7 @@ type Guess = { uci: string; correct: boolean }
 type Settings = {
   appearance: 'light' | 'dark' | 'system' // default 'system'
   boardTheme: string // 'olive', 'brown', 'blue' or 'green'; default 'olive'
-  pieceSet: string // 'maestro', 'cburnett', 'merida' or 'cardinal'; default 'maestro'
+  pieceSet: string // 'maestro', 'fantasy', 'merida' or 'cardinal'; default 'maestro'
   boardSizePx: number | null // larger screens only; null means the 560 default
   sound: boolean // default false
   moveInput: 'tap' | 'drag' | 'both' // default 'both'
