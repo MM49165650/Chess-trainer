@@ -2,7 +2,8 @@
 // scoring, the phases of each mode, moving on by itself after a selection
 // that was exactly right, rewinding and moving on to the next move. Square
 // control checks a phase as it is marked; spot the hanging piece waits for
-// Submit. The games are made up for the test.
+// Submit. A game can also be resumed at a saved move and phase. The games
+// are made up for the test.
 
 import { Chess } from 'chess.js';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -15,6 +16,9 @@ import {
     EXACT_ADVANCE_DELAY_MS,
     FIRST_MOVE_DELAY_MS,
     useMarkingGame,
+    startOf,
+    type PhaseResult,
+    type ResumePoint,
 } from './useMarkingGame';
 import { markingLabel, nextLabel, tabsOf } from './wording';
 
@@ -882,3 +886,178 @@ test('a new move is never shown rewound', () => {
 function raise(): never {
     throw new Error('The made-up game has no such move.');
 }
+
+// Resuming a saved session: the game starts at the saved move and phase,
+// with the saved results of the move's earlier phases.
+
+/** A game resumed at a saved point, which must be a phase of the game. */
+function resumed(
+    game: PracticeGamePlayData,
+    mode: MarkingMode,
+    point: ResumePoint,
+    onSubmitted?: (result: PhaseResult, next: ResumePoint | null) => void,
+) {
+    return useMarkingGame(
+        game,
+        mode,
+        onSubmitted,
+        startOf(game, mode, point) ?? raise(),
+    );
+}
+
+test('a saved point is found in its game, and one that names no phase of it is not', () => {
+    expect(
+        startOf(italian, 'squares', {
+            ply: 7,
+            phase: 'controlled',
+            rook: true,
+            results: [true, false, true],
+        }),
+    ).toEqual({ ply: 7, stepIndex: 3, results: [true, false, true] });
+
+    expect(
+        startOf(italian, 'hanging', {
+            ply: 7,
+            phase: 'hanging',
+            rook: false,
+            results: [],
+        }),
+    ).toEqual({ ply: 7, stepIndex: 0, results: [] });
+
+    const outside: ResumePoint[] = [
+        // No such move.
+        { ply: 0, phase: 'lost', rook: false, results: [] },
+        { ply: 8, phase: 'lost', rook: false, results: [] },
+        { ply: 1.5, phase: 'lost', rook: false, results: [] },
+        // Not a phase of the mode, or of the move: e4 is no castling move.
+        { ply: 1, phase: 'hanging', rook: false, results: [] },
+        { ply: 1, phase: 'lost', rook: true, results: [] },
+        // One result for each earlier phase, no more and no fewer.
+        { ply: 1, phase: 'controlled', rook: false, results: [] },
+        { ply: 1, phase: 'lost', rook: false, results: [true] },
+    ];
+
+    for (const point of outside) {
+        expect(startOf(italian, 'squares', point)).toBeNull();
+    }
+});
+
+test.each(MARKING_MODES)(
+    "%s: a game resumed at a move's first phase plays the move after a pause",
+    (mode) => {
+        const positions = positionsOf(italian.moves);
+        const game = resumed(italian, mode, {
+            ply: 3,
+            phase: mode === 'squares' ? 'lost' : 'hanging',
+            rook: false,
+            results: [],
+        });
+
+        expect(game.ply.value).toBe(3);
+        expect(game.fen.value).toBe(positions[2]);
+        expect(game.markPhase.value).toBeNull();
+
+        vi.advanceTimersByTime(FIRST_MOVE_DELAY_MS);
+
+        expect(game.fen.value).toBe(positions[3]);
+        expect(game.markPhase.value).toBe(
+            mode === 'squares' ? 'lost' : 'hanging',
+        );
+    },
+);
+
+test('square control: a game resumed at a later phase shows the move played at once', () => {
+    const positions = positionsOf(italian.moves);
+    const game = resumed(italian, 'squares', {
+        ply: 3,
+        phase: 'controlled',
+        rook: false,
+        results: [false],
+    });
+
+    expect(game.fen.value).toBe(positions[3]);
+    expect(game.markPhase.value).toBe('controlled');
+    expect(game.moveResults.value).toEqual([false]);
+
+    // Rewind still shows the position before the move.
+    game.toggleRewind();
+
+    expect(game.fen.value).toBe(positions[2]);
+});
+
+test("square control: a castling move resumes at the rook's phases, with the king's results", () => {
+    const reported: (ResumePoint | null)[] = [];
+    const results: PhaseResult[] = [];
+    const game = resumed(
+        italian,
+        'squares',
+        { ply: 7, phase: 'lost', rook: true, results: [true, false] },
+        (result, next) => {
+            results.push(result);
+            reported.push(next);
+        },
+    );
+
+    expect(game.step.value).toEqual({
+        phase: 'lost',
+        piece: 'rook',
+        rook: true,
+        answer: ['f1', 'h2'],
+    });
+    expect(game.moveResults.value).toEqual([true, false]);
+
+    passPhase(game);
+
+    expect(game.step.value?.phase).toBe('controlled');
+    expect(game.step.value?.rook).toBe(true);
+
+    answer(game);
+
+    // The king's results were counted when they were submitted, and are
+    // not reported again.
+    expect(results.map((result) => [result.piece, result.phase])).toEqual([
+        ['rook', 'lost'],
+        ['rook', 'controlled'],
+    ]);
+    expect(game.moveResults.value).toEqual([true, false, true, true]);
+
+    // The rook's lost phase points at its controlled phase, with the three
+    // results so far. The last phase of the game points nowhere.
+    expect(reported).toEqual([
+        {
+            ply: 7,
+            phase: 'controlled',
+            rook: true,
+            results: [true, false, true],
+        },
+        null,
+    ]);
+    expect(game.finished.value).toBe(true);
+});
+
+test.each(MARKING_MODES)(
+    '%s: each phase reports the next phase to resume at',
+    (mode) => {
+        const reported: (ResumePoint | null)[] = [];
+        const game = useMarkingGame(italian, mode, (_result, next) => {
+            reported.push(next);
+        });
+
+        vi.advanceTimersByTime(FIRST_MOVE_DELAY_MS);
+        passMove(game);
+
+        expect(reported).toEqual(
+            mode === 'squares'
+                ? [
+                      {
+                          ply: 1,
+                          phase: 'controlled',
+                          rook: false,
+                          results: [true],
+                      },
+                      { ply: 2, phase: 'lost', rook: false, results: [] },
+                  ]
+                : [{ ply: 2, phase: 'hanging', rook: false, results: [] }],
+        );
+    },
+);

@@ -11,8 +11,10 @@ use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
 use App\Http\Controllers\Guess\RandomMasterGameController;
 use App\Http\Controllers\Hanging\PlayHangingController;
+use App\Http\Controllers\Hanging\ShowHangingController;
 use App\Http\Controllers\ShowSitemapController;
 use App\Http\Controllers\Squares\PlaySquaresController;
+use App\Http\Controllers\Squares\ShowSquaresController;
 use App\Http\Controllers\Tactics\ListTacticsCategoriesController;
 use App\Http\Controllers\Tactics\PlayTacticsController;
 use Illuminate\Support\Facades\Route;
@@ -44,11 +46,12 @@ Route::get('/guess/{master}/{game}', PlayMasterGameController::class)
     ->where('game', '[0-9]{1,18}')
     ->name('guess.play');
 
-// Square control: the exercise. Its landing page at /squares comes later.
+// Square control: the landing page, then the exercise.
+Route::get('/squares', ShowSquaresController::class)->name('squares.show');
 Route::get('/squares/play', PlaySquaresController::class)->name('squares.play');
 
-// Spot the hanging piece: the exercise. Its landing page at /hanging comes
-// later.
+// Spot the hanging piece: the landing page, then the exercise.
+Route::get('/hanging', ShowHangingController::class)->name('hanging.show');
 Route::get('/hanging/play', PlayHangingController::class)->name('hanging.play');
 
 // Tactics by piece: the categories, then one piece's puzzles or all of them.
