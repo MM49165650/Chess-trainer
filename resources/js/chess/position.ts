@@ -83,3 +83,27 @@ export function playMove(fen: string, move: MoveParts): string | null {
 
     return chess.fen();
 }
+
+/** What was played between two positions, when it was a single legal move. */
+export type PlayedMove = { capture: boolean };
+
+/**
+ * Whether one position follows from another by a single legal move, and if
+ * so whether that move was a capture. Positions are compared by where the
+ * pieces stand and whose turn it is.
+ */
+export function movePlayedBetween(
+    before: string,
+    after: string,
+): PlayedMove | null {
+    const target = after.split(' ').slice(0, 2).join(' ');
+    const chess = new Chess(before);
+
+    for (const move of chess.moves({ verbose: true })) {
+        if (move.after.split(' ').slice(0, 2).join(' ') === target) {
+            return { capture: move.captured !== undefined };
+        }
+    }
+
+    return null;
+}

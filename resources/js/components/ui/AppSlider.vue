@@ -18,6 +18,11 @@ const props = defineProps<{
 
 const value = defineModel<number>({ required: true });
 
+const emit = defineEmits<{
+    /** The slider was let go, or moved a step with a key. */
+    change: [];
+}>();
+
 /** How far along the track the value is, for the filled part. */
 const filled = computed(() => {
     const share = (value.value - props.min) / (props.max - props.min);
@@ -45,6 +50,7 @@ const spoken = computed(() => {
             :aria-label="label"
             :aria-valuetext="spoken"
             :style="{ '--slider-filled': filled }"
+            @change="emit('change')"
         />
         <output
             class="w-10 flex-none text-right font-serif text-title tabular-nums"

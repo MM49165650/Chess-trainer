@@ -143,6 +143,15 @@ final class PageMetaData extends Data
         );
     }
 
+    public static function settings(): self
+    {
+        return new self(
+            title: 'Settings',
+            description: 'Choose the look of the board and pieces, move input and marking colours. Saved only in this browser.',
+            heading: 'Settings',
+        );
+    }
+
     public static function game(Master $master, MasterGame $game): self
     {
         // White's name first. Both players go by family name; an opponent

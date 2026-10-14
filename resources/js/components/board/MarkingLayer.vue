@@ -124,7 +124,7 @@ function toggle(square: Square): void {
 
 .mark-square.missed {
     border-style: dashed;
-    border-color: var(--color-board-feedback-correct-border);
+    border-color: var(--color-board-feedback-missed-border);
 }
 
 .mark-square.wrong {

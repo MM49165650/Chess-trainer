@@ -1,11 +1,30 @@
 /*
  * The board's look: the board theme, the piece set and the square highlights.
- * Chessground's own base stylesheet handles layout only.
+ * Chessground's own base stylesheet handles layout only. The board themes and
+ * piece sets are the ones offered in the settings, listed with their credits
+ * in resources/js/settings/catalogue.ts. A preview in the settings draws the
+ * same images, on .board-image and .piece-image.
  */
 
-/* Board theme: Lichess's olive board. See resources/boards/LICENSE.md. */
-.board-olive cg-board {
+/* Board themes, Lichess's boards. See resources/boards/LICENSE.md. */
+:is(cg-board, .board-image) {
+    background-size: cover;
+}
+
+.board-olive :is(cg-board, .board-image) {
     background-image: url('../boards/olive.jpg');
+}
+
+.board-brown :is(cg-board, .board-image) {
+    background-image: url('../boards/brown.png');
+}
+
+.board-blue :is(cg-board, .board-image) {
+    background-image: url('../boards/blue.png');
+}
+
+.board-green :is(cg-board, .board-image) {
+    background-image: url('../boards/green.png');
 }
 
 /* Piece set: Maestro. See resources/pieces/maestro/LICENSE.md. */
@@ -59,6 +78,165 @@
 
 .pieces-maestro :is(piece, .piece-image).black.pawn {
     background-image: url('../pieces/maestro/bP.svg');
+}
+
+/* Piece set: Fantasy. See resources/pieces/fantasy/LICENSE.md. */
+.pieces-fantasy :is(piece, .piece-image) {
+    background-size: cover;
+}
+
+.pieces-fantasy :is(piece, .piece-image).white.king {
+    background-image: url('../pieces/fantasy/wK.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).white.queen {
+    background-image: url('../pieces/fantasy/wQ.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).white.rook {
+    background-image: url('../pieces/fantasy/wR.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).white.bishop {
+    background-image: url('../pieces/fantasy/wB.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).white.knight {
+    background-image: url('../pieces/fantasy/wN.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).white.pawn {
+    background-image: url('../pieces/fantasy/wP.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).black.king {
+    background-image: url('../pieces/fantasy/bK.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).black.queen {
+    background-image: url('../pieces/fantasy/bQ.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).black.rook {
+    background-image: url('../pieces/fantasy/bR.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).black.bishop {
+    background-image: url('../pieces/fantasy/bB.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).black.knight {
+    background-image: url('../pieces/fantasy/bN.svg');
+}
+
+.pieces-fantasy :is(piece, .piece-image).black.pawn {
+    background-image: url('../pieces/fantasy/bP.svg');
+}
+
+/* Piece set: Merida. See resources/pieces/merida/LICENSE.md. */
+.pieces-merida :is(piece, .piece-image) {
+    background-size: cover;
+}
+
+.pieces-merida :is(piece, .piece-image).white.king {
+    background-image: url('../pieces/merida/wK.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).white.queen {
+    background-image: url('../pieces/merida/wQ.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).white.rook {
+    background-image: url('../pieces/merida/wR.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).white.bishop {
+    background-image: url('../pieces/merida/wB.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).white.knight {
+    background-image: url('../pieces/merida/wN.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).white.pawn {
+    background-image: url('../pieces/merida/wP.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).black.king {
+    background-image: url('../pieces/merida/bK.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).black.queen {
+    background-image: url('../pieces/merida/bQ.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).black.rook {
+    background-image: url('../pieces/merida/bR.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).black.bishop {
+    background-image: url('../pieces/merida/bB.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).black.knight {
+    background-image: url('../pieces/merida/bN.svg');
+}
+
+.pieces-merida :is(piece, .piece-image).black.pawn {
+    background-image: url('../pieces/merida/bP.svg');
+}
+
+/* Piece set: Cardinal. See resources/pieces/cardinal/LICENSE.md. */
+.pieces-cardinal :is(piece, .piece-image) {
+    background-size: cover;
+}
+
+.pieces-cardinal :is(piece, .piece-image).white.king {
+    background-image: url('../pieces/cardinal/wK.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).white.queen {
+    background-image: url('../pieces/cardinal/wQ.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).white.rook {
+    background-image: url('../pieces/cardinal/wR.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).white.bishop {
+    background-image: url('../pieces/cardinal/wB.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).white.knight {
+    background-image: url('../pieces/cardinal/wN.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).white.pawn {
+    background-image: url('../pieces/cardinal/wP.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).black.king {
+    background-image: url('../pieces/cardinal/bK.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).black.queen {
+    background-image: url('../pieces/cardinal/bQ.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).black.rook {
+    background-image: url('../pieces/cardinal/bR.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).black.bishop {
+    background-image: url('../pieces/cardinal/bB.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).black.knight {
+    background-image: url('../pieces/cardinal/bN.svg');
+}
+
+.pieces-cardinal :is(piece, .piece-image).black.pawn {
+    background-image: url('../pieces/cardinal/bP.svg');
 }
 
 /* The last move, in one colour for light squares and one for dark. */

@@ -1,6 +1,9 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import type { DefineComponent } from 'vue';
+import { applySettingsToPage } from './settings/applyToPage';
 import { SITE_NAME } from './site';
+
+applySettingsToPage();
 
 type PageModule = { default: DefineComponent };
 

@@ -25,7 +25,14 @@ import {
     type PromotionLetter,
     type Square,
 } from '@/chess/conventions';
-import { isPromotionMove, pieceTypeAt, readPosition } from '@/chess/position';
+import {
+    isPromotionMove,
+    movePlayedBetween,
+    pieceTypeAt,
+    readPosition,
+} from '@/chess/position';
+import { playMoveSound, SOUND_ENABLED } from '@/settings/sound';
+import { useSettings } from '@/settings/useSettings';
 import '../../../css/board.css';
 import MarkingLayer from './MarkingLayer.vue';
 import PromotionPicker from './PromotionPicker.vue';
@@ -47,7 +54,8 @@ const props = withDefaults(
         orientation?: Color;
         /** Whether the side to move may make a move. */
         movable?: boolean;
-        moveInput?: MoveInput;
+        /** How moves are made; the setting unless given. */
+        moveInput?: MoveInput | null;
         lastMove?: MoveParts | null;
         showLastMove?: boolean;
         /** The phase being marked. Marking is off when this is null. */
@@ -64,7 +72,7 @@ const props = withDefaults(
     {
         orientation: 'white',
         movable: false,
-        moveInput: 'both',
+        moveInput: null,
         lastMove: null,
         showLastMove: true,
         markPhase: null,
@@ -98,6 +106,13 @@ const wrap = ref<HTMLElement | null>(null);
 const promotion = ref<{ move: MoveParts; color: Color } | null>(null);
 
 let board: Api | null = null;
+
+// The board theme, the piece set, move input and sound follow the settings.
+const settings = useSettings();
+
+function inputMode(): MoveInput {
+    return props.moveInput ?? settings.moveInput;
+}
 
 function isMarking(): boolean {
     return props.markPhase !== null || props.feedback !== null;
@@ -144,8 +159,8 @@ function config(): Config {
             events: { after: onBoardMove },
         },
         premovable: { enabled: false },
-        draggable: { enabled: props.moveInput !== 'tap' },
-        selectable: { enabled: props.moveInput !== 'drag' },
+        draggable: { enabled: inputMode() !== 'tap' },
+        selectable: { enabled: inputMode() !== 'drag' },
         drawable: { enabled: false },
     };
 }
@@ -244,7 +259,7 @@ watch(
         props.fen,
         props.orientation,
         props.movable,
-        props.moveInput,
+        inputMode(),
         props.lastMove,
         props.showLastMove,
         props.markPhase,
@@ -256,12 +271,32 @@ watch(
         sync();
     },
 );
+
+// A move played on the board makes a sound, when sound is offered and on: a
+// new position that follows from the one before by a single legal move.
+// Stepping back through a game, or a correction from one move to another,
+// makes none.
+watch(
+    () => props.fen,
+    (after, before) => {
+        if (!SOUND_ENABLED || !settings.sound) {
+            return;
+        }
+
+        const played = movePlayedBetween(before, after);
+
+        if (played !== null) {
+            playMoveSound(played.capture);
+        }
+    },
+);
 </script>
 
 <template>
     <div
         ref="root"
-        class="chess-board board-olive pieces-maestro"
+        class="chess-board"
+        :class="[`board-${settings.boardTheme}`, `pieces-${settings.pieceSet}`]"
         :style="{ '--board-size': chosenSize }"
     >
         <div ref="wrap" class="chess-board-wrap" />

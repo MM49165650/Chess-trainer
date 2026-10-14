@@ -347,14 +347,41 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - Appearance: light, dark, or match the device
 - Board theme and piece set, taken from Lichess's collection, starting with three or four of each. The default board is Lichess's olive board and the default piece set is Lichess's Maestro
-- Sound on or off. The sound source is undecided: Lichess's licence file lists most of its sounds as exceptions without a free licence, so they are not used unless that is cleared
+- Sound on or off. Switched off for now, until original sounds are chosen: see the settings page below
 - Move input: tap, drag, or both
 - Opponent move delay in guess the move: 1 to 5 seconds in whole seconds, default 3. It is set with a slider that moves in whole seconds and shows the chosen value, such as "3 s", both on the play screen and in settings
 - Marking colours for square control and spot the hanging piece, including at least one colour-blind-friendly palette
 
+**The settings page**
+
+Settled in build step 31.
+
+- The page is at `/settings`. Its title is "Settings", its heading "Settings", and its meta description "Choose the look of the board and pieces, move input and marking colours. Saved only in this browser." The home page links to it.
+- Its sections, in order: Appearance, Board, Pieces, Marking colours, Sound, Moves (move input and the opponent's reply delay), and the reset progress button at the foot, the same component as on the progress page. The Sound section is hidden while sound is switched off.
+- Every setting takes effect at once, on the settings page and on every board, and is saved straight away, so it survives a reload. If storage is unavailable, the settings still apply for the visit, and the page shows the notice that progress will not be saved.
+
+| Setting | Choices | Default | Where it applies |
+| --- | --- | --- | --- |
+| Appearance | Light, Dark, Match device | Match device | Every page |
+| Board | Olive, Brown, Blue, Green | Olive | Every board |
+| Pieces | Maestro, Fantasy, Merida, Cardinal | Maestro | Every board, and the promotion picker |
+| Marking colours | Standard, Colour-blind friendly | Standard | The board, phase tabs and legend of square control and spot the hanging piece |
+| Sound | Off, On | Off | Every board, while sound is switched on in the code |
+| Move input | Tap, Drag, Both | Both | The boards where a move is made: guess the move and tactics. Marking is always by tap |
+| Opponent's reply delay | 1 to 5 seconds | 3 | Guess the move |
+
+- The board and the pieces are chosen from small previews: a corner of each board, and each piece set on the chosen board.
+- The reply delay slider on the guess the move play screen is the same setting. Both sliders change it as they move and save it when they are let go, so there is one value.
+- Sound plays when a move is played on the board, in all four modes: a capture sound for a capture, a move sound for any other move. A new position that does not follow from the one before by a single legal move, such as stepping back through a game or the correction after a wrong guess, makes no sound.
+- Sound is switched off until original sounds are chosen. Enigmahack's sfx sounds from Lichess were used at first and have been removed, with their licence notice and their credit. The code that plays sound stays: the sound player, the call in the board component and the single-legal-move check. One flag, `SOUND_ENABLED` in `resources/js/settings/sound.ts`, is false, so nothing loads or plays and the Sound section is hidden. The `sound` setting is still read and saved, so a value saved earlier loads without error.
+- To turn sound back on: put the two files in a folder under `resources/sounds/`, named `Move` and `Capture`, as `.ogg`, `.mp3` or both, with a `LICENSE.md` beside them naming the author and licence; add the set and its credit to `resources/js/settings/catalogue.ts`, the source for the credits page; and set `SOUND_ENABLED` to true. The player finds the files by name, and the Sound section reappears.
+- A saved board, piece set or palette that is no longer offered falls back to its default.
+- Every default is set in one place in the code, the storage module's list of defaults, and every reader of the settings uses it.
+
 **Progress**
 
 - All progress, history and settings are stored in the browser using IndexedDB, in a versioned format so they can be uploaded to an account later.
+- The one exception is a copy of the appearance setting in localStorage, so that a small script in the page head can apply it before anything is drawn and a reload does not flash the wrong mode. IndexedDB stays the real store; the copy is written when the setting is saved there, and refreshed whenever the settings are read. Settled in build step 31.
 - Clearing browser data or switching devices loses progress. This is accepted for the MVP.
 - Safari erases a site's stored data after seven days without a visit. Installing the site to the home screen avoids this, and the progress page explains how.
 
@@ -394,7 +421,7 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 **Principles**
 
 - The board is the centrepiece. Everything around it is quiet, with one accent colour and few borders.
-- The default board, olive, looks the same in light and dark mode for now. It is not dimmed or swapped in dark mode.
+- Every board looks the same in light and dark mode for now. No board is dimmed or swapped in dark mode. Settled for olive at first, and for every board in build step 31.
 - The marking colours of square control and spot the hanging piece must be clear in both modes and on every board theme.
 - One or two typefaces, with care for numbers, since scores and tallies appear everywhere.
 - Motion is quick and subtle.
@@ -422,7 +449,7 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 | Last move, light squares | `#E3DC9A` | `#C9C27A` |
 | Last move, dark squares | `#A9B36A` | `#8E9A52` |
 
-The four board rows in this table describe the sage board drawn in the mockups, which is no longer the default, so they are not tokens. The olive board is the same in both modes, so everything drawn on the board uses the light-mode values in both modes: the last-move highlight, the marks and the feedback. These are separate "on the board" tokens. The "on the page" versions of the same colours, used for things like the phase indicator, still change with the mode. Outline buttons take their border from one more token, `#C3BBAB` in light mode and `#4A473F` in dark.
+The four board rows in this table describe the sage board drawn in the mockups, which is no longer the default, so they are not tokens. Every board is the same in both modes, so everything drawn on the board uses the light-mode values in both modes, on every board: the last-move highlight, the marks and the feedback. These are separate "on the board" tokens. The "on the page" versions of the same colours, used for things like the phase indicator, still change with the mode. Outline buttons take their border from one more token, `#C3BBAB` in light mode and `#4A473F` in dark.
 
 **Light mode brightness**
 
@@ -459,6 +486,24 @@ The light-mode backgrounds were softened on 11 October 2026 after the first valu
 - A legend under the board counts correct, missed and wrong squares, and the main button moves to the next phase.
 - The wrong colour has a text version for the "Not quite" line and the cross in the phase indicator: `#A32A2A` in light mode and `#E58A8A` in dark. Added in build step 26.
 - On the board, the Light column of the phase table and the feedback colours above apply in both modes. The Dark column applies only to these colours where they appear on the page. This was settled in build step 9, after the pale dark-mode values proved unreadable on the olive board.
+
+**Marking palettes**
+
+Settled in build step 31. The colours above are the standard palette. A palette sets every marking colour: the three phases, and correct, missed and wrong, on the board and on the page (the phase tabs and the legend). Missed keeps the correct colour, dashed, in both palettes.
+
+The colour-blind friendly palette follows Okabe and Ito. With red-green colour blindness the standard amber and red are hard to tell apart, and in square control a wrong square appears in red while the lost squares are marked in amber, so this palette keeps wrong apart from lost by lightness as well as hue: lost is a light orange and wrong a very dark red.
+
+| Colour | On the board | On the page, light | On the page, dark |
+| --- | --- | --- | --- |
+| Lost | `#E69F00` | `#B37700` | `#E69F00` |
+| Controls | `#0072B2` | `#0072B2` | `#56B4E9` |
+| Hanging | `#7B3294` | `#7B3294` | `#C38AD6` |
+| Correct and missed | `#0072B2` | `#0072B2` | `#56B4E9` |
+| Wrong, and its text | `#5C0A0A` | `#5C0A0A` | `#F2C4C4` |
+
+- On the board, the marked square's border is the fill mixed with 50% black, as in the standard palette, and so is the wrong square's border.
+- Both palettes were checked on all four boards, on their light and dark squares, under normal vision and simulated protan, deutan and tritan vision. In the colour-blind palette the smallest colour difference (CIEDE2000) between wrong and lost, controls or correct is 23, against 6 for the standard palette's lost and wrong under deutan vision. On the page, the wrong text passes 4.5 to 1 in both modes. The check was run again when the green board replaced maple: on green the closest pair is the colour-blind lost and wrong under tritan vision, at 23, and every mark stays at least 9 apart from the bare green squares.
+- Reset progress uses its own destructive colour, which the palettes do not change.
 - The mockups are saved as images in the repository under `docs/design/`, because the building agent only sees what is in the repository.
 
 **How it is enforced**
@@ -593,6 +638,20 @@ The whole repository is public under GPL-3.0 from the first commit, because Ches
 - A source code link in the site footer.
 - Every bundled frontend package has a GPL-compatible licence. A CI step lists dependency licences and fails on unapproved ones.
 - Board themes, piece sets and sounds each have their own licence. Check each one used and credit its author. Maestro, the default piece set, is by sadsnake1 under CC BY-NC-SA 4.0: it requires credit, forbids commercial use, and is kept in its own folder with its own licence notice, outside the GPL-3.0 code. Lichess's board images are AGPL-3.0 or later.
+- The assets offered in build step 31, each copied unchanged from Lichess's source code into its own folder with its own licence notice. The settings catalogue in the code lists each one with its author and licence, and is the one source for the credits page.
+
+| Asset | Author | Licence |
+| --- | --- | --- |
+| Boards: olive, brown, blue, green | The lila authors and pirouetti | AGPL-3.0 or later |
+| Pieces: Maestro | sadsnake1 | CC BY-NC-SA 4.0 |
+| Pieces: Fantasy | Maurizio Monge | MIT, with the copyright notice and licence text in its folder |
+| Pieces: Merida | Armando Hernandez Marroquin | GPL-2.0 or later |
+| Pieces: Cardinal | sadsnake1 | CC BY-NC-SA 4.0 |
+
+- After build step 31, Cardinal replaced the Chessnut piece set and the green board replaced the maple board. The Chessnut and maple files were removed. A saved choice of Chessnut or maple falls back to the default, Maestro or olive.
+- Later, Fantasy replaced the Cburnett piece set, and the Cburnett files and their GPL notice were removed. A saved choice of Cburnett falls back to Maestro, which stays the default. Fantasy is under the MIT licence, which requires its copyright notice and licence text to ship with the files, so `LICENSE.txt` from Maurizio Monge's repository is kept in its folder.
+- Cardinal, like Maestro, is non-commercial and share-alike (CC BY-NC-SA 4.0). While either is offered, the site must stay free, with no commercial use, and their SVG files must be used unmodified.
+- No sounds are shipped. Enigmahack's sfx Move and Capture sounds (AGPL-3.0 or later, from Lichess) were offered in build step 31 and later removed, with their licence notice and credit, until original sounds are chosen. Any sounds added later go in their own folder with their own licence notice, and are credited in the settings catalogue.
 - Lichess is credited for the board and for the game and puzzle data, following the terms of each data set.
 
 **Kept out of the repository**
@@ -1226,13 +1285,13 @@ type Guess = { uci: string; correct: boolean }
 
 type Settings = {
   appearance: 'light' | 'dark' | 'system' // default 'system'
-  boardTheme: string
-  pieceSet: string
+  boardTheme: string // 'olive', 'brown', 'blue' or 'green'; default 'olive'
+  pieceSet: string // 'maestro', 'fantasy', 'merida' or 'cardinal'; default 'maestro'
   boardSizePx: number | null // larger screens only; null means the 560 default
-  sound: boolean
-  moveInput: 'tap' | 'drag' | 'both'
+  sound: boolean // default false
+  moveInput: 'tap' | 'drag' | 'both' // default 'both'
   opponentDelaySeconds: number // 1 to 5, default 3
-  markingPalette: string
+  markingPalette: string // 'standard' or 'colour-blind'; default 'standard'
   tacticsAutoNext: boolean // default false
 }
 
