@@ -1,6 +1,6 @@
 // Everything the marking modes say in words: the move that was played, the
-// question of each phase, the outcome of a submitted phase, and what the
-// main button offers next.
+// question of each phase, the outcome of a phase that has ended, and what
+// the main button reads.
 
 import {
     PROMOTION_PIECES,
@@ -12,7 +12,7 @@ import {
 import { isCapture, isCastling, specialMoveOf } from '@/chess/game';
 import type { MarkFeedback } from '@/components/board/types';
 import type { PracticeMoveData } from '@/generated/data';
-import type { PhaseStep } from './phases';
+import type { MarkingMode, PhaseStep } from './phases';
 
 const PHASE_NAMES: Readonly<Record<Phase, string>> = {
     lost: 'Lost',
@@ -194,7 +194,21 @@ export function verdictOf(feedback: MarkFeedback, phase: Phase): string {
 }
 
 /**
- * What the main button offers once a phase has been submitted: the next
+ * What the main button reads while a phase is being marked. In square
+ * control the phase checks itself, so the button is for giving an answer
+ * of no squares, or for giving up and seeing the answer. In spot the
+ * hanging piece it submits the marks.
+ */
+export function markingLabel(mode: MarkingMode, marked: number): string {
+    if (mode === 'squares') {
+        return marked === 0 ? 'Nothing' : 'Show me';
+    }
+
+    return `Submit · ${marked === 0 ? 'none' : String(marked)} marked`;
+}
+
+/**
+ * What the main button offers once a phase has ended: the next
  * phase, the next move, or the next game after the last move.
  */
 export function nextLabel(

@@ -15,6 +15,7 @@ import {
     useMarkingGame,
 } from '@/marking/useMarkingGame';
 import {
+    markingLabel,
     moveInWords,
     nextLabel,
     phaseName,
@@ -47,9 +48,11 @@ const {
     fen,
     fenBefore,
     marks,
+    wrongMarks,
     markPhase,
     feedback,
     exact,
+    corrected,
     moveResults,
     rewound,
     isLastMove,
@@ -80,6 +83,18 @@ const verdict = computed(() =>
         : verdictOf(feedback.value, step.value.phase),
 );
 
+/**
+ * How the phase came out, in a word or two. "Exactly right" is only for a
+ * phase in which no wrong square was marked at any point.
+ */
+const outcome = computed(() => {
+    if (exact.value !== true) {
+        return 'Not quite';
+    }
+
+    return corrected.value ? 'Corrected' : 'Exactly right';
+});
+
 /** The outcome is the headline unless the earlier position is on show. */
 const showsOutcome = computed(() => feedback.value !== null && !rewound.value);
 
@@ -98,9 +113,7 @@ const mainLabel = computed(() => {
         return nextLabel(steps.value, stepIndex.value, isLastMove.value);
     }
 
-    const count = marks.value.length;
-
-    return `Submit · ${count === 0 ? 'none' : String(count)} marked`;
+    return markingLabel(props.mode, marks.value.length);
 });
 
 function onMain(): void {
@@ -128,11 +141,13 @@ function onMain(): void {
         <p
             v-if="showsOutcome && step !== null"
             class="label-caps"
-            :class="exact ? 'text-accent' : 'text-feedback-wrong-text'"
+            :class="
+                exact && !corrected ? 'text-accent' : 'text-feedback-wrong-text'
+            "
         >
             {{ finished ? 'End of the game' : `Move ${String(moveNumber)}` }}
             · {{ phaseName(step, steps) }} ·
-            {{ exact ? 'Exactly right' : 'Not quite' }}
+            {{ outcome }}
         </p>
         <p v-else-if="!started" class="label-caps text-muted">
             The starting position
@@ -160,6 +175,7 @@ function onMain(): void {
         :show-last-move="false"
         :mark-phase="markPhase"
         :feedback="feedback"
+        :wrong-marks="wrongMarks"
         :animation-ms="MARKING_MOVE_ANIMATION_MS"
         @resized="saveBoardSize"
     />
