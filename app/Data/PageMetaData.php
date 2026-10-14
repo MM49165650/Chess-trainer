@@ -147,7 +147,7 @@ final class PageMetaData extends Data
     {
         return new self(
             title: 'Settings',
-            description: 'Choose the look of the board and pieces, sound, move input and marking colours. Saved only in this browser.',
+            description: 'Choose the look of the board and pieces, move input and marking colours. Saved only in this browser.',
             heading: 'Settings',
         );
     }

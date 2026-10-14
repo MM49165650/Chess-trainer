@@ -31,7 +31,7 @@ import {
     pieceTypeAt,
     readPosition,
 } from '@/chess/position';
-import { playMoveSound } from '@/settings/sound';
+import { playMoveSound, SOUND_ENABLED } from '@/settings/sound';
 import { useSettings } from '@/settings/useSettings';
 import '../../../css/board.css';
 import MarkingLayer from './MarkingLayer.vue';
@@ -272,13 +272,14 @@ watch(
     },
 );
 
-// A move played on the board makes a sound, when sound is on: a new position
-// that follows from the one before by a single legal move. Stepping back
-// through a game, or a correction from one move to another, makes none.
+// A move played on the board makes a sound, when sound is offered and on: a
+// new position that follows from the one before by a single legal move.
+// Stepping back through a game, or a correction from one move to another,
+// makes none.
 watch(
     () => props.fen,
     (after, before) => {
-        if (!settings.sound) {
+        if (!SOUND_ENABLED || !settings.sound) {
             return;
         }
 

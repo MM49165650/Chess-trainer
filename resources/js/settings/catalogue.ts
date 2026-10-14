@@ -1,6 +1,7 @@
-// What the settings offer: the board themes, piece sets, marking palettes and
-// the sound set, with each one's author and licence. The credits page reads
-// the credits from here too, so this is the one list of them.
+// What the settings offer: the board themes, piece sets and marking palettes,
+// with each one's author and licence. The credits page reads the credits from
+// here too, so this is the one list of them. A sound set, when there is one
+// again, is credited here as well (see resources/js/settings/sound.ts).
 
 export type Credit = {
     author: string;
@@ -98,19 +99,6 @@ export const MARKING_PALETTES = [
     { id: 'standard', name: 'Standard' },
     { id: 'colour-blind', name: 'Colour-blind friendly' },
 ] as const satisfies readonly Choice[];
-
-/** The one sound set: Move and Capture only. */
-export const SOUND_SET = {
-    id: 'sfx',
-    name: 'Sfx',
-    credit: {
-        author: 'Enigmahack',
-        authorUrl: 'https://github.com/Enigmahack',
-        licence: 'AGPL-3.0 or later',
-        licenceUrl: 'https://www.gnu.org/licenses/agpl-3.0.html',
-        sourceUrl: `${LILA}/sound/sfx`,
-    },
-} as const satisfies CreditedChoice;
 
 export type BoardThemeId = (typeof BOARD_THEMES)[number]['id'];
 export type PieceSetId = (typeof PIECE_SETS)[number]['id'];

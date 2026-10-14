@@ -347,7 +347,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 - Appearance: light, dark, or match the device
 - Board theme and piece set, taken from Lichess's collection, starting with three or four of each. The default board is Lichess's olive board and the default piece set is Lichess's Maestro
-- Sound on or off
+- Sound on or off. Switched off for now, until original sounds are chosen: see the settings page below
 - Move input: tap, drag, or both
 - Opponent move delay in guess the move: 1 to 5 seconds in whole seconds, default 3. It is set with a slider that moves in whole seconds and shows the chosen value, such as "3 s", both on the play screen and in settings
 - Marking colours for square control and spot the hanging piece, including at least one colour-blind-friendly palette
@@ -356,8 +356,8 @@ Most users are on phones, so phone width is the primary design target for every 
 
 Settled in build step 31.
 
-- The page is at `/settings`. Its title is "Settings", its heading "Settings", and its meta description "Choose the look of the board and pieces, sound, move input and marking colours. Saved only in this browser." The home page links to it.
-- Its sections, in order: Appearance, Board, Pieces, Marking colours, Sound, Moves (move input and the opponent's reply delay), and the reset progress button at the foot, the same component as on the progress page.
+- The page is at `/settings`. Its title is "Settings", its heading "Settings", and its meta description "Choose the look of the board and pieces, move input and marking colours. Saved only in this browser." The home page links to it.
+- Its sections, in order: Appearance, Board, Pieces, Marking colours, Sound, Moves (move input and the opponent's reply delay), and the reset progress button at the foot, the same component as on the progress page. The Sound section is hidden while sound is switched off.
 - Every setting takes effect at once, on the settings page and on every board, and is saved straight away, so it survives a reload. If storage is unavailable, the settings still apply for the visit, and the page shows the notice that progress will not be saved.
 
 | Setting | Choices | Default | Where it applies |
@@ -366,13 +366,15 @@ Settled in build step 31.
 | Board | Olive, Brown, Blue, Green | Olive | Every board |
 | Pieces | Maestro, Fantasy, Merida, Cardinal | Maestro | Every board, and the promotion picker |
 | Marking colours | Standard, Colour-blind friendly | Standard | The board, phase tabs and legend of square control and spot the hanging piece |
-| Sound | Off, On | Off | Every board |
+| Sound | Off, On | Off | Every board, while sound is switched on in the code |
 | Move input | Tap, Drag, Both | Both | The boards where a move is made: guess the move and tactics. Marking is always by tap |
 | Opponent's reply delay | 1 to 5 seconds | 3 | Guess the move |
 
 - The board and the pieces are chosen from small previews: a corner of each board, and each piece set on the chosen board.
 - The reply delay slider on the guess the move play screen is the same setting. Both sliders change it as they move and save it when they are let go, so there is one value.
-- Sound plays when a move is played on the board, in all four modes: a capture sound for a capture, a move sound for any other move. A new position that does not follow from the one before by a single legal move, such as stepping back through a game or the correction after a wrong guess, makes no sound. The sounds are Move and Capture from Enigmahack's sfx set, from Lichess, under AGPL-3.0 or later.
+- Sound plays when a move is played on the board, in all four modes: a capture sound for a capture, a move sound for any other move. A new position that does not follow from the one before by a single legal move, such as stepping back through a game or the correction after a wrong guess, makes no sound.
+- Sound is switched off until original sounds are chosen. Enigmahack's sfx sounds from Lichess were used at first and have been removed, with their licence notice and their credit. The code that plays sound stays: the sound player, the call in the board component and the single-legal-move check. One flag, `SOUND_ENABLED` in `resources/js/settings/sound.ts`, is false, so nothing loads or plays and the Sound section is hidden. The `sound` setting is still read and saved, so a value saved earlier loads without error.
+- To turn sound back on: put the two files in a folder under `resources/sounds/`, named `Move` and `Capture`, as `.ogg`, `.mp3` or both, with a `LICENSE.md` beside them naming the author and licence; add the set and its credit to `resources/js/settings/catalogue.ts`, the source for the credits page; and set `SOUND_ENABLED` to true. The player finds the files by name, and the Sound section reappears.
 - A saved board, piece set or palette that is no longer offered falls back to its default.
 - Every default is set in one place in the code, the storage module's list of defaults, and every reader of the settings uses it.
 
@@ -645,12 +647,11 @@ The whole repository is public under GPL-3.0 from the first commit, because Ches
 | Pieces: Fantasy | Maurizio Monge | MIT, with the copyright notice and licence text in its folder |
 | Pieces: Merida | Armando Hernandez Marroquin | GPL-2.0 or later |
 | Pieces: Cardinal | sadsnake1 | CC BY-NC-SA 4.0 |
-| Sounds: Move and Capture from the sfx set | Enigmahack | AGPL-3.0 or later |
 
 - After build step 31, Cardinal replaced the Chessnut piece set and the green board replaced the maple board. The Chessnut and maple files were removed. A saved choice of Chessnut or maple falls back to the default, Maestro or olive.
 - Later, Fantasy replaced the Cburnett piece set, and the Cburnett files and their GPL notice were removed. A saved choice of Cburnett falls back to Maestro, which stays the default. Fantasy is under the MIT licence, which requires its copyright notice and licence text to ship with the files, so `LICENSE.txt` from Maurizio Monge's repository is kept in its folder.
 - Cardinal, like Maestro, is non-commercial and share-alike (CC BY-NC-SA 4.0). While either is offered, the site must stay free, with no commercial use, and their SVG files must be used unmodified.
-- Lichess's licence file lists the sfx set under `public/sounds/`, while the folder is `public/sound/`; the file spells it both ways, and they are taken as the same folder. Lichess's other sounds, including its standard set, are listed without a free licence and are not used.
+- No sounds are shipped. Enigmahack's sfx Move and Capture sounds (AGPL-3.0 or later, from Lichess) were offered in build step 31 and later removed, with their licence notice and credit, until original sounds are chosen. Any sounds added later go in their own folder with their own licence notice, and are credited in the settings catalogue.
 - Lichess is credited for the board and for the game and puzzle data, following the terms of each data set.
 
 **Kept out of the repository**

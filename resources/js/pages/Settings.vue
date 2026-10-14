@@ -16,6 +16,7 @@ import {
     MARKING_PALETTES,
     PIECE_SETS,
 } from '@/settings/catalogue';
+import { SOUND_ENABLED } from '@/settings/sound';
 import { changeSetting, useSettings } from '@/settings/useSettings';
 import { storageAvailable } from '@/storage/db';
 import { OPPONENT_DELAY_MAX, OPPONENT_DELAY_MIN } from '@/storage/settings';
@@ -236,7 +237,12 @@ onMounted(async () => {
             </div>
         </section>
 
-        <section aria-labelledby="settings-sound" class="px-5 pt-8">
+        <!-- Hidden while sound is switched off: see resources/js/settings/sound.ts. -->
+        <section
+            v-if="SOUND_ENABLED"
+            aria-labelledby="settings-sound"
+            class="px-5 pt-8"
+        >
             <h2 id="settings-sound" class="label-caps text-muted">Sound</h2>
             <ChoiceGroup
                 class="mt-3"
