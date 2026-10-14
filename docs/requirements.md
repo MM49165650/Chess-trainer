@@ -67,7 +67,7 @@ Eleven masters, shown in this order: Morphy, Lasker, Rubinstein, Capablanca, Ale
 
 - The score is correct guesses out of total guesses, for example 23/34.
 - A move is correct only if it matches the move played. Moves are compared by from-square, to-square and promotion piece, not by written notation.
-- The progress page shows the user's accuracy for each master: correct guesses out of all guesses, as a percentage, counted over finished games only and using each game's latest finished result. Masters are listed from highest to lowest accuracy, each with its number of games and moves, for example "Capablanca 72% · 4 games, 131 moves". Masters with no finished game are not listed. Nothing new is stored; it is worked out from the saved game records.
+- The progress page shows the user's accuracy for each master: correct guesses out of all guesses, as a percentage, counted over finished games only and using each game's latest finished result. Masters are listed from highest to lowest accuracy, each as a row with the master's family name, "4 games, 131 moves" under it, and the percentage on the right, for example Capablanca with 72%. Masters with no finished game are not listed. Nothing new is stored; it is worked out from the saved game records.
 
 **End of game**
 
