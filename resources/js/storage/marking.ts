@@ -408,3 +408,16 @@ export async function clearSeenGames(mode: MarkingMode): Promise<boolean> {
         return false;
     }
 }
+
+/** Whether either mode has counted a phase this visit that was not saved. */
+export function hasUnsavedScores(): boolean {
+    return Object.values(unsaved).some((scores) =>
+        scores.some((score) => score.tally.attempts > 0),
+    );
+}
+
+/** Forgets what either mode counted this visit without saving it. */
+export function clearUnsavedScores(): void {
+    unsaved.squares = emptyScores('squares');
+    unsaved.hanging = emptyScores('hanging');
+}

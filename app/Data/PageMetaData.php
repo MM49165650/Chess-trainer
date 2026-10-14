@@ -134,6 +134,15 @@ final class PageMetaData extends Data
         );
     }
 
+    public static function progress(): self
+    {
+        return new self(
+            title: 'Progress',
+            description: 'Your scores in the four modes, kept only in this browser.',
+            heading: 'Your progress',
+        );
+    }
+
     public static function game(Master $master, MasterGame $game): self
     {
         // White's name first. Both players go by family name; an opponent

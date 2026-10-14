@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // The site's button. Primary is the filled pill for a screen's main action,
-// outline is for a secondary action, and quiet is plain text.
+// outline is for a secondary action, quiet is plain text, and danger is an
+// outline in the wrong colour for an action that cannot be undone.
 
 withDefaults(
     defineProps<{
-        variant?: 'primary' | 'outline' | 'quiet';
+        variant?: 'primary' | 'outline' | 'quiet' | 'danger';
         /** Large is the height of the bottom bar's buttons. */
         size?: 'medium' | 'large';
         /** A round button that holds only an icon. It needs an aria-label. */
@@ -89,6 +90,11 @@ withDefaults(
 .app-button.is-outline {
     border-color: var(--color-control-border);
     color: var(--color-ink);
+}
+
+.app-button.is-danger {
+    border-color: var(--color-feedback-wrong-text);
+    color: var(--color-feedback-wrong-text);
 }
 
 .app-button.is-quiet {

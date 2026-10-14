@@ -122,3 +122,14 @@ export async function readMasterGames(
 
     return records;
 }
+
+/** Every saved master game record, for the progress page. */
+export async function readAllMasterGames(): Promise<MasterGameRecord[]> {
+    try {
+        const db = await database();
+
+        return (await db?.getAll('masterGames')) ?? [];
+    } catch {
+        return [];
+    }
+}
