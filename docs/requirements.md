@@ -363,8 +363,8 @@ Settled in build step 31.
 | Setting | Choices | Default | Where it applies |
 | --- | --- | --- | --- |
 | Appearance | Light, Dark, Match device | Match device | Every page |
-| Board | Olive, Brown, Blue, Maple | Olive | Every board |
-| Pieces | Maestro, Cburnett, Merida, Chessnut | Maestro | Every board, and the promotion picker |
+| Board | Olive, Brown, Blue, Green | Olive | Every board |
+| Pieces | Maestro, Cburnett, Merida, Cardinal | Maestro | Every board, and the promotion picker |
 | Marking colours | Standard, Colour-blind friendly | Standard | The board, phase tabs and legend of square control and spot the hanging piece |
 | Sound | Off, On | Off | Every board |
 | Move input | Tap, Drag, Both | Both | The boards where a move is made: guess the move and tactics. Marking is always by tap |
@@ -500,7 +500,7 @@ The colour-blind friendly palette follows Okabe and Ito. With red-green colour b
 | Wrong, and its text | `#5C0A0A` | `#5C0A0A` | `#F2C4C4` |
 
 - On the board, the marked square's border is the fill mixed with 50% black, as in the standard palette, and so is the wrong square's border.
-- Both palettes were checked on all four boards, on their light and dark squares, under normal vision and simulated protan, deutan and tritan vision. In the colour-blind palette the smallest colour difference (CIEDE2000) between wrong and lost, controls or correct is 24, against 5 for the standard palette's lost and wrong under deutan vision. On the page, the wrong text passes 4.5 to 1 in both modes.
+- Both palettes were checked on all four boards, on their light and dark squares, under normal vision and simulated protan, deutan and tritan vision. In the colour-blind palette the smallest colour difference (CIEDE2000) between wrong and lost, controls or correct is 23, against 6 for the standard palette's lost and wrong under deutan vision. On the page, the wrong text passes 4.5 to 1 in both modes. The check was run again when the green board replaced maple: on green the closest pair is the colour-blind lost and wrong under tritan vision, at 23, and every mark stays at least 9 apart from the bare green squares.
 - Reset progress uses its own destructive colour, which the palettes do not change.
 - The mockups are saved as images in the repository under `docs/design/`, because the building agent only sees what is in the repository.
 
@@ -640,13 +640,15 @@ The whole repository is public under GPL-3.0 from the first commit, because Ches
 
 | Asset | Author | Licence |
 | --- | --- | --- |
-| Boards: olive, brown, blue, maple | The lila authors and pirouetti | AGPL-3.0 or later |
+| Boards: olive, brown, blue, green | The lila authors and pirouetti | AGPL-3.0 or later |
 | Pieces: Maestro | sadsnake1 | CC BY-NC-SA 4.0 |
 | Pieces: Cburnett | Colin M.L. Burnett | GPL-2.0 or later |
 | Pieces: Merida | Armando Hernandez Marroquin | GPL-2.0 or later |
-| Pieces: Chessnut | Alexis Luengas | Apache-2.0, with the licence text in its folder |
+| Pieces: Cardinal | sadsnake1 | CC BY-NC-SA 4.0 |
 | Sounds: Move and Capture from the sfx set | Enigmahack | AGPL-3.0 or later |
 
+- After build step 31, Cardinal replaced the Chessnut piece set and the green board replaced the maple board. The Chessnut and maple files were removed. A saved choice of Chessnut or maple falls back to the default, Maestro or olive.
+- Cardinal, like Maestro, is non-commercial and share-alike (CC BY-NC-SA 4.0). While either is offered, the site must stay free, with no commercial use, and their SVG files must be used unmodified.
 - Lichess's licence file lists the sfx set under `public/sounds/`, while the folder is `public/sound/`; the file spells it both ways, and they are taken as the same folder. Lichess's other sounds, including its standard set, are listed without a free licence and are not used.
 - Lichess is credited for the board and for the game and puzzle data, following the terms of each data set.
 
@@ -1281,8 +1283,8 @@ type Guess = { uci: string; correct: boolean }
 
 type Settings = {
   appearance: 'light' | 'dark' | 'system' // default 'system'
-  boardTheme: string // 'olive', 'brown', 'blue' or 'maple'; default 'olive'
-  pieceSet: string // 'maestro', 'cburnett', 'merida' or 'chessnut'; default 'maestro'
+  boardTheme: string // 'olive', 'brown', 'blue' or 'green'; default 'olive'
+  pieceSet: string // 'maestro', 'cburnett', 'merida' or 'cardinal'; default 'maestro'
   boardSizePx: number | null // larger screens only; null means the 560 default
   sound: boolean // default false
   moveInput: 'tap' | 'drag' | 'both' // default 'both'

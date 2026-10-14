@@ -34,11 +34,18 @@ const GPL_2_OR_LATER = {
     licenceUrl: 'https://www.gnu.org/licenses/gpl-2.0.txt',
 } as const;
 
+// Non-commercial and share-alike: the site must stay free, and the files are
+// used unchanged.
+const CC_BY_NC_SA_4 = {
+    licence: 'CC BY-NC-SA 4.0',
+    licenceUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+} as const;
+
 export const BOARD_THEMES = [
     { id: 'olive', name: 'Olive', credit: BOARD_CREDIT },
     { id: 'brown', name: 'Brown', credit: BOARD_CREDIT },
     { id: 'blue', name: 'Blue', credit: BOARD_CREDIT },
-    { id: 'maple', name: 'Maple', credit: BOARD_CREDIT },
+    { id: 'green', name: 'Green', credit: BOARD_CREDIT },
 ] as const satisfies readonly CreditedChoice[];
 
 export const PIECE_SETS = [
@@ -48,8 +55,7 @@ export const PIECE_SETS = [
         credit: {
             author: 'sadsnake1',
             authorUrl: null,
-            licence: 'CC BY-NC-SA 4.0',
-            licenceUrl: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
+            ...CC_BY_NC_SA_4,
             sourceUrl: `${LILA}/piece/maestro`,
         },
     },
@@ -74,14 +80,13 @@ export const PIECE_SETS = [
         },
     },
     {
-        id: 'chessnut',
-        name: 'Chessnut',
+        id: 'cardinal',
+        name: 'Cardinal',
         credit: {
-            author: 'Alexis Luengas',
-            authorUrl: 'https://github.com/LexLuengas/chessnut-pieces',
-            licence: 'Apache-2.0',
-            licenceUrl: 'https://www.apache.org/licenses/LICENSE-2.0',
-            sourceUrl: `${LILA}/piece/chessnut`,
+            author: 'sadsnake1',
+            authorUrl: null,
+            ...CC_BY_NC_SA_4,
+            sourceUrl: `${LILA}/piece/cardinal`,
         },
     },
 ] as const satisfies readonly CreditedChoice[];
