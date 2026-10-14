@@ -10,10 +10,12 @@ import AppButton from '@/components/ui/AppButton.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import type { PracticeGamePlayData } from '@/generated/data';
 import type { MarkingMode } from '@/marking/phases';
+import { percentage, type RunningScore } from '@/marking/tallies';
 import {
     MARKING_MOVE_ANIMATION_MS,
     useMarkingGame,
     type GameStart,
+    type PhaseResult,
     type ResumePoint,
 } from '@/marking/useMarkingGame';
 import {
@@ -22,6 +24,7 @@ import {
     nextLabel,
     phaseName,
     questionOf,
+    scoreLabel,
     verdictOf,
 } from '@/marking/wording';
 import PhaseTabs from './PhaseTabs.vue';
@@ -32,6 +35,8 @@ const props = defineProps<{
     mode: MarkingMode;
     /** The saved phase to resume at; without it the game starts at move 1. */
     start?: GameStart | undefined;
+    /** The mode's running percentages, shown while a phase is marked. */
+    scores: readonly RunningScore[];
 }>();
 
 const emit = defineEmits<{
@@ -39,7 +44,7 @@ const emit = defineEmits<{
      * When a phase ends: where the game stands next, or null once the game
      * is finished.
      */
-    progress: [next: ResumePoint | null];
+    progress: [ended: PhaseResult, next: ResumePoint | null];
     /** After the last phase of the last move, when the user moves on. */
     next: [];
 }>();
@@ -72,8 +77,8 @@ const {
 } = useMarkingGame(
     props.game,
     props.mode,
-    (_result, following) => {
-        emit('progress', following);
+    (result, following) => {
+        emit('progress', result, following);
     },
     props.start,
 );
@@ -201,8 +206,9 @@ function onMain(): void {
         @resized="saveBoardSize"
     />
 
-    <!-- The legend keeps its room, so nothing below the board moves. -->
-    <ul class="legend" :aria-hidden="legend.length === 0">
+    <!-- The legend keeps its room, so nothing below the board moves. Until
+         the phase ends, the room holds the running percentages. -->
+    <ul v-if="legend.length > 0" class="legend">
         <li v-for="item in legend" :key="item.kind" class="legend-item">
             <span class="swatch" :class="item.kind" aria-hidden="true" />
             <span>
@@ -211,6 +217,20 @@ function onMain(): void {
             </span>
         </li>
     </ul>
+    <p v-else class="legend scores">
+        <template v-for="(score, index) in scores" :key="score.phase">
+            <span v-if="index > 0" class="text-muted" aria-hidden="true">
+                ·
+            </span>
+            <span>
+                <span class="text-muted">{{ scoreLabel(score.phase) }}</span>
+                {{ ' ' }}
+                <span class="font-semibold tabular-nums">
+                    {{ percentage(score.tally) }}
+                </span>
+            </span>
+        </template>
+    </p>
 
     <BottomBar>
         <AppButton
@@ -255,6 +275,11 @@ function onMain(): void {
         min-height: 30px;
         padding-top: 6px;
     }
+}
+
+.scores {
+    align-items: center;
+    gap: 8px;
 }
 
 .legend-item {

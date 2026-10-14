@@ -20,6 +20,21 @@ const PHASE_NAMES: Readonly<Record<Phase, string>> = {
     hanging: 'Hanging',
 };
 
+/** A phase's name in full, where there is room, as on a landing page. */
+const LONG_PHASE_NAMES: Readonly<Record<Phase, string>> = {
+    lost: 'Squares lost',
+    controlled: 'Squares controlled',
+    hanging: 'Hanging pieces',
+};
+
+/**
+ * The label of a phase's percentage: the tab name under the board, and the
+ * name in full on a landing page.
+ */
+export function scoreLabel(phase: Phase, long = false): string {
+    return (long ? LONG_PHASE_NAMES : PHASE_NAMES)[phase];
+}
+
 const NUMBERS = [
     'no',
     'one',
