@@ -18,8 +18,9 @@ import {
     type PhaseStep,
 } from './phases';
 
-// How long the starting position is shown before the first move plays, in
-// milliseconds, so that the move is seen.
+// How long the position is shown before the move plays when a game opens,
+// at its start or resumed at a move's first phase, in milliseconds, so that
+// the move is seen.
 export const FIRST_MOVE_DELAY_MS = 800;
 
 // How long a move takes to play on the board, in milliseconds. The move's
@@ -45,11 +46,64 @@ export type PhaseResult = {
     exact: boolean;
 };
 
-/** `onSubmitted` is called once for every phase, when it ends. */
+/**
+ * Where a game stands between two phases, as a session saves it: the next
+ * phase to mark, and how the move's earlier phases scored, in their order.
+ */
+export type ResumePoint = {
+    ply: Ply;
+    phase: Phase;
+    /** True on a castling move while the next phase is one of the rook's. */
+    rook: boolean;
+    results: readonly boolean[];
+};
+
+/** A resume point found in its game: the move, and which of its phases. */
+export type GameStart = {
+    ply: Ply;
+    stepIndex: number;
+    results: readonly boolean[];
+};
+
+/**
+ * Finds a saved resume point in its game. The answer is null when the point
+ * names no phase of the game, or does not hold one result for each of the
+ * move's earlier phases.
+ */
+export function startOf(
+    game: PracticeGamePlayData,
+    mode: MarkingMode,
+    point: ResumePoint,
+): GameStart | null {
+    const move = Number.isInteger(point.ply)
+        ? game.moves[point.ply - 1]
+        : undefined;
+
+    if (move === undefined || point.ply < 1) {
+        return null;
+    }
+
+    const stepIndex = stepsOf(move, mode).findIndex(
+        (step) => step.phase === point.phase && step.rook === point.rook,
+    );
+
+    if (stepIndex < 0 || point.results.length !== stepIndex) {
+        return null;
+    }
+
+    return { ply: point.ply, stepIndex, results: [...point.results] };
+}
+
+/**
+ * `onSubmitted` is called once for every phase, when it ends, with where
+ * the game stands next, or null once the game is finished. `start` resumes
+ * the game at a saved phase; without it the game starts at move 1.
+ */
 export function useMarkingGame(
     game: PracticeGamePlayData,
     mode: MarkingMode,
-    onSubmitted?: (result: PhaseResult) => void,
+    onSubmitted?: (result: PhaseResult, next: ResumePoint | null) => void,
+    start?: GameStart,
 ) {
     // Entry 0 is the starting position and entry n the one after n plies.
     const positions = positionsOf(game.moves);
@@ -59,13 +113,16 @@ export function useMarkingGame(
     const checksAsMarked = mode === 'squares';
 
     /** The move being worked on. */
-    const ply = ref<Ply>(1);
+    const ply = ref<Ply>(start?.ply ?? 1);
 
     /** Which of the move's phases is being marked, counting from 0. */
-    const stepIndex = ref(0);
+    const stepIndex = ref(start?.stepIndex ?? 0);
 
-    /** False until the first move of the game has played on the board. */
-    const started = ref(false);
+    /**
+     * False until the move being worked on has played on the board. A game
+     * resumed at a later phase of a move shows the move as played already.
+     */
+    const started = ref(stepIndex.value > 0);
 
     const marked = ref<Square[]>([]);
 
@@ -82,10 +139,25 @@ export function useMarkingGame(
     /** True while the position before the move is shown. */
     const rewound = ref(false);
 
-    /** Every phase submitted in this game, in order. */
-    const results = ref<PhaseResult[]>([]);
-
     const move = computed(() => game.moves[ply.value - 1] ?? null);
+
+    /**
+     * Every phase submitted in this game, in order. A resumed game starts
+     * with the saved results of the move's earlier phases.
+     */
+    const results = ref<PhaseResult[]>(
+        move.value === null
+            ? []
+            : stepsOf(move.value, mode)
+                  .slice(0, stepIndex.value)
+                  .map((earlier, index) => ({
+                      ply: ply.value,
+                      phase: earlier.phase,
+                      rook: earlier.rook,
+                      piece: earlier.piece,
+                      exact: start?.results[index] ?? false,
+                  })),
+    );
 
     const steps = computed(() =>
         move.value === null ? [] : stepsOf(move.value, mode),
@@ -184,9 +256,13 @@ export function useMarkingGame(
         () => feedback.value !== null && isLastStep.value && isLastMove.value,
     );
 
-    const timer = setTimeout(() => {
-        started.value = true;
-    }, FIRST_MOVE_DELAY_MS);
+    // The game opens on the position before the move, which then plays, as
+    // it does when a game is resumed at a move's first phase.
+    const timer = started.value
+        ? null
+        : setTimeout(() => {
+              started.value = true;
+          }, FIRST_MOVE_DELAY_MS);
 
     let advanceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -203,7 +279,10 @@ export function useMarkingGame(
     }
 
     onScopeDispose(() => {
-        clearTimeout(timer);
+        if (timer !== null) {
+            clearTimeout(timer);
+        }
+
         cancelAdvance();
     }, true);
 
@@ -261,12 +340,44 @@ export function useMarkingGame(
         feedback.value = score.feedback;
         rewound.value = false;
         results.value.push(result);
-        onSubmitted?.(result);
+        onSubmitted?.(result, pointAfter());
 
         if (score.exact && !finished.value) {
             advancePending.value = true;
             advanceTimer = setTimeout(next, EXACT_ADVANCE_DELAY_MS);
         }
+    }
+
+    /**
+     * Where the game stands once the phase has ended: the move's next phase,
+     * or the next move's first. Null once the game is finished.
+     */
+    function pointAfter(): ResumePoint | null {
+        if (!isLastStep.value) {
+            const following = steps.value[stepIndex.value + 1];
+
+            return following === undefined
+                ? null
+                : {
+                      ply: ply.value,
+                      phase: following.phase,
+                      rook: following.rook,
+                      results: moveResults.value,
+                  };
+        }
+
+        const nextMove = game.moves[ply.value];
+        const first =
+            nextMove === undefined ? undefined : stepsOf(nextMove, mode)[0];
+
+        return first === undefined
+            ? null
+            : {
+                  ply: ply.value + 1,
+                  phase: first.phase,
+                  rook: first.rook,
+                  results: [],
+              };
     }
 
     /**

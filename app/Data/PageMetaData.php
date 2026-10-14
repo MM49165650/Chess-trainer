@@ -98,6 +98,24 @@ final class PageMetaData extends Data
         );
     }
 
+    public static function squares(): self
+    {
+        return new self(
+            title: 'Square control',
+            description: 'Watch a beginner game move by move, and mark the squares each moved piece gave up and now controls.',
+            heading: 'Square control',
+        );
+    }
+
+    public static function hanging(): self
+    {
+        return new self(
+            title: 'Spot the hanging piece',
+            description: 'Watch a beginner game move by move, and mark every piece left hanging, on either side.',
+            heading: 'Spot the hanging piece',
+        );
+    }
+
     public static function squaresPlay(): self
     {
         return new self(

@@ -13,6 +13,8 @@ import type { MarkingMode } from '@/marking/phases';
 import {
     MARKING_MOVE_ANIMATION_MS,
     useMarkingGame,
+    type GameStart,
+    type ResumePoint,
 } from '@/marking/useMarkingGame';
 import {
     markingLabel,
@@ -28,9 +30,16 @@ const props = defineProps<{
     game: PracticeGamePlayData;
     /** Square control, or spot the hanging piece. */
     mode: MarkingMode;
+    /** The saved phase to resume at; without it the game starts at move 1. */
+    start?: GameStart | undefined;
 }>();
 
 const emit = defineEmits<{
+    /**
+     * When a phase ends: where the game stands next, or null once the game
+     * is finished.
+     */
+    progress: [next: ResumePoint | null];
     /** After the last phase of the last move, when the user moves on. */
     next: [];
 }>();
@@ -60,7 +69,14 @@ const {
     submit,
     next,
     toggleRewind,
-} = useMarkingGame(props.game, props.mode);
+} = useMarkingGame(
+    props.game,
+    props.mode,
+    (_result, following) => {
+        emit('progress', following);
+    },
+    props.start,
+);
 
 /** The number a game score gives the move: both sides' first is move 1. */
 const moveNumber = computed(() => Math.ceil(ply.value / 2));
@@ -149,8 +165,13 @@ function onMain(): void {
             · {{ phaseName(step, steps) }} ·
             {{ outcome }}
         </p>
+        <!-- A game resumed at a later move opens on the position before it. -->
         <p v-else-if="!started" class="label-caps text-muted">
-            The starting position
+            {{
+                ply === 1
+                    ? 'The starting position'
+                    : `Before move ${String(moveNumber)}`
+            }}
         </p>
         <p v-else-if="played !== null" class="label-caps text-muted">
             {{ rewound ? 'Before move' : 'Move' }} {{ moveNumber }} ·

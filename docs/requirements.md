@@ -1,6 +1,6 @@
 # Chess training site: product requirements
 
-Last updated: 13 October 2026
+Last updated: 14 October 2026
 
 A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that win material, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
@@ -170,6 +170,12 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 - The session, the seen games and the scores are this mode's own. A game played in spot the hanging piece is not used up here.
 - The board is shown with White at the bottom.
 - A rewind button shows the position before the move. The move's squares are not highlighted in this mode. Phase 1 depends on that earlier position, and a user resuming a session did not just watch the move.
+- The landing page shows the heading "Square control" and one line under it: "Watch a beginner game move by move, and mark the squares each moved piece gave up and now controls." The same line is the page's meta description. The button reads Resume while the mode has a saved session, and Start otherwise, including when storage is unavailable. Both open /squares/play, which resumes the session if there is one. Until step 28 adds the percentages, the page shows nothing else. Settled in build step 27, as are the points below.
+- A game is picked at random from the games not yet seen in this mode, never the game just played, and it becomes the session at once, at move 1. Leaving before marking anything resumes the same game.
+- Resuming at a move's first phase plays the move as usual: the position before it for about 0.8 seconds, then the move. Resuming at a later phase of a move shows the position after the move at once, and rewind still shows the one before. The phase tabs show the earlier phases of that move with their tick or cross.
+- The "Next game" button sits in the header, at the right. Pressed before the end of a game, even on a game with nothing marked yet, it records the game as abandoned and picks another. At the end of a game it does what the main button does.
+- When every game has been seen in this mode, the mode's seen games are cleared without a message, and picking starts again from all of them. The other mode's are left alone.
+- If a saved session's game no longer exists, or its saved move or phase is not in the game, the session is deleted and a new game is picked without a message. If the game fails to load for another reason, the page says so and offers Try again, and the session is kept.
 
 **The marking screen**
 
@@ -184,7 +190,7 @@ Settled in build step 26, and shared with spot the hanging piece since 13 Octobe
 - The main button reads "Nothing" while no square is marked, and "Show me" once at least one is. Either press ends the phase.
 - After a phase ends, the line above reads "Move 2 · Controls · Not quite" in the wrong colour, or "… · Exactly right" in the accent colour, and the heading says how it came out: "Three squares missed, one too many.", "All eight squares.", "Both squares.", "The only square." or "Nothing to mark, and nothing marked.". When a wrong square was marked and the set then completed, the line reads "Move 2 · Controls · Corrected" in the wrong colour, and the heading still describes the final selection, as in "Both squares.". On a castling move the line names the piece, as in "Move 5 · Rook · Lost · Not quite".
 - The main button then names what comes next: "Next: squares controlled" and "Next move". On a castling move it reads, in order, "Next: king's squares controlled", "Next: rook's squares lost", "Next: rook's squares controlled" and "Next move". After the last phase of a game's last move the line above starts "End of the game" and the button reads "Next game". There is no end-of-game screen.
-- Until sessions are built in step 27, the screen opens a game picked at random from the ID list, from its first move, and "Next game" at the end picks another. The "Next game" button in the header comes with step 27, the percentages under the board with step 28, and the report a problem link with step 33.
+- Since build step 27 the screen resumes the mode's session, or picks an unseen game, and has the "Next game" button in the header; see Sessions above. The percentages under the board come with step 28, and the report a problem link with step 33.
 
 ## Mode 3: Tactics by piece
 
@@ -272,6 +278,8 @@ The user watches a beginner game one move at a time and, after every move, marks
 - Sessions are open-ended, and returning resumes at the same move.
 - A next game button serves a random game. There is no browsing. The mode opens on a landing page at /hanging that shows the percentage and a Start or Resume button. The exercise itself runs at /hanging/play.
 - The session, the seen games and the scores are this mode's own. A game played in square control is not used up here.
+- The landing page shows the heading "Spot the hanging piece" and one line under it: "Watch a beginner game move by move, and mark every piece left hanging, on either side." The same line is the page's meta description.
+- Everything else about sessions works as in square control: the Start or Resume button, picking an unseen game, the "Next game" button in the header and abandoned games, the silent reset when every game has been seen, and a missing game. Each move has one phase, so resuming always plays the move as usual. Settled in build step 27.
 
 **The marking screen**
 
@@ -283,7 +291,7 @@ The screen is square control's, with these differences.
 - After the phase is submitted, the line above reads "Move 2 · Hanging · Not quite" or "… · Exactly right", and the heading says "pieces" where square control says "squares": "One piece missed.", "Both pieces.", "Nothing to mark, and nothing marked.".
 - The main button then reads "Next move", or "Next game" after a game's last move.
 - Rewind, the move in words, the legend and the board are the same. The board is shown with White at the bottom, and the move's squares are not highlighted.
-- Until sessions are built in step 27, the screen opens a game picked at random from the ID list, as square control does.
+- Since build step 27 the screen resumes the mode's session, or picks an unseen game, as square control does.
 
 ## Site-wide requirements
 
@@ -541,6 +549,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Work through made-up practice games in the square-control phase logic, and confirm each rule: squares are marked and unmarked; marks that exactly match the answer, with at least one square marked, end the phase at once as correct; a wrong square is shown at once and fails the phase, even when it is unmarked and the set is then completed, which counts as corrected and not as exactly right; an empty answer is only confirmed with the button, which reads "Nothing" with no square marked and "Show me" otherwise; pressing the button ends the phase, and a missed square fails it; every phase is scored exactly once; a phase that has ended cannot be changed; an ordinary move has two phases and a castling move four, each with its own piece and answer; the next move plays after the last phase of a move; the game is finished after the last phase of the last move; and rewind keeps the marks and switches off when a phase ends and on a new move.
 - Work through the same made-up games in spot the hanging piece, and confirm each rule: every move has one phase, castling as well; a hanging piece of either side is in the answer; marking nothing is right when nothing hangs; the next move plays after each phase; and the game is finished after the last move.
 - In both marking modes, confirm moving on by itself: a phase that is exactly right moves on after the pause and not before, to the next phase or the next move; a phase ended with a square missed or wrong never does; in square control a set completed after a wrong square moves on as corrected although the phase failed, and a "Nothing" that is right moves on as well; in spot the hanging piece marks that match the answer do nothing until they are submitted, and a wrong square is not shown before then; rewind during the pause cancels it for good; the button during the pause moves on at once and only once; and the end of a game waits for the button.
+- Choose practice games from made-up ID lists, and confirm each rule: only games unseen in that mode are chosen; the current game is never chosen again; a game seen in one mode is still chosen in the other; and when a mode runs out, only that mode's seen games are reset.
+- Resume made-up practice games in the marking logic at a saved move and phase, and confirm each rule: it starts at that move and phase; a first phase plays the move after the starting position, and a later phase shows the position after the move at once; a castling move resumes at the rook's lost and controlled phases; and the saved results of the move's earlier phases are shown and counted as they were. Both tests added in build step 27.
 - Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
 - Resize the board with a made-up settings store, and confirm each rule: the size is saved once when the resize ends and not during the drag; it is still there for the next puzzle without the settings being read again; a saved size is used on the next visit; and a resize made before the settings arrive is not overwritten by them.
 - Open the four play screens in a headless browser with made-up games and puzzles, at 360×640, 375×550, 390×660 and 412×780, and confirm in each state (playing, after a wrong guess, looking back at a move, the end of a game, a failed puzzle with Show solution, the solution shown, a wrong square shown in square control, the feedback and rewind of both marking modes) that the page does not scroll in either direction, that the board is the full width at 360×640, 390×660 and 412×780, and that it is at least 280 pixels at 375×550.
@@ -643,7 +653,7 @@ The build is 34 steps in six stages. Each step is one request to an agent, with 
 | 30. Progress page | Stats for the four modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
 | 32. Installable | The web app manifest and icons | The site installs to a phone's home screen, and the iPhone carry-over question is answered by a test |
-| 33. Remaining pages and states | The home page with the four modes, in an order decided in this step (plain links to `/guess`, `/tactics`, `/squares/play` and `/hanging/play` stand in until then); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
+| 33. Remaining pages and states | The home page with the four modes, in an order decided in this step (plain links to `/guess`, `/tactics`, `/squares` and `/hanging` stand in until then); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
 ## Open decisions and later features
@@ -1033,7 +1043,7 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | `/guess/{master}` | Game list for one master, by slug |
 | `/guess/{master}/random` | Redirects to a random game by that master |
 | `/guess/{master}/{game}` | Play a master game |
-| `/squares` | Square control landing page: the two phase percentages and a Start or Resume button |
+| `/squares` | Square control landing page: the two phase percentages (from step 28) and a Start or Resume button |
 | `/squares/play` | The square-control exercise |
 | `/hanging` | Spot the hanging piece landing page: the percentage and a Start or Resume button |
 | `/hanging/play` | The spot the hanging piece exercise |
@@ -1213,7 +1223,14 @@ type MasterGameRecord = {
   current: { guesses: Guess[]; startedAt: string; updatedAt: string } | null
 }
 
-type SquareSession = { gameId: number; ply: number; phase: SquarePhase; rook: boolean; updatedAt: string }
+type SquareSession = {
+  gameId: number
+  ply: number
+  phase: SquarePhase
+  rook: boolean
+  results: boolean[] // how the move's earlier phases scored, in order
+  updatedAt: string
+}
 
 type SquareSeen = { gameId: number; status: 'finished' | 'abandoned'; at: string }
 
@@ -1243,19 +1260,22 @@ type TacticsTallies = Record<PieceType, Tally>
 - `ply` is the move being worked on, and `phase` is the next phase to submit.
 - `rook` is true only on a castling move, while the next phase to submit is the rook's lost or controlled phase. With it, `phase` tells the four phases of a castling move apart.
 - A phase is added to the tallies at the moment it is submitted, under the type of piece that moved. On a castling move the king's lost and controlled phases are added under the king, and the rook's under the rook. Resuming continues at the exact phase, so nothing is counted twice.
+- `results` holds whether each of the move's earlier phases scored, in their order, so the phase tabs show their tick or cross on resuming. It is empty at a move's first phase. Added in build step 27; nothing had been written to the store before then, so the shape changed without a conversion.
 - The session is saved when a phase is submitted, pointing at what comes next. Leaving during the pause after a phase that was exactly right therefore resumes at the next phase or move.
+- The session is first saved when a game is picked, at move 1 and its first phase. When the last phase of a game is submitted, the game is recorded as finished and the session is deleted.
 - Marks that were not submitted are not saved.
 - The percentage shown for a phase is the total across the six piece types.
 - Pressing next game before the end records the game as abandoned.
-- When every practice game is in `squareSeen`, that store is cleared.
+- When every practice game is in `squareSeen`, that store is cleared, without a message.
+- A session whose game no longer exists, or whose `ply`, `phase` and `rook` do not name a phase of that game, is deleted, and a new game is picked.
 
 **Spot the hanging piece**
 
 - The mode's progress is its own. Nothing here reads or writes the three `square` stores, and square control does not touch the three `hanging` stores, so a game seen in one mode is still unseen in the other.
 - `ply` is the move being worked on. Each move has one phase, so the move is all that is needed to resume.
 - The phase is added to the one tally at the moment it is submitted. There is no split by piece.
-- The session, unsubmitted marks, next game and abandoned games work as in square control.
-- When every practice game is in `hangingSeen`, that store is cleared.
+- The session, unsubmitted marks, next game, abandoned games and a session that names no move of its game work as in square control. A move has no earlier phases, so the session has no `results`.
+- When every practice game is in `hangingSeen`, that store is cleared, without a message.
 
 **Tactics**
 

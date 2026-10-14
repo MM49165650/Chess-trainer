@@ -47,6 +47,8 @@ export type SquareSession = {
     phase: SquarePhase;
     /** True on a castling move while the next phase is one of the rook's. */
     rook: boolean;
+    /** How the move's earlier phases scored, in their order. */
+    results: boolean[];
     updatedAt: string;
 };
 
