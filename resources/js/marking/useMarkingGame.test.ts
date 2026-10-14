@@ -177,6 +177,7 @@ test('square control: marks that match the answer end the phase at once, in any 
 
     expect(game.markPhase.value).toBeNull();
     expect(game.exact.value).toBe(true);
+    expect(game.corrected.value).toBe(false);
     expect(game.feedback.value).toEqual({
         correct: ['d3', 'f3'],
         missed: [],
@@ -218,6 +219,7 @@ test('square control: a wrong square is shown at once, and the phase stays open'
 
     expect(game.wrongMarks.value).toEqual([]);
     expect(game.exact.value).toBe(false);
+    expect(game.corrected.value).toBe(false);
     expect(game.feedback.value).toEqual({
         correct: ['d3'],
         missed: ['f3'],
@@ -243,8 +245,10 @@ test('square control: a wrong square taken off again still fails the phase, whic
     game.marks.value = ['d3'];
     game.marks.value = ['d3', 'f3'];
 
-    // The selection is exactly right, and the phase has failed all the same.
+    // The selection is exactly right, and the phase has failed all the
+    // same: it is shown as corrected, with a cross.
     expect(game.exact.value).toBe(true);
+    expect(game.corrected.value).toBe(true);
     expect(game.moveResults.value).toEqual([false]);
     expect(game.advancePending.value).toBe(true);
 
@@ -256,6 +260,7 @@ test('square control: a wrong square taken off again still fails the phase, whic
     // The next phase starts clean, and the failed one was scored once.
     game.marks.value = ['d5', 'f5'];
 
+    expect(game.corrected.value).toBe(false);
     expect(game.moveResults.value).toEqual([false, true]);
     expect(reported).toEqual([false, true]);
 });
@@ -305,6 +310,7 @@ test('square control: a square marked where the answer is empty fails the phase,
     game.submit();
 
     expect(game.exact.value).toBe(true);
+    expect(game.corrected.value).toBe(true);
     expect(game.results.value.at(-1)?.exact).toBe(false);
 });
 

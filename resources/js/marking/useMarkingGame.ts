@@ -157,6 +157,15 @@ export function useMarkingGame(
               feedback.value.wrong.length === 0,
     );
 
+    /**
+     * True when the phase ended on a selection that was exactly right but
+     * failed all the same, because a wrong square had been marked on the
+     * way. It is then shown as corrected, not as exactly right.
+     */
+    const corrected = computed(
+        () => exact.value === true && results.value.at(-1)?.exact === false,
+    );
+
     /** How the phases of this move scored so far, in their order. */
     const moveResults = computed(() =>
         results.value
@@ -311,6 +320,7 @@ export function useMarkingGame(
         canMark,
         feedback,
         exact,
+        corrected,
         moveResults,
         results,
         rewound,

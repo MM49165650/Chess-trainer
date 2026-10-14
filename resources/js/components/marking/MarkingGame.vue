@@ -52,6 +52,7 @@ const {
     markPhase,
     feedback,
     exact,
+    corrected,
     moveResults,
     rewound,
     isLastMove,
@@ -81,6 +82,18 @@ const verdict = computed(() =>
         ? null
         : verdictOf(feedback.value, step.value.phase),
 );
+
+/**
+ * How the phase came out, in a word or two. "Exactly right" is only for a
+ * phase in which no wrong square was marked at any point.
+ */
+const outcome = computed(() => {
+    if (exact.value !== true) {
+        return 'Not quite';
+    }
+
+    return corrected.value ? 'Corrected' : 'Exactly right';
+});
 
 /** The outcome is the headline unless the earlier position is on show. */
 const showsOutcome = computed(() => feedback.value !== null && !rewound.value);
@@ -128,11 +141,13 @@ function onMain(): void {
         <p
             v-if="showsOutcome && step !== null"
             class="label-caps"
-            :class="exact ? 'text-accent' : 'text-feedback-wrong-text'"
+            :class="
+                exact && !corrected ? 'text-accent' : 'text-feedback-wrong-text'
+            "
         >
             {{ finished ? 'End of the game' : `Move ${String(moveNumber)}` }}
             · {{ phaseName(step, steps) }} ·
-            {{ exact ? 'Exactly right' : 'Not quite' }}
+            {{ outcome }}
         </p>
         <p v-else-if="!started" class="label-caps text-muted">
             The starting position
