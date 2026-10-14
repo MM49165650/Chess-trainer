@@ -23,18 +23,22 @@ import type {
 } from '@/generated/data';
 import { chooseGame } from '@/marking/choose';
 import type { MarkingMode } from '@/marking/phases';
+import { emptyScores, withPhase, type RunningScore } from '@/marking/tallies';
 import {
     startOf,
     type GameStart,
+    type PhaseResult,
     type ResumePoint,
 } from '@/marking/useMarkingGame';
 import { storageAvailable } from '@/storage/db';
 import {
     clearSeenGames,
     deleteSession,
+    readScores,
     readSeenGames,
     readSession,
     recordGameSeen,
+    recordPhase,
     saveSession,
 } from '@/storage/marking';
 
@@ -68,6 +72,12 @@ const start = ref<GameStart | undefined>(undefined);
 
 /** True once the last phase of the game on the board has ended. */
 const done = ref(false);
+
+/** The mode's running percentages, counted as each phase ends. */
+const scores = ref<RunningScore[]>(emptyScores(props.mode));
+
+/** The saves made as phases end, chained so each waits for the one before. */
+let saving: Promise<unknown> = Promise.resolve();
 
 const loading = ref(false);
 const failure = ref(false);
@@ -235,6 +245,9 @@ async function nextGame(): Promise<void> {
     await run(async () => {
         const current = game.value;
 
+        // A phase that has just ended is saved before the game is left.
+        await saving;
+
         if (current !== null && !done.value) {
             await recordGameSeen(props.mode, current.id, 'abandoned');
         }
@@ -244,30 +257,31 @@ async function nextGame(): Promise<void> {
 }
 
 /**
- * Saves where the game stands after each phase. When the last phase of the
- * game has ended, the game is recorded as finished and the session ends.
+ * Counts each phase as it ends and saves where the game stands, together.
+ * When the last phase of the game has ended, the game is recorded as
+ * finished and the session ends. The saves are made one after another.
  */
-function saveProgress(next: ResumePoint | null): void {
+function saveProgress(ended: PhaseResult, next: ResumePoint | null): void {
     const current = game.value;
 
     if (current === null) {
         return;
     }
 
+    scores.value = withPhase(scores.value, ended.phase, ended.exact);
+
     if (next === null) {
         done.value = true;
-        void recordGameSeen(props.mode, current.id, 'finished');
-
-        return;
     }
 
-    void saveSession(props.mode, {
-        gameId: current.id,
-        ply: next.ply,
-        phase: next.phase,
-        rook: next.rook,
-        results: [...next.results],
-    });
+    saving = saving.then(() =>
+        recordPhase(
+            props.mode,
+            current.id,
+            ended,
+            next === null ? null : { ...next, results: [...next.results] },
+        ),
+    );
 }
 
 function retry(): void {
@@ -275,7 +289,13 @@ function retry(): void {
 }
 
 onMounted(async () => {
-    canSave.value = await storageAvailable();
+    const [available, stored] = await Promise.all([
+        storageAvailable(),
+        readScores(props.mode),
+    ]);
+
+    canSave.value = available;
+    scores.value = stored;
     retry();
 });
 </script>
@@ -342,6 +362,7 @@ onMounted(async () => {
             :mode="mode"
             :game="game"
             :start="start"
+            :scores="scores"
             @progress="saveProgress"
             @next="nextGame"
         />
