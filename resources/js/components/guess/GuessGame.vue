@@ -3,7 +3,7 @@
 // the result of the last guess, and the running score in the bottom bar. The
 // moves already played can be stepped through, and a finished game shared.
 
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { colorOfPly } from '@/chess/conventions';
 import { isCapture, isCastling } from '@/chess/game';
 import ChessBoard from '@/components/board/ChessBoard.vue';
@@ -17,14 +17,11 @@ import AppSlider from '@/components/ui/AppSlider.vue';
 import BottomBar from '@/components/ui/BottomBar.vue';
 import SlideUpPanel from '@/components/ui/SlideUpPanel.vue';
 import type { MasterGameData } from '@/generated/data';
-import {
-    REPLY_DELAY_DEFAULT,
-    REPLY_DELAY_MAX,
-    REPLY_DELAY_MIN,
-    useGuessGame,
-} from '@/guess/useGuessGame';
+import { useGuessGame } from '@/guess/useGuessGame';
 import { shareSummary } from '@/guess/shareSummary';
+import { changeSetting, useSettings } from '@/settings/useSettings';
 import { SITE_NAME } from '@/site';
+import { OPPONENT_DELAY_MAX, OPPONENT_DELAY_MIN } from '@/storage/settings';
 import type { MasterGameRecord } from '@/storage/types';
 
 const props = defineProps<{
@@ -37,8 +34,21 @@ const props = defineProps<{
     canSave: boolean;
 }>();
 
-// Kept in memory only, until the settings arrive.
-const delaySeconds = ref(REPLY_DELAY_DEFAULT);
+// The opponent move delay is one of the settings. The slider here changes it
+// as it moves, and saves it when it is let go.
+const settings = useSettings();
+const delaySeconds = ref(settings.opponentDelaySeconds);
+
+watch(
+    () => settings.opponentDelaySeconds,
+    (seconds) => {
+        delaySeconds.value = seconds;
+    },
+);
+
+function saveDelay(): void {
+    void changeSetting('opponentDelaySeconds', delaySeconds.value);
+}
 
 // The size outlasts this game: the next one opens at the same size.
 const { boardSize, saveBoardSize } = useBoardSize();
@@ -586,8 +596,9 @@ const moveNumber = computed(() =>
                 label="Reply delay"
                 unit="s"
                 unit-name="second"
-                :min="REPLY_DELAY_MIN"
-                :max="REPLY_DELAY_MAX"
+                :min="OPPONENT_DELAY_MIN"
+                :max="OPPONENT_DELAY_MAX"
+                @change="saveDelay"
             />
         </div>
         <div class="flex pt-5">

@@ -13,6 +13,7 @@ use App\Http\Controllers\Guess\RandomMasterGameController;
 use App\Http\Controllers\Hanging\PlayHangingController;
 use App\Http\Controllers\Hanging\ShowHangingController;
 use App\Http\Controllers\ShowProgressController;
+use App\Http\Controllers\ShowSettingsController;
 use App\Http\Controllers\ShowSitemapController;
 use App\Http\Controllers\Squares\PlaySquaresController;
 use App\Http\Controllers\Squares\ShowSquaresController;
@@ -63,6 +64,8 @@ Route::get('/tactics/{piece}', PlayTacticsController::class)
     ->name('tactics.play');
 
 Route::get('/progress', ShowProgressController::class)->name('progress');
+
+Route::get('/settings', ShowSettingsController::class)->name('settings');
 
 // Development-only pages. They are never registered on the public site, and
 // a production build leaves their code out as well.

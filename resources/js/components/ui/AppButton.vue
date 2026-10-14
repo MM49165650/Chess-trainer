@@ -93,8 +93,8 @@ withDefaults(
 }
 
 .app-button.is-danger {
-    border-color: var(--color-feedback-wrong-text);
-    color: var(--color-feedback-wrong-text);
+    border-color: var(--color-destructive);
+    color: var(--color-destructive);
 }
 
 .app-button.is-quiet {

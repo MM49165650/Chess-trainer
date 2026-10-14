@@ -20,8 +20,8 @@ import type {
     PuzzleIdListData,
     PuzzleListData,
 } from '@/generated/data';
+import { changeSetting, useSettings } from '@/settings/useSettings';
 import { storageAvailable } from '@/storage/db';
-import { readSettings, saveSettings } from '@/storage/settings';
 import {
     clearPuzzlesSeen,
     readPuzzlesSeen,
@@ -75,14 +75,11 @@ const notSaved = ref(false);
  * Whether a solved puzzle moves on to the next by itself. It is one of the
  * user's settings, so it holds in every category. Off unless chosen.
  */
-const autoNext = ref(false);
-let autoNextTouched = false;
+const settings = useSettings();
+const autoNext = computed(() => settings.tacticsAutoNext);
 
 function toggleAutoNext(): void {
-    autoNextTouched = true;
-    autoNext.value = !autoNext.value;
-
-    void saveSettings({ tacticsAutoNext: autoNext.value }).then((done) => {
+    void changeSetting('tacticsAutoNext', !autoNext.value).then((done) => {
         if (!done) {
             notSaved.value = true;
         }
@@ -224,15 +221,8 @@ async function startAgain(): Promise<void> {
     await load();
 }
 
-onMounted(async () => {
+onMounted(() => {
     void load();
-
-    // Unless the user has pressed the toggle before this arrives.
-    const saved = (await readSettings()).tacticsAutoNext;
-
-    if (saved !== undefined && !autoNextTouched) {
-        autoNext.value = saved;
-    }
 });
 </script>
 

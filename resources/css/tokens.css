@@ -52,58 +52,18 @@
     /* The page behind an open slide-up panel. */
     --color-scrim: color-mix(in srgb, var(--color-ink) 40%, transparent);
 
-    /*
-     * Square control, drawn on the page: the phase indicator and the legend.
-     * These change with the mode, like the rest of the page.
-     */
-    --color-mark-lost: #a66a0c;
-    --color-mark-controlled: #2b66a6;
-    --color-mark-hanging: #a03a78;
-    --color-feedback-correct: #2b66a6;
-    --color-feedback-wrong: #be3232;
-
-    /* The wrong colour as text. The one above is for fills and borders. */
-    --color-feedback-wrong-text: #a32a2a;
+    /* A destructive action, such as reset progress. */
+    --color-destructive: #a32a2a;
 
     /*
-     * Everything drawn on the board. The board looks the same in light and
+     * Everything drawn on the board. Every board looks the same in light and
      * dark mode, so these keep one value in both.
      */
     --color-board-last-move-light: #e3dc9a;
     --color-board-last-move-dark: #a9b36a;
 
-    --color-board-mark-lost: #a66a0c;
-    --color-board-mark-controlled: #2b66a6;
-    --color-board-mark-hanging: #a03a78;
-
-    --color-board-feedback-correct: #2b66a6;
-    --color-board-feedback-wrong: #be3232;
-    --color-board-feedback-wrong-border: #8a1c1c;
-
     /* The letter on a square that names its phase, on a dark chip. */
     --color-board-mark-label: #fbf8ef;
-
-    /* A marked square's border is a darker shade of its fill colour. */
-    --color-board-mark-lost-border: color-mix(
-        in srgb,
-        var(--color-board-mark-lost) 50%,
-        black
-    );
-    --color-board-mark-controlled-border: color-mix(
-        in srgb,
-        var(--color-board-mark-controlled) 50%,
-        black
-    );
-    --color-board-mark-hanging-border: color-mix(
-        in srgb,
-        var(--color-board-mark-hanging) 50%,
-        black
-    );
-    --color-board-feedback-correct-border: color-mix(
-        in srgb,
-        var(--color-board-feedback-correct) 50%,
-        black
-    );
 
     /* Headings are set in the serif, everything else in the sans. */
     --font-*: initial;
@@ -163,12 +123,123 @@
 
         --color-on-accent: var(--color-page);
 
+        --color-destructive: #e58a8a;
+    }
+}
+
+/*
+ * The marking colours of square control and spot the hanging piece, one block
+ * per marking palette. A palette sets every one of them: the three phases and
+ * correct, missed and wrong, on the board and on the page. The root element
+ * carries the palette chosen in the settings; a preview of another palette
+ * carries its own attribute.
+ *
+ * On the page, for the phase indicator and the legend, they change with the
+ * mode like the rest of the page. On the board they keep one value in both
+ * modes, because every board looks the same in light and dark mode.
+ */
+
+/* The standard palette. */
+:root,
+[data-palette='standard'] {
+    --color-mark-lost: #a66a0c;
+    --color-mark-controlled: #2b66a6;
+    --color-mark-hanging: #a03a78;
+    --color-feedback-correct: #2b66a6;
+    --color-feedback-missed: #2b66a6;
+    --color-feedback-wrong: #be3232;
+
+    /* The wrong colour as text. The one above is for fills and borders. */
+    --color-feedback-wrong-text: #a32a2a;
+
+    --color-board-mark-lost: #a66a0c;
+    --color-board-mark-controlled: #2b66a6;
+    --color-board-mark-hanging: #a03a78;
+    --color-board-feedback-correct: #2b66a6;
+    --color-board-feedback-missed: #2b66a6;
+    --color-board-feedback-wrong: #be3232;
+    --color-board-feedback-wrong-border: #8a1c1c;
+
+    @variant dark {
         --color-mark-lost: #e3a64a;
         --color-mark-controlled: #8ec0ee;
         --color-mark-hanging: #d98bbb;
-
         --color-feedback-correct: #8ec0ee;
+        --color-feedback-missed: #8ec0ee;
         --color-feedback-wrong: #e58a8a;
         --color-feedback-wrong-text: #e58a8a;
     }
+}
+
+/*
+ * The colour-blind friendly palette, after Okabe and Ito. Lost is a light
+ * orange and wrong a very dark red, so the two stay apart by lightness as
+ * well as hue: with red-green colour blindness the standard amber and red are
+ * hard to tell apart, and in square control they are on the board together.
+ * Checked on every board, under simulated protan, deutan and tritan vision,
+ * in build step 31.
+ */
+[data-palette='colour-blind'] {
+    --color-mark-lost: #b37700;
+    --color-mark-controlled: #0072b2;
+    --color-mark-hanging: #7b3294;
+    --color-feedback-correct: #0072b2;
+    --color-feedback-missed: #0072b2;
+    --color-feedback-wrong: #5c0a0a;
+    --color-feedback-wrong-text: #5c0a0a;
+
+    --color-board-mark-lost: #e69f00;
+    --color-board-mark-controlled: #0072b2;
+    --color-board-mark-hanging: #7b3294;
+    --color-board-feedback-correct: #0072b2;
+    --color-board-feedback-missed: #0072b2;
+    --color-board-feedback-wrong: #5c0a0a;
+    --color-board-feedback-wrong-border: color-mix(
+        in srgb,
+        var(--color-board-feedback-wrong) 50%,
+        black
+    );
+
+    @variant dark {
+        --color-mark-lost: #e69f00;
+        --color-mark-controlled: #56b4e9;
+        --color-mark-hanging: #c38ad6;
+        --color-feedback-correct: #56b4e9;
+        --color-feedback-missed: #56b4e9;
+        --color-feedback-wrong: #f2c4c4;
+        --color-feedback-wrong-text: #f2c4c4;
+    }
+}
+
+/*
+ * A marked square's border is a darker shade of its fill colour, worked out
+ * wherever a palette is set so that it follows that palette.
+ */
+:root,
+[data-palette] {
+    --color-board-mark-lost-border: color-mix(
+        in srgb,
+        var(--color-board-mark-lost) 50%,
+        black
+    );
+    --color-board-mark-controlled-border: color-mix(
+        in srgb,
+        var(--color-board-mark-controlled) 50%,
+        black
+    );
+    --color-board-mark-hanging-border: color-mix(
+        in srgb,
+        var(--color-board-mark-hanging) 50%,
+        black
+    );
+    --color-board-feedback-correct-border: color-mix(
+        in srgb,
+        var(--color-board-feedback-correct) 50%,
+        black
+    );
+    --color-board-feedback-missed-border: color-mix(
+        in srgb,
+        var(--color-board-feedback-missed) 50%,
+        black
+    );
 }

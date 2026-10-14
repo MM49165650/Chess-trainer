@@ -5,6 +5,7 @@ import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHa
 import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSquaresController';
 import ListTacticsCategoriesController from '@/actions/App/Http/Controllers/Tactics/ListTacticsCategoriesController';
 import ShowProgressController from '@/actions/App/Http/Controllers/ShowProgressController';
+import ShowSettingsController from '@/actions/App/Http/Controllers/ShowSettingsController';
 import PageHead from '@/components/PageHead.vue';
 import type { PageMetaData } from '@/generated/data';
 
@@ -48,6 +49,11 @@ defineProps<{
         <p class="mt-2">
             <Link :href="ShowProgressController.url()" class="underline">
                 Progress
+            </Link>
+        </p>
+        <p class="mt-2">
+            <Link :href="ShowSettingsController.url()" class="underline">
+                Settings
             </Link>
         </p>
     </main>

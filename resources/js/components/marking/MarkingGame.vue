@@ -163,7 +163,9 @@ function onMain(): void {
             v-if="showsOutcome && step !== null"
             class="label-caps"
             :class="
-                exact && !corrected ? 'text-accent' : 'text-feedback-wrong-text'
+                exact && !corrected
+                    ? 'text-accent'
+                    : 'text-(--color-feedback-wrong-text)'
             "
         >
             {{ finished ? 'End of the game' : `Move ${String(moveNumber)}` }}
@@ -312,6 +314,7 @@ function onMain(): void {
 
 .swatch.missed {
     border-style: dashed;
+    border-color: var(--color-feedback-missed);
 }
 
 .swatch.wrong {

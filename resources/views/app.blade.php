@@ -5,6 +5,19 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="color-scheme" content="light dark">
 
+        {{-- The appearance setting, applied before anything is drawn so a reload
+             does not flash the wrong mode. Settings live in IndexedDB, which
+             cannot be read in time; this is a copy of that one choice, kept by
+             resources/js/settings/useSettings.ts under the same key. --}}
+        <script>
+            try {
+                var appearance = localStorage.getItem('chess-training:appearance');
+                if (appearance === 'light' || appearance === 'dark') {
+                    document.documentElement.dataset.appearance = appearance;
+                }
+            } catch (error) {}
+        </script>
+
         {{-- Development-only pages live in resources/js/dev, outside the pages folder. --}}
         @php($pageFolder = str_starts_with($page['component'], 'dev/') ? 'resources/js' : 'resources/js/pages')
         @vite(['resources/css/app.css', 'resources/js/app.ts', "{$pageFolder}/{$page['component']}.vue"])

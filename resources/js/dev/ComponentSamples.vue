@@ -77,7 +77,7 @@ const lostMarks = ref<Square[]>(['e2', 'f3', 'h3']);
 const controlledMarks = ref<Square[]>(['d4', 'e5', 'g5', 'h4', 'g1', 'd2']);
 const hangingMarks = ref<Square[]>(['e5', 'e4']);
 
-// Stands in for the appearance setting, which arrives with the settings page.
+// Switches the mode for this page only, without changing the setting.
 watch(appearance, (chosen) => {
     if (chosen === 'system') {
         delete document.documentElement.dataset.appearance;
