@@ -1,5 +1,6 @@
 <script setup lang="ts">
-// A slider for a small whole number, with the chosen value shown beside it.
+// A slider for a small whole number, with the chosen value shown beside it,
+// unless the page shows the value itself.
 // It is the browser's own range input, so the mouse, touch and the arrow
 // keys all work as they do everywhere else.
 
@@ -10,10 +11,15 @@ const props = defineProps<{
     label: string;
     min: number;
     max: number;
-    /** Written after the number, as in "3 s". Without it the number stands alone. */
-    unit?: string;
+    /** Written after the number, as in "3 s". */
+    unit: string;
     /** The unit in full and for one, as in "second", for screen readers. */
     unitName: string;
+    /**
+     * The value in words, as in "Off" or "3 moves", when the page shows it
+     * itself. The number is then not shown here, and this is read out.
+     */
+    valueText?: string;
 }>();
 
 const value = defineModel<number>({ required: true });
@@ -32,6 +38,10 @@ const filled = computed(() => {
 
 /** The value as it is read out: "1 second", "3 seconds". */
 const spoken = computed(() => {
+    if (props.valueText !== undefined) {
+        return props.valueText;
+    }
+
     const plural = value.value === 1 ? '' : 's';
 
     return `${String(value.value)} ${props.unitName}${plural}`;
@@ -53,10 +63,11 @@ const spoken = computed(() => {
             @change="emit('change')"
         />
         <output
+            v-if="valueText === undefined"
             class="w-10 flex-none text-right font-serif text-title tabular-nums"
             aria-hidden="true"
         >
-            {{ unit === undefined ? value : `${String(value)} ${unit}` }}
+            {{ value }} {{ unit }}
         </output>
     </div>
 </template>
