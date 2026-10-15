@@ -12,6 +12,8 @@ The site is being built step by step. So far there is only a placeholder home pa
 - [`docs/requirements.md`](docs/requirements.md): the product and technical requirements, including the build order.
 - [`docs/design/`](docs/design/): mockups of the chosen visual direction.
 - [`AGENTS.md`](AGENTS.md): working rules for AI coding agents.
+- [`docs/deployment.md`](docs/deployment.md): how the site is deployed to the server, step by step.
+- [`docs/deployment.md`](docs/deployment.md): how the site is deployed to the server, step by step.
 
 ## Run locally
 

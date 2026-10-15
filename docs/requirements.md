@@ -727,7 +727,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 
 1. Step 32, installable.
 2. Step 33, the remaining pages and states. After it, on 14 October 2026, the game length, skip the opening and start a new game options were added to the two marking modes' landing pages, outside the numbered steps.
-3. Step 4, the first deployment.
+3. Step 4, the first deployment, to `chess.asanfa.com`. The intermediate files of the full imports reach the server by upload through Hestia's file manager, as `docs/deployment.md` describes.
 4. The full imports on the server: the master games loaded locally in step 18, and steps 23 and 29.
 5. The iPhone carry-over test, listed in Stage 6.
 6. Step 34, the launch check.
@@ -739,7 +739,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 1. Repository | The starter kit with Vue, Inertia and TypeScript, with its login and registration pages removed; Docker for PHP, Node and Postgres; the GPL-3.0 licence file; a public GitHub repository with secret scanning | The home page loads in Docker from a fresh clone |
 | 2. Check command and CI | Pint, Larastan, Rector, Pest architecture tests, the TypeScript checker, ESLint, Vitest and the licence check, behind one command; CI and a pre-commit hook that run it | CI passes on the empty app and fails on a deliberate violation of each tool |
 | 3. Agent setup | This document saved as `docs/requirements.md`; `AGENTS.md` written from Appendix H; Laravel Boost installed | An agent given a trivial task reads both files and runs the check command |
-| 4. First deployment | Done after step 33, once the build is done. The Hetzner server with Docker; Cloudflare in front with trusted forwarding headers; debug mode off; database backups; the site on a subdomain of a domain the owner already has, given at this step | A merge to the main branch puts the site on the public address |
+| 4. First deployment | Done after step 33, once the build is done. Settled on 14 October 2026; the runbook is `docs/deployment.md`. The owner's Hetzner server runs Ubuntu 24.04 managed by HestiaCP 1.10.2, whose nginx, in front of Apache, serves other sites, so nothing else on it changes: Docker from Docker's apt repository runs the app (Apache with PHP 8.4 and the built assets, `Dockerfile.production`) and Postgres 18 (no published port, data in a named volume) from `compose.production.yaml`, with the app published on `127.0.0.1:8012` only; secrets in a server-only `.env`; debug mode off. Hestia's nginx proxies `chess.asanfa.com` to it through the custom proxy template `asanfa` (`deploy/hestia/`), keeping Hestia's Let's Encrypt certificate and renewal. Cloudflare is in front, proxied, with Full (strict) encryption for the subdomain. Laravel trusts only the gateway of the app's fixed Docker network, and only its `X-Forwarded-For` and `X-Forwarded-Proto`; visitors' real addresses come from Hestia's nginx, which takes them from Cloudflare's `CF-Connecting-IP` through its `cloudflare.inc`. A Hestia firewall reload rebuilds only the `INPUT` chain and leaves Docker's rules alone, so no firewall hook is needed. A nightly `pg_dump` to `chess-trainer-backups` in the Hestia user's home, keeping the last 14, and before every deploy. `deploy/deploy.sh`, run by hand on the server, pulls `main`, builds, backs up, migrates and swaps the container. Automatic deploys on merge are a follow-up | The site answers on `https://chess.asanfa.com`, deployed from the main branch by `deploy/deploy.sh`, and a firewall reload in the Hestia panel leaves it running |
 
 **Stage 2: Chess core**
 
@@ -810,7 +810,7 @@ One decision is still open: whether progress carries over after installing on an
 | Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
 | Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone, the iPhone test in the build order |
-| Name and domain | Whole site | Decided on 14 October 2026: the site is called Asanfa Chess Trainer, Asanfa for short, and lives on a subdomain of a domain the owner already has, given at the first deployment |
+| Name and domain | Whole site | Decided on 14 October 2026: the site is called Asanfa Chess Trainer, Asanfa for short, and lives on a subdomain of a domain the owner already has, given at the first deployment: `chess.asanfa.com` |
 
 **Later features**
 

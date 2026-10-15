@@ -1,0 +1,25 @@
+# What the production image is built from: the app's source, without
+# secrets, data, dependencies installed on the host or generated files.
+
+.git
+.github
+.githooks
+.claude
+.env
+.env.*
+data
+docs
+tests
+node_modules
+vendor
+storage
+public/build
+public/hot
+bootstrap/cache/*.php
+resources/js/actions
+resources/js/routes
+resources/js/wayfinder
+*.sql
+*.sql.gz
+*.dump
+*.jsonl
