@@ -19,6 +19,7 @@ import SlideUpPanel from '@/components/ui/SlideUpPanel.vue';
 import type { MasterGameData } from '@/generated/data';
 import { useGuessGame } from '@/guess/useGuessGame';
 import { shareSummary } from '@/guess/shareSummary';
+import { pageAddress, type ProblemReport } from '@/report';
 import { changeSetting, useSettings } from '@/settings/useSettings';
 import { SITE_NAME } from '@/site';
 import { OPPONENT_DELAY_MAX, OPPONENT_DELAY_MIN } from '@/storage/settings';
@@ -32,6 +33,11 @@ const props = defineProps<{
     saved: MasterGameRecord | null;
     /** Whether the browser has storage to save progress in. */
     canSave: boolean;
+}>();
+
+const emit = defineEmits<{
+    /** What there is to report as a problem, whenever it changes. */
+    report: [report: ProblemReport | null];
 }>();
 
 // The opponent move delay is one of the settings. The slider here changes it
@@ -267,6 +273,52 @@ const moveNumber = computed(() =>
     resultIsFresh.value && result.value
         ? result.value.number
         : Math.min(guesses.value.length + 1, props.game.guess_count),
+);
+
+/**
+ * What a problem report is about. There is something to report once the
+ * game is over: the move being looked back at, or else the end of the game.
+ */
+const report = computed<ProblemReport | null>(() => {
+    if (status.value !== 'over') {
+        return null;
+    }
+
+    const { game } = props;
+    const players =
+        game.master_color === 'white'
+            ? `${game.master.name} vs. ${game.opponent_name}`
+            : `${game.opponent_name} vs. ${game.master.name}`;
+    const occasion = [game.event, game.year]
+        .filter((part) => part !== null)
+        .join(' ');
+
+    let move = 'the end of the game';
+
+    if (viewed.value !== null) {
+        move =
+            shownPly.value === 0
+                ? 'the starting position'
+                : `${numbered(shownPly.value)} (ply ${String(shownPly.value)})`;
+    }
+
+    return {
+        title: `Guess the move: game ${String(game.id)}, ${move}`,
+        details: [
+            'Mode: guess the move',
+            `Game: ${players}${occasion === '' ? '' : `, ${occasion}`} (ID ${String(game.id)})`,
+            `Link: ${pageAddress()}`,
+            `Move: ${move}`,
+        ],
+    };
+});
+
+watch(
+    report,
+    (now) => {
+        emit('report', now);
+    },
+    { immediate: true },
 );
 </script>
 

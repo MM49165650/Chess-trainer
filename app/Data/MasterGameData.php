@@ -23,6 +23,8 @@ final class MasterGameData extends Data
         #[LiteralTypeScriptType("'white' | 'black'")]
         public string $master_color,
         public string $opponent_name,
+        /** The family name, or null where the source gave none. */
+        public ?string $opponent_short_name,
         public ?int $year,
         public ?string $event,
         public int $ply_count,

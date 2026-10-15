@@ -1,9 +1,11 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import type { DefineComponent } from 'vue';
+import { trackHistory } from './navigation';
 import { applySettingsToPage } from './settings/applyToPage';
 import { SITE_NAME } from './site';
 
 applySettingsToPage();
+trackHistory();
 
 type PageModule = { default: DefineComponent };
 

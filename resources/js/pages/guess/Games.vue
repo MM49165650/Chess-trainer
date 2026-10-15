@@ -19,7 +19,6 @@ import type {
     MasterSummaryData,
     PageMetaData,
 } from '@/generated/data';
-import { rememberGameList } from '@/guess/listReturn';
 import { readMasterGames } from '@/storage/masterGames';
 import type { MasterGameRecord } from '@/storage/types';
 
@@ -157,14 +156,7 @@ watch(panelOpen, (open) => {
     }
 });
 
-watch(
-    () => inertiaPage.url,
-    (url) => {
-        showApplied();
-        rememberGameList(props.master.slug, url);
-    },
-    { immediate: true },
-);
+watch(() => inertiaPage.url, showApplied, { immediate: true });
 
 watch(() => props.games, readRecords);
 onMounted(readRecords);

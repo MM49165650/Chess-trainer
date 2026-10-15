@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // The progress page: the user's stats in the four modes, read from the
-// browser, with the Safari and install notes and reset progress. The modes
-// follow their numbering until step 33 decides the order for this page and
-// the home page.
+// browser, with the Safari note and reset progress. The modes are in the
+// home page's order. The install note is left out until the iPhone test has
+// found how to word it.
 
 import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
@@ -42,14 +42,6 @@ const canSave = ref(true);
  * Other browsers on Apple devices name themselves as well as Safari.
  */
 const inSafari = ref(false);
-
-/**
- * Whether the site is open as an installed app: the display mode from the
- * manifest, or Safari's own flag on an iPhone. The install note is left out
- * then. It is a placeholder until the iPhone test finds whether progress
- * made in Safari carries over to the installed site.
- */
-const installed = ref(true);
 
 function familyName(name: string): string {
     return name.split(' ').at(-1) ?? name;
@@ -117,9 +109,6 @@ onMounted(async () => {
     inSafari.value =
         /Safari\//.test(agent) &&
         !/Chrome|Chromium|CriOS|FxiOS|EdgiOS|Edg\/|OPR|Android/.test(agent);
-    installed.value =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        Reflect.get(navigator, 'standalone') === true;
     canSave.value = await storageAvailable();
     await read();
 });
@@ -162,9 +151,6 @@ onMounted(async () => {
                 Safari deletes a site's saved data after seven days without a
                 visit. Visiting at least once a week keeps your progress.
             </p>
-            <p v-if="!installed" class="text-caption text-muted">
-                [Install note]
-            </p>
         </div>
 
         <!-- Hidden until read, so no figure changes as the page opens. -->
@@ -193,26 +179,6 @@ onMounted(async () => {
                 <p v-else class="mt-2 text-muted">No finished games yet.</p>
             </section>
 
-            <section aria-labelledby="progress-squares" class="px-5 pt-8">
-                <h2 id="progress-squares" class="label-caps text-muted">
-                    Square control
-                </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('squares')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
-                    >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
-            </section>
-
             <section aria-labelledby="progress-tactics" class="px-5 pt-8">
                 <h2 id="progress-tactics" class="label-caps text-muted">
                     Tactics by piece
@@ -236,6 +202,26 @@ onMounted(async () => {
                         </template>
                     </ListRow>
                 </div>
+            </section>
+
+            <section aria-labelledby="progress-squares" class="px-5 pt-8">
+                <h2 id="progress-squares" class="label-caps text-muted">
+                    Square control
+                </h2>
+                <dl class="mt-2 flex">
+                    <div
+                        v-for="score in marking('squares')"
+                        :key="score.phase"
+                        class="flex flex-1 flex-col gap-0.5"
+                    >
+                        <dt class="text-label text-muted">
+                            {{ scoreLabel(score.phase, true) }}
+                        </dt>
+                        <dd class="font-serif text-title tabular-nums">
+                            {{ percentage(score.tally) }}
+                        </dd>
+                    </div>
+                </dl>
             </section>
 
             <section aria-labelledby="progress-hanging" class="px-5 pt-8">

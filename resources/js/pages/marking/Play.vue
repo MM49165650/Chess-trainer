@@ -5,15 +5,16 @@
 // picks a game at random from those the mode has not seen, and fetches it.
 // Each mode keeps its own session and seen games.
 
-import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ListPracticeGameIdsController from '@/actions/App/Http/Controllers/Api/ListPracticeGameIdsController';
 import ShowPracticeGameController from '@/actions/App/Http/Controllers/Api/ShowPracticeGameController';
 import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHangingController';
 import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSquaresController';
 import type { Phase } from '@/chess/conventions';
+import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
+import ReportProblem from '@/components/ReportProblem.vue';
 import MarkingGame from '@/components/marking/MarkingGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type {
@@ -30,6 +31,7 @@ import {
     type PhaseResult,
     type ResumePoint,
 } from '@/marking/useMarkingGame';
+import type { ProblemReport } from '@/report';
 import { storageAvailable } from '@/storage/db';
 import {
     clearSeenGames,
@@ -82,6 +84,9 @@ let saving: Promise<unknown> = Promise.resolve();
 const loading = ref(false);
 const failure = ref(false);
 const canSave = ref(true);
+
+/** What there is to report as a problem: a move, while its feedback shows. */
+const report = ref<ProblemReport | null>(null);
 
 // The board is kept short enough for the whole screen to fit without
 // scrolling: the header, the question and the bottom bar all stay in view.
@@ -305,28 +310,14 @@ onMounted(async () => {
 
     <main ref="page" class="sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 py-1 pr-1 pl-1 short:py-0">
-            <Link
-                :href="landing"
-                class="flex size-11 flex-none items-center justify-center"
-                :aria-label="`Back to ${meta.heading}`"
-            >
-                <svg
-                    aria-hidden="true"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M15 5l-7 7 7 7" />
-                </svg>
-            </Link>
+            <BackArrow :parent="landing" label="Back" />
             <p class="min-w-0 flex-1 truncate font-serif text-title-small">
                 {{ meta.heading }}
             </p>
+            <!-- Only while the game is on the board, as the report is. -->
+            <ReportProblem
+                :report="!failure && !loading && game !== null ? report : null"
+            />
             <AppButton
                 variant="quiet"
                 :disabled="loading || game === null"
@@ -365,6 +356,7 @@ onMounted(async () => {
             :scores="scores"
             @progress="saveProgress"
             @next="nextGame"
+            @report="(now) => (report = now)"
         />
 
         <div

@@ -31,7 +31,7 @@ final class PageMetaData extends Data
     {
         return new self(
             title: '',
-            description: 'Free, open source chess training in four modes: guess the move, square control, spot the hanging piece and tactics by piece.',
+            description: "Free chess training: guess masters' moves, tactics by piece, square control and spotting hanging pieces.",
             heading: Config::string('app.name'),
         );
     }
@@ -149,6 +149,33 @@ final class PageMetaData extends Data
             title: 'Settings',
             description: 'Choose the look of the board and pieces, move input and marking colours. Saved only in this browser.',
             heading: 'Settings',
+        );
+    }
+
+    public static function about(): self
+    {
+        return new self(
+            title: 'About',
+            description: 'A free chess trainer made for friends: what it is, and what each of its four modes is for.',
+            heading: 'About',
+        );
+    }
+
+    public static function credits(): self
+    {
+        return new self(
+            title: 'Credits',
+            description: 'The boards, piece sets, board code and game data the site uses, with their authors and licences.',
+            heading: 'Credits',
+        );
+    }
+
+    public static function privacy(): self
+    {
+        return new self(
+            title: 'Privacy',
+            description: 'No accounts and no cookies. Your progress stays in this browser.',
+            heading: 'Privacy',
         );
     }
 

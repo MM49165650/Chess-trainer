@@ -4,3 +4,6 @@ export const SITE_NAME =
 
 /** The short name, shown in the page header and under the installed icon. */
 export const SITE_SHORT_NAME = 'Asanfa';
+
+/** The public repository: the source code, and where problems are reported. */
+export const SOURCE_CODE_URL = 'https://github.com/MM49165650/Chess-trainer';

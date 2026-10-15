@@ -4,14 +4,15 @@
 // leaves out the puzzles already seen and fetches the rest a few at a time.
 // Each result is saved, so no puzzle repeats until the category runs out.
 
-import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ListPuzzleIdsController from '@/actions/App/Http/Controllers/Api/ListPuzzleIdsController';
 import ListPuzzlesController from '@/actions/App/Http/Controllers/Api/ListPuzzlesController';
 import ListTacticsCategoriesController from '@/actions/App/Http/Controllers/Tactics/ListTacticsCategoriesController';
 import { PIECE_TYPES } from '@/chess/conventions';
+import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
+import ReportProblem from '@/components/ReportProblem.vue';
 import TacticsPuzzle from '@/components/tactics/TacticsPuzzle.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type {
@@ -20,6 +21,7 @@ import type {
     PuzzleIdListData,
     PuzzleListData,
 } from '@/generated/data';
+import { pageAddress, type ProblemReport } from '@/report';
 import { changeSetting, useSettings } from '@/settings/useSettings';
 import { storageAvailable } from '@/storage/db';
 import {
@@ -185,9 +187,32 @@ async function load(): Promise<void> {
     }
 }
 
+/** The puzzle on the board once its result is decided, or null before. */
+const decidedId = ref<number | null>(null);
+
+/** What there is to report as a problem: the puzzle, once it is decided. */
+const report = computed<ProblemReport | null>(() => {
+    const puzzle = current.value;
+
+    if (puzzle === null || puzzle.id !== decidedId.value) {
+        return null;
+    }
+
+    return {
+        title: `Tactics: puzzle ${String(puzzle.id)}`,
+        details: [
+            'Mode: tactics by piece',
+            `Puzzle: ${String(puzzle.id)}, ${puzzle.piece}, rated ${String(puzzle.rating)}`,
+            `Lichess: https://lichess.org/training/${puzzle.lichess_id}`,
+            `Link: ${pageAddress()}`,
+        ],
+    };
+});
+
 // A puzzle counts as seen once its result is decided. It is filed under its
 // own piece, whichever category it was played in.
 function onDecided(puzzle: PuzzleData, solved: boolean): void {
+    decidedId.value = puzzle.id;
     seen.set(puzzle.id, { puzzleId: puzzle.id, piece: puzzle.piece });
 
     void recordPuzzleResult(puzzle.id, puzzle.piece, solved).then((done) => {
@@ -230,35 +255,19 @@ onMounted(() => {
     <PageHead :meta="meta" />
 
     <main ref="page" class="sm:mx-auto sm:w-[560px]">
-        <!-- The two sides are the same width, so the title stays centred. -->
-        <header
-            class="grid grid-cols-[1fr_auto_1fr] items-center gap-1 py-1 pr-3 pl-1 short:py-0"
-        >
-            <Link
-                :href="ListTacticsCategoriesController.url()"
-                class="flex size-11 items-center justify-center"
-                aria-label="Back to the pieces"
-            >
-                <svg
-                    aria-hidden="true"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M15 5l-7 7 7 7" />
-                </svg>
-            </Link>
-            <p class="min-w-0 text-center font-serif text-title-small">
+        <!-- The title gives way to the flag, which comes once a puzzle is
+             decided, as in the marking modes. -->
+        <header class="flex items-center gap-1 py-1 pr-3 pl-1 short:py-0">
+            <BackArrow
+                :parent="ListTacticsCategoriesController.url()"
+                label="Back"
+            />
+            <p class="min-w-0 flex-1 truncate font-serif text-title-small">
                 {{ meta.heading }}
             </p>
+            <ReportProblem :report="report" />
             <!-- A solved puzzle then moves on to the next by itself. -->
             <AppButton
-                class="justify-self-end"
                 variant="outline"
                 :aria-pressed="autoNext"
                 @click="toggleAutoNext"

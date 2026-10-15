@@ -32,6 +32,7 @@ class ShowMasterGameController extends Controller
             'master' => ['slug' => $master->slug, 'name' => $master->name],
             'master_color' => $game->master_color,
             'opponent_name' => $game->opponent_name,
+            'opponent_short_name' => $game->opponent_short_name,
             'year' => $game->year,
             'event' => $game->event,
             'ply_count' => $game->ply_count,

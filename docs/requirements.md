@@ -195,7 +195,7 @@ Settled in build step 26, and shared with spot the hanging piece since 13 Octobe
 - The main button reads "Nothing" while no square is marked, and "Show me" once at least one is. Either press ends the phase.
 - After a phase ends, the line above reads "Move 2 · Controls · Not quite" in the wrong colour, or "… · Exactly right" in the accent colour, and the heading says how it came out: "Three squares missed, one too many.", "All eight squares.", "Both squares.", "The only square." or "Nothing to mark, and nothing marked.". When a wrong square was marked and the set then completed, the line reads "Move 2 · Controls · Corrected" in the wrong colour, and the heading still describes the final selection, as in "Both squares.". On a castling move the line names the piece, as in "Move 5 · Rook · Lost · Not quite".
 - The main button then names what comes next: "Next: squares controlled" and "Next move". On a castling move it reads, in order, "Next: king's squares controlled", "Next: rook's squares lost", "Next: rook's squares controlled" and "Next move". After the last phase of a game's last move the line above starts "End of the game" and the button reads "Next game". There is no end-of-game screen.
-- Since build step 27 the screen resumes the mode's session, or picks an unseen game, and has the "Next game" button in the header; see Sessions above. Since build step 28 the percentages share the legend's room under the board; see Scoring and feedback above. The report a problem link comes with step 33.
+- Since build step 27 the screen resumes the mode's session, or picks an unseen game, and has the "Next game" button in the header; see Sessions above. Since build step 28 the percentages share the legend's room under the board; see Scoring and feedback above. Since build step 33 the header has the report a problem flag while the feedback shows; see Other under the site-wide requirements.
 
 ## Mode 3: Tactics by piece
 
@@ -254,7 +254,7 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 
 ## Mode 4: Spot the hanging piece
 
-The user watches a beginner game one move at a time and, after every move, marks every piece and pawn that is hanging. Decided on 13 October 2026, when the hanging phase was taken out of square control. It is numbered after tactics so that earlier references to Mode 3 still hold; the order of the modes on the home and progress pages is decided in build step 33.
+The user watches a beginner game one move at a time and, after every move, marks every piece and pawn that is hanging. Decided on 13 October 2026, when the hanging phase was taken out of square control. It is numbered after tactics so that earlier references to Mode 3 still hold. The home and progress pages show the modes in the order decided in build step 33: guess the move, tactics by piece, square control, spot the hanging piece.
 
 **Games**
 
@@ -343,6 +343,27 @@ Most users are on phones, so phone width is the primary design target for every 
 - Credits, with a link to the source code
 - Privacy, a short page saying that progress is stored only in the browser and that Cloudflare analytics is used
 
+**The home page, about, credits and privacy**
+
+Settled in build step 33.
+
+- The modes are shown in this order on the home page and the progress page: guess the move, tactics by piece, square control, spot the hanging piece.
+- The home page follows the mockup `home-light`, without its label "Chess training" and its heading "Sit beside the masters and guess their next move.", which were taken out before the step was merged: the header with "Asanfa" and a settings button, then a hairline across the page, the Continue card when there is a game in progress, the four modes numbered 01 to 04, each with a one-line description, and the footer. "Asanfa" is the page's main heading. The meta description reads "Free chess training: guess masters' moves, tactics by piece, square control and spotting hanging pieces."
+- The Continue card is for guess the move only, and is text only, without the mockup's strip of board: the label "Continue", the game as "Capablanca vs. Marshall, 1918", White first and by family name, and "Move 9 of 36". The opponent's family name is `opponent_short_name`, as in the play screen's header, and the full name where it is null; the master game response carries it for this. It shows the game in progress that was played most recently, and is left out when no game is in progress or the game no longer exists. It fetches the game, so it says so while it loads and offers Try again if the request fails.
+- The footer has two centred lines: Progress and Settings, as in the mockup, then a smaller line with About, Credits, Privacy and Source code.
+- About, at `/about`, is a short plain draft for the owner to edit: a free chess trainer made for friends, what each mode is for, that progress stays in the browser, and that it is free and open source, with a link to the source code.
+- Credits, at `/credits`, lists every board, piece set and font from the settings catalogue with its author, licence and source, then Chessground, PGN Mentor for the master games, Lichess for the puzzles and the practice games, and the source code link.
+- Privacy, at `/privacy`, says that there are no accounts and no cookies, that progress and settings are kept only in the browser and never sent anywhere, that Cloudflare Web Analytics counts visits without cookies, and that the fonts are served by the site itself.
+- About, credits and privacy have the back arrow to the home page, as the progress page does.
+
+**Back from a play screen**
+
+Settled in build step 33.
+
+- The back arrow on the four play screens (a master game, tactics, square control and spot the hanging piece) returns to the page the user came from, as the browser's own back button does. A game opened from the home page's Continue card goes back to the home page; one opened from a game list goes back to the list as it was left, with its page, search and filters.
+- When there is no page on the site to return to, because the screen was opened from a shared link, a bookmark or a fresh launch of the installed app, the arrow goes to the screen's parent page: the master's game list, the tactics categories, or the mode's landing page. The parent page takes the screen's place in the browser history, so the browser's back button then leaves the site rather than returning to the screen.
+- The site knows a page is behind the current one by keeping the pages the tab has shown since the site was loaded. A reload starts afresh, so after a reload the arrow goes to the parent page.
+
 **Settings**
 
 - Appearance: light, dark, or match the device
@@ -390,12 +411,12 @@ Settled in build step 31.
 Settled in build step 30.
 
 - The page is at `/progress`. Its title is "Progress", its heading "Your progress", and its meta description "Your scores in the four modes, kept only in this browser." The home page links to it.
-- It shows the four modes in their numbering for now: guess the move, square control, tactics by piece, spot the hanging piece. Step 33 decides the order for the home page and this page together.
+- It shows the four modes in the order of the home page, decided in build step 33: guess the move, tactics by piece, square control, spot the hanging piece.
 - Guess the move lists accuracy by master as described under its scoring. The percentage is rounded down, like the marking percentages. Masters with the same accuracy are listed with more moves first, then in the fixed master order. With no finished game the section shows one line: "No finished games yet."
 - Square control shows its two percentages, "Squares lost" and "Squares controlled", and spot the hanging piece its one, "Hanging pieces", as on their landing pages: rounded down, with a dash until something is counted. The tallies by piece of square control are not shown.
 - Tactics shows solved out of attempted, as "14 / 20": an "All pieces" total row first, as on the category page, then the six pieces in their order. A row shows a dash before any attempt.
 - The Safari note reads "Safari deletes a site's saved data after seven days without a visit. Visiting at least once a week keeps your progress." It is shown only in Safari, on any device.
-- The install note is a placeholder, "[Install note]", from step 32 until the iPhone test answers the carry-over question and the note is worded. It is not shown when the site is already installed.
+- The install note is not shown at all until the iPhone test answers the carry-over question and the note is worded. Step 32 showed a placeholder, "[Install note]"; step 33 took it out. Once worded, the note is not shown when the site is already installed.
 - If storage is unavailable, the page shows the notice that progress will not be saved, and the marking modes' figures show what was counted during the visit.
 - The reset progress button sits at the foot of the page. It is shown whenever there is something to clear, stored or counted in memory during the visit, and hidden otherwise. It opens the slide-up panel with the heading "Reset all progress?", the text "This clears your scores, history and saved games in every mode, in this browser. Your settings stay. This cannot be undone." and two buttons, "Reset progress", marked as destructive, and "Cancel". After a reset the page shows its empty state and the line "Progress reset."
 
@@ -414,6 +435,8 @@ Settled in build step 32.
 - A reset progress button, with a confirmation step. It is on the progress page from build step 30, and the same component goes into settings as well in step 31, so it lives in both. Settled in build step 30.
 - When a game or puzzle fails to load, the user sees a clear message and a retry button.
 - Every exercise has a report a problem link that opens a GitHub issue pre-filled with the game or puzzle and the move number. The link is shown only once there is something to report, so it never gets in the way while playing: at the end of a master game and in its review, after a puzzle is solved or failed, and in square control and spot the hanging piece with the feedback for each move. Decided on 12 October 2026.
+- The link is a flag button, 44 pixels square and labelled "Report a problem", at the right of the play screen's header, so the screen keeps its height: in guess the move in the slot at the right, in tactics before Auto next, and in the two marking modes before Next game. It opens a new GitHub issue in a new tab, with a title and a body naming the mode, the game or puzzle, and the move. A master game gives its link and the move shown, or the end of the game; a puzzle gives its ID, piece and rating, and its Lichess link; a practice game gives its ID, the move in words and the phase. Settled in build step 33.
+- Every page that fetches data says so while it loads, and if the request fails it says what did not load and offers Try again. These are the three play screens and the home page's Continue card. Settled in build step 33.
 - The site is in English only.
 
 ## Visual design
@@ -438,7 +461,7 @@ The site has to be beautiful, in a light mode and a dark mode. The chosen look i
 
 **Chosen direction: Study**
 
-- Headings are set in Newsreader, a serif. Body text and controls are set in Instrument Sans. Both font files are served from the site's own server, not from Google, so no visitor request goes to a third party; their licences are checked when the files are downloaded.
+- Headings are set in Newsreader, a serif. Body text and controls are set in Instrument Sans. Both font files are served from the site's own server, not from Google, so no visitor request goes to a third party; their licences are checked when the files are downloaded. Both are under the SIL Open Font License 1.1, with each `OFL.txt` beside the files in `resources/fonts/`. They are listed in the settings catalogue and credited on the credits page since build step 33.
 - Sections are separated by hairline rules and spacing, not by cards or shadows.
 - Small labels are uppercase with wide letter spacing. Scores use tabular figures.
 - The board runs edge to edge on a phone. The default is Lichess's olive board with the Maestro piece set.
@@ -751,7 +774,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 30. Progress page | Stats for the four modes, the install note, the Safari note, and reset progress | The page matches what was played, and reset clears it |
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
 | 32. Installable | The web app manifest and icons; the site name in the page header; the install note on the progress page as a placeholder, not shown when the site is already installed | The site installs from the desktop browser or a local network address and opens without the address bar |
-| 33. Remaining pages and states | The home page with the four modes, in an order decided in this step (plain links to `/guess`, `/tactics`, `/squares` and `/hanging` stand in until then); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
+| 33. Remaining pages and states | The home page with the four modes, in the order decided in this step (see Pages); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
 | iPhone test | Done after the full imports on the server. Whether progress made in Safari carries over to the site installed on an iPhone's home screen, tested on a real phone; the install note on the progress page worded from the answer | The carry-over question is answered, and the install note says what the test found |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
@@ -906,7 +929,7 @@ The eleven rows are created by a seeder kept in the repository, with the display
 | `fingerprint` | char(64) | Unique; see Appendix D |
 | `master_color` | text | `white` or `black` |
 | `opponent_name` | text | Written as first name then last name |
-| `opponent_short_name` | text | Nullable; the family name, taken from the part of the source name before the comma, for titles and the play screen header. Added in build step 17; where it is null, the full name is shown |
+| `opponent_short_name` | text | Nullable; the family name, taken from the part of the source name before the comma, for titles, the play screen header and, since build step 33, the home page's Continue card, which reads it from the master game response. Added in build step 17; where it is null, the full name is shown |
 | `year` | smallint | Nullable; between 1800 and 2100 |
 | `event` | text | Nullable |
 | `ply_count` | smallint | At least 1 |
@@ -1176,6 +1199,7 @@ A master game response:
   "master": { "slug": "capablanca", "name": "José Raúl Capablanca" },
   "master_color": "white",
   "opponent_name": "Frank Marshall",
+  "opponent_short_name": "Marshall",
   "year": 1918,
   "event": "New York",
   "ply_count": 71,
