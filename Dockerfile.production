@@ -1,0 +1,73 @@
+# Production image: Apache with PHP serving the app and its built assets.
+# Built on the server by deploy/deploy.sh; see docs/deployment.md.
+#
+# Node is only used to build the assets and is not in the final image. The
+# build context is filtered by Dockerfile.production.dockerignore.
+
+FROM node:24-bookworm-slim AS node
+
+FROM composer:2 AS composer
+
+FROM php:8.4-apache-bookworm AS base
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq-dev libicu-dev \
+    && docker-php-ext-install pdo_pgsql intl opcache \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html
+
+# The PHP packages, without the development tools.
+FROM base AS vendor
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --no-progress
+
+COPY . .
+RUN mkdir -p storage/app/private storage/app/public storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && composer dump-autoload --optimize --no-dev --no-interaction
+
+# The built assets. The Vite plugins and the generated TypeScript types call
+# `php artisan`, so this stage has PHP and Node together.
+FROM vendor AS assets
+
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+
+RUN npm ci --no-audit --no-fund \
+    && php artisan typescript:transform \
+    && npm run build
+
+FROM base AS production
+
+# Debian's alias module maps /icons/ to Apache's own icons, which would hide
+# the site's public/icons.
+RUN a2enmod headers \
+    && a2dismod -f autoindex alias \
+    && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
+COPY deploy/docker/php.ini "$PHP_INI_DIR/conf.d/zz-production.ini"
+COPY deploy/docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY deploy/docker/apache-server.conf /etc/apache2/conf-enabled/zz-server.conf
+COPY deploy/docker/entrypoint.sh /usr/local/bin/app-entrypoint
+
+COPY --from=vendor /var/www/html /var/www/html
+COPY --from=assets /var/www/html/public/build /var/www/html/public/build
+
+RUN chmod 755 /usr/local/bin/app-entrypoint \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost/up > /dev/null || exit 1
+
+ENTRYPOINT ["app-entrypoint"]
+CMD ["apache2-foreground"]

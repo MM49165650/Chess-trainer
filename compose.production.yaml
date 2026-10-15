@@ -1,0 +1,61 @@
+# Production, on the server only; see docs/deployment.md. The settings and
+# secrets come from .env next to this file, made from
+# deploy/env.production.example and never committed.
+#
+# Only the app is published, and only on the loopback address, for Hestia's
+# nginx. Postgres publishes no port and keeps its data in a named volume.
+
+name: chess-trainer-production
+
+x-logging: &logging
+    driver: json-file
+    options:
+        max-size: 10m
+        max-file: '5'
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile.production
+        image: chess-trainer-app:latest
+        env_file: .env
+        ports:
+            - '127.0.0.1:8012:80'
+        volumes:
+            # The intermediate import files, copied here by hand; see
+            # "Importing content" in docs/deployment.md.
+            - ./data/intermediate:/var/www/html/data/intermediate:ro
+        depends_on:
+            postgres:
+                condition: service_healthy
+        restart: unless-stopped
+        logging: *logging
+
+    postgres:
+        image: postgres:18
+        environment:
+            POSTGRES_DB: ${DB_DATABASE:?set DB_DATABASE in .env}
+            POSTGRES_USER: ${DB_USERNAME:?set DB_USERNAME in .env}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+        volumes:
+            - postgres:/var/lib/postgresql
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+            interval: 5s
+            timeout: 5s
+            retries: 30
+        restart: unless-stopped
+        logging: *logging
+
+# A fixed subnet, so that the address Hestia's nginx reaches the app from,
+# the gateway, is known in advance: it is TRUSTED_PROXIES in .env.
+networks:
+    default:
+        ipam:
+            config:
+                - subnet: 172.30.12.0/24
+                  gateway: 172.30.12.1
+
+volumes:
+    postgres:

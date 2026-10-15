@@ -1,0 +1,8 @@
+# Nightly database backup for chess.asanfa.com; see docs/deployment.md.
+# Installed as /etc/cron.d/chess-trainer, with @HESTIA_USER@ replaced by the
+# Hestia user's name. The time is the server's time zone.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HESTIA_USER=@HESTIA_USER@
+
+30 3 * * * root bash /opt/chess-trainer/deploy/backup.sh >> /var/log/chess-trainer-backup.log 2>&1
