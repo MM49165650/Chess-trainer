@@ -59,18 +59,18 @@ const inProgress = ref<MasterGameRecord | null>(null);
 const game = ref<MasterGameData | null>(null);
 const failure = ref(false);
 
-function familyName(name: string): string {
-    return name.split(' ').at(-1) ?? name;
-}
-
-/** "Capablanca vs. Marshall, 1918": White first, by family name. */
+/**
+ * "Capablanca vs. Marshall, 1918": White first, by family name, as in the
+ * play screen's header. An opponent without one goes by the full name.
+ */
 const gameName = computed(() => {
     if (game.value === null) {
         return '';
     }
 
-    const master = familyName(game.value.master.name);
-    const opponent = familyName(game.value.opponent_name);
+    const master =
+        game.value.master.name.split(' ').at(-1) ?? game.value.master.name;
+    const opponent = game.value.opponent_short_name ?? game.value.opponent_name;
     const players =
         game.value.master_color === 'white'
             ? `${master} vs. ${opponent}`
@@ -160,7 +160,7 @@ onMounted(async () => {
 
     <div class="flex min-h-dvh flex-col sm:mx-auto sm:w-[560px]">
         <header class="flex items-center justify-between pt-2 pr-2 pb-1 pl-5">
-            <p class="font-serif text-title italic">{{ SITE_SHORT_NAME }}</p>
+            <h1 class="font-serif text-title italic">{{ SITE_SHORT_NAME }}</h1>
             <Link
                 :href="ShowSettingsController.url()"
                 class="flex size-11 items-center justify-center"
@@ -183,19 +183,12 @@ onMounted(async () => {
             </Link>
         </header>
 
-        <main class="flex flex-col">
-            <div class="flex flex-col gap-2.5 px-5 pt-2.5 pb-5">
-                <p class="label-caps text-muted">Chess training</p>
-                <h1 class="font-serif text-display tracking-heading">
-                    Sit beside the masters and guess their next move.
-                </h1>
-            </div>
-
+        <main class="flex flex-col border-t border-hairline">
             <!-- The master game in progress: loading, failed, or ready. -->
             <section
                 v-if="inProgress !== null"
                 aria-label="Continue"
-                class="border-y border-hairline"
+                class="border-b border-hairline"
             >
                 <Link
                     v-if="game !== null"

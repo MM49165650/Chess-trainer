@@ -1,6 +1,7 @@
 // What the settings offer: the board themes, piece sets and marking palettes,
-// with each one's author and licence. The credits page reads the credits from
-// here too, so this is the one list of them. A sound set, when there is one
+// with each one's author and licence, and the credits for the two typefaces.
+// The credits page reads the credits from here, so this is the one list of
+// them. A sound set, when there is one
 // again, is credited here as well (see resources/js/settings/sound.ts).
 
 export type Credit = {
@@ -90,6 +91,38 @@ export const PIECE_SETS = [
             authorUrl: null,
             ...CC_BY_NC_SA_4,
             sourceUrl: `${LILA}/piece/cardinal`,
+        },
+    },
+] as const satisfies readonly CreditedChoice[];
+
+const OFL_1_1 = {
+    licence: 'SIL Open Font License 1.1',
+    licenceUrl: 'https://openfontlicense.org/open-font-license-official-text/',
+} as const;
+
+/**
+ * The two typefaces. They are not a setting, but they are credited with the
+ * rest. Each folder in resources/fonts/ keeps its OFL.txt beside the files.
+ */
+export const FONTS = [
+    {
+        id: 'newsreader',
+        name: 'Newsreader',
+        credit: {
+            author: 'The Newsreader Project Authors',
+            authorUrl: 'https://github.com/productiontype/Newsreader',
+            ...OFL_1_1,
+            sourceUrl: 'https://fontsource.org/fonts/newsreader',
+        },
+    },
+    {
+        id: 'instrument-sans',
+        name: 'Instrument Sans',
+        credit: {
+            author: 'The Instrument Sans Project Authors',
+            authorUrl: 'https://github.com/Instrument/instrument-sans',
+            ...OFL_1_1,
+            sourceUrl: 'https://fontsource.org/fonts/instrument-sans',
         },
     },
 ] as const satisfies readonly CreditedChoice[];

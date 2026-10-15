@@ -3,10 +3,10 @@
 // game's details, fetches its moves from the data endpoint and reads the
 // user's saved progress, so a game started earlier resumes.
 
-import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ShowMasterGameController from '@/actions/App/Http/Controllers/Api/ShowMasterGameController';
 import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/ListMasterGamesController';
+import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import GuessGame from '@/components/guess/GuessGame.vue';
 import PageHead from '@/components/PageHead.vue';
@@ -17,7 +17,6 @@ import type {
     MasterGameDetailsData,
     PageMetaData,
 } from '@/generated/data';
-import { gameListLeft } from '@/guess/listReturn';
 import type { ProblemReport } from '@/report';
 import { storageAvailable } from '@/storage/db';
 import { readMasterGame } from '@/storage/masterGames';
@@ -49,11 +48,10 @@ const report = ref<ProblemReport | null>(null);
 const page = ref<HTMLElement | null>(null);
 useBoardHeightLimit(page);
 
-// The back arrow returns to the game list as the user left it, with its
-// page, search and filters. A game opened directly goes to the master's list.
-const backUrl =
-    gameListLeft(props.game.master.slug) ??
-    ListMasterGamesController.url(props.game.master.slug);
+// The back arrow returns to the page the user came from, such as the game
+// list with its page, search and filters, or the home page. A game opened
+// directly goes to the master's list.
+const parentUrl = ListMasterGamesController.url(props.game.master.slug);
 
 const occasion = computed(() =>
     [props.game.event, props.game.year]
@@ -103,25 +101,7 @@ onMounted(load);
 
     <main ref="page" class="sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 p-1 short:py-0">
-            <Link
-                :href="backUrl"
-                class="flex size-11 flex-none items-center justify-center"
-                aria-label="Back to the games"
-            >
-                <svg
-                    aria-hidden="true"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M15 5l-7 7 7 7" />
-                </svg>
-            </Link>
+            <BackArrow :parent="parentUrl" label="Back" />
             <div class="flex min-w-0 flex-1 flex-col items-center text-center">
                 <p class="font-serif text-title-small">{{ meta.heading }}</p>
                 <p v-if="occasion" class="text-label text-muted">

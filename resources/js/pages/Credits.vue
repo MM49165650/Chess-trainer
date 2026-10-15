@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// The credits page. The boards and piece sets come from the settings
+// The credits page. The boards, piece sets and fonts come from the settings
 // catalogue, the one list of them, so a set added there is credited here.
 // Then the board code, the game and puzzle data, and the source code.
 
@@ -7,6 +7,7 @@ import TextPage from '@/components/TextPage.vue';
 import type { PageMetaData } from '@/generated/data';
 import {
     BOARD_THEMES,
+    FONTS,
     PIECE_SETS,
     type Credit,
     type CreditedChoice,
@@ -43,9 +44,11 @@ function rows(choices: readonly CreditedChoice[]): CreditRow[] {
     }));
 }
 
+/** Each part of the catalogue, with where its files were copied from. */
 const SECTIONS = [
-    { heading: 'Boards', rows: rows(BOARD_THEMES) },
-    { heading: 'Pieces', rows: rows(PIECE_SETS) },
+    { heading: 'Boards', from: 'Lichess', rows: rows(BOARD_THEMES) },
+    { heading: 'Pieces', from: 'Lichess', rows: rows(PIECE_SETS) },
+    { heading: 'Fonts', from: 'Fontsource', rows: rows(FONTS) },
 ];
 </script>
 
@@ -59,7 +62,7 @@ const SECTIONS = [
         <section v-for="section in SECTIONS" :key="section.heading">
             <h2>{{ section.heading }}</h2>
             <p v-for="row in section.rows" :key="row.names">
-                <span class="font-serif text-title-small"> {{ row.names }}</span
+                <span class="font-serif text-title-small">{{ row.names }}</span
                 ><br />
                 <span class="text-caption text-muted">
                     By
@@ -70,7 +73,9 @@ const SECTIONS = [
                     ><template v-else>{{ row.credit.author }}</template
                     >, under
                     <a :href="row.credit.licenceUrl">{{ row.credit.licence }}</a
-                    >. From <a :href="row.credit.sourceUrl">Lichess</a>.
+                    >. From
+                    <a :href="row.credit.sourceUrl">{{ section.from }}</a
+                    >.
                 </span>
             </p>
         </section>

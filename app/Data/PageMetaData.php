@@ -31,7 +31,7 @@ final class PageMetaData extends Data
     {
         return new self(
             title: '',
-            description: 'Free, open source chess training in four modes: guess the move, tactics by piece, square control and spot the hanging piece.',
+            description: "Free chess training: guess masters' moves, tactics by piece, square control and spotting hanging pieces.",
             heading: Config::string('app.name'),
         );
     }

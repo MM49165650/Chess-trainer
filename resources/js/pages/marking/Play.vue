@@ -5,13 +5,13 @@
 // picks a game at random from those the mode has not seen, and fetches it.
 // Each mode keeps its own session and seen games.
 
-import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ListPracticeGameIdsController from '@/actions/App/Http/Controllers/Api/ListPracticeGameIdsController';
 import ShowPracticeGameController from '@/actions/App/Http/Controllers/Api/ShowPracticeGameController';
 import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHangingController';
 import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSquaresController';
 import type { Phase } from '@/chess/conventions';
+import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
 import ReportProblem from '@/components/ReportProblem.vue';
@@ -310,25 +310,7 @@ onMounted(async () => {
 
     <main ref="page" class="sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 py-1 pr-1 pl-1 short:py-0">
-            <Link
-                :href="landing"
-                class="flex size-11 flex-none items-center justify-center"
-                :aria-label="`Back to ${meta.heading}`"
-            >
-                <svg
-                    aria-hidden="true"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M15 5l-7 7 7 7" />
-                </svg>
-            </Link>
+            <BackArrow :parent="landing" label="Back" />
             <p class="min-w-0 flex-1 truncate font-serif text-title-small">
                 {{ meta.heading }}
             </p>

@@ -4,12 +4,12 @@
 // leaves out the puzzles already seen and fetches the rest a few at a time.
 // Each result is saved, so no puzzle repeats until the category runs out.
 
-import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ListPuzzleIdsController from '@/actions/App/Http/Controllers/Api/ListPuzzleIdsController';
 import ListPuzzlesController from '@/actions/App/Http/Controllers/Api/ListPuzzlesController';
 import ListTacticsCategoriesController from '@/actions/App/Http/Controllers/Tactics/ListTacticsCategoriesController';
 import { PIECE_TYPES } from '@/chess/conventions';
+import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
 import ReportProblem from '@/components/ReportProblem.vue';
@@ -258,25 +258,10 @@ onMounted(() => {
         <!-- The title gives way to the flag, which comes once a puzzle is
              decided, as in the marking modes. -->
         <header class="flex items-center gap-1 py-1 pr-3 pl-1 short:py-0">
-            <Link
-                :href="ListTacticsCategoriesController.url()"
-                class="flex size-11 flex-none items-center justify-center"
-                aria-label="Back to the pieces"
-            >
-                <svg
-                    aria-hidden="true"
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M15 5l-7 7 7 7" />
-                </svg>
-            </Link>
+            <BackArrow
+                :parent="ListTacticsCategoriesController.url()"
+                label="Back"
+            />
             <p class="min-w-0 flex-1 truncate font-serif text-title-small">
                 {{ meta.heading }}
             </p>
