@@ -16,6 +16,7 @@ import {
     EXACT_ADVANCE_DELAY_MS,
     FIRST_MOVE_DELAY_MS,
     useMarkingGame,
+    pointAfterOpening,
     startOf,
     type PhaseResult,
     type ResumePoint,
@@ -1059,5 +1060,96 @@ test.each(MARKING_MODES)(
                   ]
                 : [{ ply: 2, phase: 'hanging', rook: false, results: [] }],
         );
+    },
+);
+
+// Skipping the opening: a new game starts after the first full moves of
+// both sides, which are played but never marked.
+
+// White castles on the seventh ply and Black's knight takes on e4 on the
+// eighth, both inside the four full moves skipped.
+const castledAndCaptured = madeUpGame(4, [
+    'e2e4',
+    'e7e5',
+    'g1f3',
+    'b8c6',
+    'f1c4',
+    'g8f6',
+    'e1g1',
+    'f6e4',
+    'd2d4',
+    'e5d4',
+]);
+
+test("skipping the opening starts at White's move after the skipped full moves", () => {
+    expect(pointAfterOpening(64, 'squares', 0)).toEqual({
+        ply: 1,
+        phase: 'lost',
+        rook: false,
+        results: [],
+    });
+    expect(pointAfterOpening(64, 'squares', 4).ply).toBe(9);
+    expect(pointAfterOpening(64, 'hanging', 10)).toEqual({
+        ply: 21,
+        phase: 'hanging',
+        rook: false,
+        results: [],
+    });
+
+    // A game too short for the skip starts at its last move.
+    expect(pointAfterOpening(12, 'squares', 10).ply).toBe(12);
+});
+
+test.each(MARKING_MODES)(
+    '%s: a game started after the opening shows the position after a castling move and a capture, and counts nothing before it',
+    (mode) => {
+        const results: PhaseResult[] = [];
+        const reported: (ResumePoint | null)[] = [];
+        const point = pointAfterOpening(castledAndCaptured.ply_count, mode, 4);
+        const game = resumed(
+            castledAndCaptured,
+            mode,
+            point,
+            (result, next) => {
+                results.push(result);
+                reported.push(next);
+            },
+        );
+
+        // The position before the first move worked on is the one after the
+        // eight plies skipped: White has castled and Black's knight is on e4.
+        const before = new Chess(game.fen.value);
+
+        expect(game.ply.value).toBe(9);
+        expect(game.markPhase.value).toBeNull();
+        expect(before.get('g1')).toEqual({ type: 'k', color: 'w' });
+        expect(before.get('f1')).toEqual({ type: 'r', color: 'w' });
+        expect(before.get('e1')).toBeUndefined();
+        expect(before.get('h1')).toBeUndefined();
+        expect(before.get('e4')).toEqual({ type: 'n', color: 'b' });
+        expect(before.get('f6')).toBeUndefined();
+        expect(before.turn()).toBe('w');
+        expect(game.fen.value).toBe(positionsOf(castledAndCaptured.moves)[8]);
+
+        // Then White's fifth move plays, and is the first one marked.
+        vi.advanceTimersByTime(FIRST_MOVE_DELAY_MS);
+
+        expect(game.fen.value).toBe(positionsOf(castledAndCaptured.moves)[9]);
+        expect(game.markPhase.value).toBe(point.phase);
+        expect(game.moveResults.value).toEqual([]);
+
+        passMove(game);
+        passMove(game);
+
+        // Only the two moves worked on were counted: none of the skipped
+        // ones, the castling move and the capture among them.
+        expect(results.map((result) => result.ply)).toEqual(
+            mode === 'squares' ? [9, 9, 10, 10] : [9, 10],
+        );
+        expect(game.results.value.every((result) => result.ply >= 9)).toBe(
+            true,
+        );
+        expect(reported.at(-1)).toBeNull();
+        expect(game.finished.value).toBe(true);
     },
 );

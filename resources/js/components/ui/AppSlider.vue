@@ -10,8 +10,8 @@ const props = defineProps<{
     label: string;
     min: number;
     max: number;
-    /** Written after the number, as in "3 s". */
-    unit: string;
+    /** Written after the number, as in "3 s". Without it the number stands alone. */
+    unit?: string;
     /** The unit in full and for one, as in "second", for screen readers. */
     unitName: string;
 }>();
@@ -56,7 +56,7 @@ const spoken = computed(() => {
             class="w-10 flex-none text-right font-serif text-title tabular-nums"
             aria-hidden="true"
         >
-            {{ value }} {{ unit }}
+            {{ unit === undefined ? value : `${String(value)} ${unit}` }}
         </output>
     </div>
 </template>

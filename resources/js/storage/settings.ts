@@ -1,6 +1,7 @@
 // The user's settings. Only the settings that have been chosen are stored; a
 // setting that is missing takes its default, from the one list below.
 
+import { GAME_LENGTHS, SKIP_MOVES_MAX } from '@/marking/lengths';
 import {
     BOARD_THEMES,
     MARKING_PALETTES,
@@ -20,11 +21,30 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
     opponentDelaySeconds: 3,
     markingPalette: 'standard',
     tacticsAutoNext: false,
+    squareLength: 'any',
+    squareSkipMoves: 0,
+    hangingLength: 'any',
+    hangingSkipMoves: 0,
 };
 
 /** The opponent move delay in guess the move, in whole seconds. */
 export const OPPONENT_DELAY_MIN = 1;
 export const OPPONENT_DELAY_MAX = 5;
+
+/** A whole number from `min` to `max`, or the fallback. */
+function wholeNumber(
+    value: unknown,
+    min: number,
+    max: number,
+    fallback: number,
+): number {
+    return typeof value === 'number' &&
+        Number.isInteger(value) &&
+        value >= min &&
+        value <= max
+        ? value
+        : fallback;
+}
 
 function oneOf<T>(value: unknown, choices: readonly T[], fallback: T): T {
     return choices.find((choice) => choice === value) ?? fallback;
@@ -41,7 +61,6 @@ function ids(list: readonly { id: string }[]): string[] {
  */
 export function withDefaults(saved: Partial<Settings>): Settings {
     const d = DEFAULT_SETTINGS;
-    const delay = saved.opponentDelaySeconds;
     const size = saved.boardSizePx;
 
     return {
@@ -59,13 +78,12 @@ export function withDefaults(saved: Partial<Settings>): Settings {
             ['tap', 'drag', 'both'] as const,
             d.moveInput,
         ),
-        opponentDelaySeconds:
-            Number.isInteger(delay) &&
-            delay !== undefined &&
-            delay >= OPPONENT_DELAY_MIN &&
-            delay <= OPPONENT_DELAY_MAX
-                ? delay
-                : d.opponentDelaySeconds,
+        opponentDelaySeconds: wholeNumber(
+            saved.opponentDelaySeconds,
+            OPPONENT_DELAY_MIN,
+            OPPONENT_DELAY_MAX,
+            d.opponentDelaySeconds,
+        ),
         markingPalette: oneOf(
             saved.markingPalette,
             ids(MARKING_PALETTES),
@@ -75,6 +93,24 @@ export function withDefaults(saved: Partial<Settings>): Settings {
             typeof saved.tacticsAutoNext === 'boolean'
                 ? saved.tacticsAutoNext
                 : d.tacticsAutoNext,
+        squareLength: oneOf(saved.squareLength, GAME_LENGTHS, d.squareLength),
+        squareSkipMoves: wholeNumber(
+            saved.squareSkipMoves,
+            0,
+            SKIP_MOVES_MAX,
+            d.squareSkipMoves,
+        ),
+        hangingLength: oneOf(
+            saved.hangingLength,
+            GAME_LENGTHS,
+            d.hangingLength,
+        ),
+        hangingSkipMoves: wholeNumber(
+            saved.hangingSkipMoves,
+            0,
+            SKIP_MOVES_MAX,
+            d.hangingSkipMoves,
+        ),
     };
 }
 

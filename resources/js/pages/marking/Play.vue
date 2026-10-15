@@ -2,28 +2,24 @@
 // The play page of the two marking modes, square control and spot the
 // hanging piece: watch a beginner game one move at a time and mark what the
 // mode asks about. The page resumes the mode's session where it stopped, or
-// picks a game at random from those the mode has not seen, and fetches it.
-// Each mode keeps its own session and seen games.
+// picks a game at random from those the mode has not seen, of the length the
+// mode is set to, and fetches it. Each mode keeps its own session and seen
+// games.
 
 import { computed, onMounted, ref } from 'vue';
-import ListPracticeGameIdsController from '@/actions/App/Http/Controllers/Api/ListPracticeGameIdsController';
 import ShowPracticeGameController from '@/actions/App/Http/Controllers/Api/ShowPracticeGameController';
 import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHangingController';
 import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSquaresController';
-import type { Phase } from '@/chess/conventions';
 import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
 import ReportProblem from '@/components/ReportProblem.vue';
 import MarkingGame from '@/components/marking/MarkingGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
-import type {
-    PageMetaData,
-    PracticeGameIdListData,
-    PracticeGamePlayData,
-} from '@/generated/data';
-import { chooseGame } from '@/marking/choose';
+import type { PageMetaData, PracticeGamePlayData } from '@/generated/data';
+import type { GameListItem } from '@/marking/choose';
 import type { MarkingMode } from '@/marking/phases';
+import { forgetGame, pickGame, practiceGames } from '@/marking/picking';
 import { emptyScores, withPhase, type RunningScore } from '@/marking/tallies';
 import {
     startOf,
@@ -34,14 +30,11 @@ import {
 import type { ProblemReport } from '@/report';
 import { storageAvailable } from '@/storage/db';
 import {
-    clearSeenGames,
     deleteSession,
     readScores,
-    readSeenGames,
     readSession,
     recordGameSeen,
     recordPhase,
-    saveSession,
 } from '@/storage/marking';
 
 const props = defineProps<{
@@ -50,12 +43,6 @@ const props = defineProps<{
     meta: PageMetaData;
 }>();
 
-/** The phase every game starts with in each mode. */
-const FIRST_PHASE: Record<MarkingMode, Phase> = {
-    squares: 'lost',
-    hanging: 'hanging',
-};
-
 /** The mode's landing page, where the back arrow leads. */
 const landing = computed(() =>
     props.mode === 'squares'
@@ -63,8 +50,11 @@ const landing = computed(() =>
         : ShowHangingController.url(),
 );
 
-/** The IDs of all practice games, or null until they arrive. */
-const ids = ref<number[] | null>(null);
+/** Every practice game, or null until the list arrives. */
+const games = ref<readonly GameListItem[] | null>(null);
+
+/** True when there was no game of the chosen length to pick. */
+const nothingToPick = ref(false);
 
 /** The game on the board. */
 const game = ref<PracticeGamePlayData | null>(null);
@@ -112,16 +102,10 @@ async function fetchJson(url: string): Promise<unknown> {
     return response.json();
 }
 
-async function fetchIds(): Promise<number[]> {
-    if (ids.value === null) {
-        const list = (await fetchJson(
-            ListPracticeGameIdsController.url(),
-        )) as PracticeGameIdListData;
+async function fetchList(): Promise<readonly GameListItem[]> {
+    games.value = await practiceGames();
 
-        ids.value = list.ids;
-    }
-
-    return ids.value;
+    return games.value;
 }
 
 /**
@@ -135,7 +119,8 @@ async function fetchGame(id: number): Promise<PracticeGamePlayData | null> {
         )) as PracticeGamePlayData;
     } catch (error) {
         if (error instanceof GameNotFound) {
-            ids.value = (ids.value ?? []).filter((other) => other !== id);
+            forgetGame(id);
+            games.value = await practiceGames();
 
             return null;
         }
@@ -149,48 +134,39 @@ const round = ref(0);
 
 function show(next: PracticeGamePlayData, at?: GameStart): void {
     round.value += 1;
+    nothingToPick.value = false;
     game.value = next;
     start.value = at;
     done.value = false;
 }
 
 /**
- * Picks a game the mode has not seen, other than the one just played, and
- * makes it the session at move 1. When the mode has been through every
- * game, its seen games are cleared first.
+ * Picks a game of the chosen length that the mode has not seen, other than
+ * the one just played, and makes it the session, at move 1 or after the
+ * skipped opening. When the mode has been through every game of that
+ * length, their seen records are cleared first.
  */
 async function pick(): Promise<void> {
     for (;;) {
-        const list = await fetchIds();
-        const seen = new Set(await readSeenGames(props.mode));
-        const choice = chooseGame(
-            list,
-            seen,
+        const session = await pickGame(
+            props.mode,
             game.value === null ? [] : [game.value.id],
         );
 
-        if (choice.reset) {
-            await clearSeenGames(props.mode);
-        }
-
-        if (choice.id === null) {
+        if (session === null) {
             game.value = null;
+            nothingToPick.value = true;
+            await fetchList();
 
             return;
         }
 
-        await saveSession(props.mode, {
-            gameId: choice.id,
-            ply: 1,
-            phase: FIRST_PHASE[props.mode],
-            rook: false,
-            results: [],
-        });
+        const picked = await fetchGame(session.gameId);
+        const at =
+            picked === null ? null : startOf(picked, props.mode, session);
 
-        const picked = await fetchGame(choice.id);
-
-        if (picked !== null) {
-            show(picked);
+        if (picked !== null && at !== null) {
+            show(picked, at);
 
             return;
         }
@@ -205,7 +181,7 @@ async function pick(): Promise<void> {
  * picked. A game that fails to load keeps its session for Try again.
  */
 async function resumeOrPick(): Promise<void> {
-    await fetchIds();
+    await fetchList();
 
     const session = await readSession(props.mode);
 
@@ -360,11 +336,15 @@ onMounted(async () => {
         />
 
         <div
-            v-else-if="ids !== null && ids.length === 0"
+            v-else-if="nothingToPick && !loading"
             class="flex flex-col items-start gap-3 px-5 pt-6"
         >
             <h1 class="font-serif text-heading tracking-heading">
-                There are no practice games yet.
+                {{
+                    games?.length === 0
+                        ? 'There are no practice games yet.'
+                        : 'There are no games of this length yet.'
+                }}
             </h1>
         </div>
 

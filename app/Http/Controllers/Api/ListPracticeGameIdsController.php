@@ -10,9 +10,9 @@ use App\Models\PracticeGame;
 use Illuminate\Http\JsonResponse;
 
 /**
- * GET /api/practice-games/ids: the IDs of all practice games. The browser
- * picks one of them at random. The response is the same for every visitor,
- * so it may be cached.
+ * GET /api/practice-games/ids: every practice game, as pairs of ID and
+ * length in plies. The browser picks one of the chosen length at random. The
+ * response is the same for every visitor, so it may be cached.
  */
 class ListPracticeGameIdsController extends Controller
 {
@@ -24,15 +24,15 @@ class ListPracticeGameIdsController extends Controller
     public function __invoke(): JsonResponse
     {
         // Ordered by ID, so the list is the same every time.
-        $ids = [];
+        $items = [];
 
-        foreach (PracticeGame::query()->orderBy('id')->get(['id']) as $game) {
-            $ids[] = $game->id;
+        foreach (PracticeGame::query()->orderBy('id')->get(['id', 'ply_count']) as $game) {
+            $items[] = [$game->id, $game->ply_count];
         }
 
         // Only a successful response carries the public cache header.
         return response()
-            ->json(new PracticeGameIdListData($ids))
+            ->json(new PracticeGameIdListData($items))
             ->setPublic()
             ->setMaxAge(self::CACHE_SECONDS);
     }
