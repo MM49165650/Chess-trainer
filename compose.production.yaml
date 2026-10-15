@@ -30,6 +30,11 @@ services:
             postgres:
                 condition: service_healthy
         restart: unless-stopped
+        # The server is shared with other sites; see "Resource limits" in
+        # docs/deployment.md. The swap limit equal to the memory limit means
+        # no swap on top.
+        mem_limit: 768m
+        memswap_limit: 768m
         logging: *logging
 
     postgres:
@@ -46,6 +51,8 @@ services:
             timeout: 5s
             retries: 30
         restart: unless-stopped
+        mem_limit: 512m
+        memswap_limit: 512m
         logging: *logging
 
 # A fixed subnet, so that the address Hestia's nginx reaches the app from,
