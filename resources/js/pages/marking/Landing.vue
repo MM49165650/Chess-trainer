@@ -243,12 +243,7 @@ onMounted(async () => {
                     >
                         Game in progress · {{ moveNote }}
                     </h2>
-                    <AppButton
-                        size="large"
-                        class="w-full"
-                        :disabled="starting"
-                        @click="play"
-                    >
+                    <AppButton size="wide" :disabled="starting" @click="play">
                         Resume
                     </AppButton>
                 </section>
@@ -303,8 +298,8 @@ onMounted(async () => {
                     <!-- Starting a new game while one is in progress abandons
                          it, so it is then the second action, not the main. -->
                     <AppButton
-                        size="large"
-                        class="mt-4 w-full"
+                        size="wide"
+                        class="mt-4"
                         :variant="session === null ? 'primary' : 'outline'"
                         :disabled="starting"
                         @click="startNewGame"
