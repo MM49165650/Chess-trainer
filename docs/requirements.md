@@ -676,6 +676,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 **Operations**
 
 - Production runs with debug mode off.
+- Production's resource use is capped, decided on 14 October 2026: memory limits of 768 MB for the app container and 512 MB for Postgres, with no swap on top, in `compose.production.yaml`, and at most 16 Apache workers (`MaxRequestWorkers` and `ServerLimit` 16) in `deploy/docker/apache-server.conf`. The app shares a server with other sites, so a traffic spike must not use up the server's memory. Sixteen workers handle far more than the site needs, since most of the work runs in the browser and the server only hands out pages and data. `docs/deployment.md` says how to see the usage and where to raise the limits.
 - Automated database backups, tested by restoring once.
 - Error tracking for production exceptions.
 

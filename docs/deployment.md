@@ -541,6 +541,36 @@ The full imports, steps 18, 23 and 29, are not part of this step. When they are 
 
 Git ignores `data/`, so `git pull` never touches these files. Each load is safe to rerun and never deletes, so the IDs stay stable.
 
+## Resource limits
+
+The server is shared with other sites, so the app's use is capped: 768 MB of memory for the app container and 512 MB for Postgres, with no swap on top, and at most 16 Apache workers, which handle far more than the site needs. `docs/requirements.md` has the reasons, under Operations.
+
+To see the current use:
+
+```bash
+docker stats --no-stream
+```
+
+You should see `chess-trainer-production-app-1` and `chess-trainer-production-postgres-1`, each with `MEM USAGE / LIMIT` such as `60MiB / 768MiB`. Leave out `--no-stream` to watch it live; Ctrl+C stops.
+
+Signs that a limit is too low:
+
+- `docker compose logs app | grep MaxRequestWorkers` shows `server reached MaxRequestWorkers setting`: all 16 workers were busy and requests queued.
+- `journalctl -k | grep -i 'memory cgroup out of memory'` shows a process killed in a container for going over its memory limit.
+
+Where to change them:
+
+- Memory: `mem_limit` and `memswap_limit` (keep the two equal) for each service in `compose.production.yaml`.
+- Workers: `MaxRequestWorkers` and `ServerLimit` (keep the two equal) in `deploy/docker/apache-server.conf`. Each worker can use up to PHP's `memory_limit` of 128 MB, though a request here uses far less, so raise the app's memory along with the workers.
+
+Change them with a pull request, so that `main` matches the server, then deploy (section 10): `deploy.sh` rebuilds the image and recreates the containers with the new values. In an emergency, the app's memory can be raised at once; it lasts until the container is next recreated, for example by a deploy that changes the image, which sets the values from the file again:
+
+```bash
+docker update --memory 1g --memory-swap 1g chess-trainer-production-app-1
+```
+
+The imports in section 11 run inside the app container with `docker compose exec`, so they count against its 768 MB as well. Run them when the site is quiet.
+
 ## Follow-ups
 
 - **Automatic deploys on merge.** `deploy.sh` is run by hand for now. Since there is no SSH access from outside, the simplest automatic version is pull-based: a systemd timer on the server that checks `origin/main` every few minutes and runs `deploy.sh` when it has moved. A GitHub Actions job that connects in would need SSH.
