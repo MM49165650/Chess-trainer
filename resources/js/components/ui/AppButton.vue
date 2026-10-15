@@ -6,8 +6,12 @@
 withDefaults(
     defineProps<{
         variant?: 'primary' | 'outline' | 'quiet' | 'danger';
-        /** Large is the height of the bottom bar's buttons. */
-        size?: 'medium' | 'large';
+        /**
+         * Large is the height of the bottom bar's buttons. Wide is a landing
+         * page's main button: medium's height, centred, three quarters of
+         * the column wide and at most 320 pixels.
+         */
+        size?: 'medium' | 'large' | 'wide';
         /** A round button that holds only an icon. It needs an aria-label. */
         icon?: boolean;
         /** Takes all the width that is left over in its row. */
@@ -64,6 +68,14 @@ withDefaults(
 .app-button.large {
     height: 52px;
     padding: 0 20px;
+}
+
+.app-button.wide {
+    width: 75%;
+    max-width: 320px;
+    height: 44px;
+    margin-inline: auto;
+    padding: 0 16px;
 }
 
 .app-button.icon.medium {

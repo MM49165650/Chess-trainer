@@ -12,6 +12,11 @@ import { parseMove } from '../../resources/js/chess/conventions.ts';
 import { positionsOf } from '../../resources/js/chess/game.ts';
 import { replayPgn } from '../../resources/js/chess/replay.ts';
 import type { PracticeGameImportData } from '../../resources/js/generated/data.ts';
+import {
+    BANDS,
+    bandOf,
+    type BandName,
+} from '../../resources/js/marking/lengths.ts';
 
 /** The version of the calculation in Appendix B that the answers come from. */
 export const ANSWERS_VERSION = 2;
@@ -39,15 +44,6 @@ export const DEFAULT_OPTIONS: PracticeOptions = {
     limit: 500,
     perFamily: 25,
 };
-
-/** The length bands, each with the longest game it holds, in plies. */
-export const BANDS = [
-    { name: 'short', upTo: 49 },
-    { name: 'medium', upTo: 73 },
-    { name: 'long', upTo: Infinity },
-] as const;
-
-export type BandName = (typeof BANDS)[number]['name'];
 
 /** One game of the source file: its tags and its moves as written. */
 export type SourceGame = {
@@ -117,11 +113,6 @@ export function writtenMoves(moveText: string): string[] {
 /** The opening family: the Opening tag up to the first colon. */
 export function openingFamily(tags: Record<string, string>): string {
     return (tags.Opening ?? '').split(':')[0]?.trim() || '?';
-}
-
-/** The band a game of this length belongs to. */
-export function bandOf(plies: number): BandName {
-    return BANDS.find((band) => plies <= band.upTo)?.name ?? 'long';
 }
 
 /**

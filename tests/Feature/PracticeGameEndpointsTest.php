@@ -59,7 +59,7 @@ function expectNoSuchGame(TestResponse $response): void
         ->and($response->headers->getCookies())->toBe([]);
 }
 
-test('the ID list holds every practice game, lowest ID first', function (): void {
+test('the ID list holds every practice game with its length, lowest ID first', function (): void {
     $first = madeUpPracticeGame('a');
     $second = madeUpPracticeGame('b');
     $third = madeUpPracticeGame('c');
@@ -68,10 +68,10 @@ test('the ID list holds every practice game, lowest ID first', function (): void
 
     expectCacheable($response, 3600);
 
-    $response->assertExactJson(['ids' => [$first->id, $second->id, $third->id]]);
+    $response->assertExactJson(['items' => [[$first->id, 2], [$second->id, 2], [$third->id, 2]]]);
 
     expect($response->getContent())->toBe(
-        '{"ids":['.$first->id.','.$second->id.','.$third->id.']}',
+        '{"items":[['.$first->id.',2],['.$second->id.',2],['.$third->id.',2]]}',
     );
 });
 
@@ -80,7 +80,7 @@ test('the ID list is empty when no game is loaded', function (): void {
 
     expectCacheable($response, 3600);
 
-    expect($response->getContent())->toBe('{"ids":[]}');
+    expect($response->getContent())->toBe('{"items":[]}');
 });
 
 test('a game carries its moves and answers, and nothing the screen does not use', function (): void {

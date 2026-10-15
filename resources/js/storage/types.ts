@@ -1,6 +1,7 @@
 // The records kept in the browser: Appendix G of docs/requirements.md.
 
 import type { Phase, PieceType } from '@/chess/conventions';
+import type { GameLength } from '@/marking/lengths';
 
 export type Tally = { attempts: number; correct: number };
 
@@ -21,6 +22,14 @@ export type Settings = {
     markingPalette: string;
     /** Tactics: whether a solved puzzle moves on to the next by itself. */
     tacticsAutoNext: boolean;
+    /** Square control: the length of the next game picked. */
+    squareLength: GameLength;
+    /** Square control: the full moves skipped at the start, 0 to 10. */
+    squareSkipMoves: number;
+    /** Spot the hanging piece: the length of the next game picked. */
+    hangingLength: GameLength;
+    /** Spot the hanging piece: the full moves skipped at the start, 0 to 10. */
+    hangingSkipMoves: number;
 };
 
 export type MasterGameRecord = {

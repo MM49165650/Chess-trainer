@@ -11,6 +11,7 @@ import type { PieceType, Phase, Ply, Square } from '@/chess/conventions';
 import { positionsOf } from '@/chess/game';
 import type { MarkFeedback } from '@/components/board/types';
 import type { PracticeGamePlayData } from '@/generated/data';
+import { firstPlyAfter } from './lengths';
 import {
     scoreMarks,
     stepsOf,
@@ -64,6 +65,30 @@ export type GameStart = {
     stepIndex: number;
     results: readonly boolean[];
 };
+
+/** The phase every move starts with in each mode, castling included. */
+export const FIRST_PHASE = {
+    squares: 'lost',
+    hanging: 'hanging',
+} as const satisfies Record<MarkingMode, Phase>;
+
+/**
+ * Where a new game starts once the opening's full moves are skipped: the
+ * first phase of the move after them, with nothing marked for the moves
+ * skipped. With none skipped it is move 1.
+ */
+export function pointAfterOpening(
+    plyCount: number,
+    mode: MarkingMode,
+    skipMoves: number,
+): ResumePoint {
+    return {
+        ply: firstPlyAfter(skipMoves, plyCount),
+        phase: FIRST_PHASE[mode],
+        rook: false,
+        results: [],
+    };
+}
 
 /**
  * Finds a saved resume point in its game. The answer is null when the point

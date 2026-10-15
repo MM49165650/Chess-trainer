@@ -392,8 +392,14 @@ export async function readSeenGames(mode: MarkingMode): Promise<number[]> {
     }
 }
 
-/** Forgets the games seen in the mode, once it has been through them all. */
-export async function clearSeenGames(mode: MarkingMode): Promise<boolean> {
+/**
+ * Forgets that these games were seen in the mode, once it has been through
+ * every game of a length. The mode's other seen games are kept.
+ */
+export async function clearSeenGames(
+    mode: MarkingMode,
+    gameIds: readonly number[],
+): Promise<boolean> {
     try {
         const db = await database();
 
@@ -401,7 +407,12 @@ export async function clearSeenGames(mode: MarkingMode): Promise<boolean> {
             return false;
         }
 
-        await db.clear(STORES_OF[mode].seen);
+        const transaction = db.transaction(STORES_OF[mode].seen, 'readwrite');
+
+        await Promise.all([
+            ...gameIds.map((gameId) => transaction.store.delete(gameId)),
+            transaction.done,
+        ]);
 
         return true;
     } catch {
