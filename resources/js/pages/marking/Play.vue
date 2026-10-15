@@ -14,6 +14,7 @@ import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSq
 import type { Phase } from '@/chess/conventions';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import PageHead from '@/components/PageHead.vue';
+import ReportProblem from '@/components/ReportProblem.vue';
 import MarkingGame from '@/components/marking/MarkingGame.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type {
@@ -30,6 +31,7 @@ import {
     type PhaseResult,
     type ResumePoint,
 } from '@/marking/useMarkingGame';
+import type { ProblemReport } from '@/report';
 import { storageAvailable } from '@/storage/db';
 import {
     clearSeenGames,
@@ -82,6 +84,9 @@ let saving: Promise<unknown> = Promise.resolve();
 const loading = ref(false);
 const failure = ref(false);
 const canSave = ref(true);
+
+/** What there is to report as a problem: a move, while its feedback shows. */
+const report = ref<ProblemReport | null>(null);
 
 // The board is kept short enough for the whole screen to fit without
 // scrolling: the header, the question and the bottom bar all stay in view.
@@ -327,6 +332,10 @@ onMounted(async () => {
             <p class="min-w-0 flex-1 truncate font-serif text-title-small">
                 {{ meta.heading }}
             </p>
+            <!-- Only while the game is on the board, as the report is. -->
+            <ReportProblem
+                :report="!failure && !loading && game !== null ? report : null"
+            />
             <AppButton
                 variant="quiet"
                 :disabled="loading || game === null"
@@ -365,6 +374,7 @@ onMounted(async () => {
             :scores="scores"
             @progress="saveProgress"
             @next="nextGame"
+            @report="(now) => (report = now)"
         />
 
         <div

@@ -10,6 +10,7 @@ import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/List
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
 import GuessGame from '@/components/guess/GuessGame.vue';
 import PageHead from '@/components/PageHead.vue';
+import ReportProblem from '@/components/ReportProblem.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import type {
     MasterGameData,
@@ -17,6 +18,7 @@ import type {
     PageMetaData,
 } from '@/generated/data';
 import { gameListLeft } from '@/guess/listReturn';
+import type { ProblemReport } from '@/report';
 import { storageAvailable } from '@/storage/db';
 import { readMasterGame } from '@/storage/masterGames';
 import type { MasterGameRecord } from '@/storage/types';
@@ -38,6 +40,9 @@ const canSave = ref(true);
  * failed, which a retry may fix.
  */
 const failure = ref<'missing' | 'unreachable' | null>(null);
+
+/** What there is to report as a problem: nothing until the game is over. */
+const report = ref<ProblemReport | null>(null);
 
 // The board is kept short enough for the whole screen to fit without
 // scrolling: the header, the prompt and the bottom bar all stay in view.
@@ -123,8 +128,8 @@ onMounted(load);
                     {{ occasion }}
                 </p>
             </div>
-            <!-- Keeps the title centred; the game options will go here. -->
-            <span class="size-11 flex-none" aria-hidden="true" />
+            <!-- Its room keeps the title centred while there is no flag. -->
+            <ReportProblem :report="report" keep-room />
         </header>
 
         <GuessGame
@@ -135,6 +140,7 @@ onMounted(load);
             "
             :saved="saved"
             :can-save="canSave"
+            @report="(now) => (report = now)"
         />
 
         <div

@@ -3,7 +3,7 @@
 // with the question or the outcome, the board with its marks, the legend,
 // and the bottom bar with the rewind button and the main action.
 
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import ChessBoard from '@/components/board/ChessBoard.vue';
 import { useBoardSize } from '@/components/board/useBoardSize';
 import AppButton from '@/components/ui/AppButton.vue';
@@ -27,6 +27,7 @@ import {
     scoreLabel,
     verdictOf,
 } from '@/marking/wording';
+import type { ProblemReport } from '@/report';
 import PhaseTabs from './PhaseTabs.vue';
 
 const props = defineProps<{
@@ -47,6 +48,8 @@ const emit = defineEmits<{
     progress: [ended: PhaseResult, next: ResumePoint | null];
     /** After the last phase of the last move, when the user moves on. */
     next: [];
+    /** What there is to report as a problem, whenever it changes. */
+    report: [report: ProblemReport | null];
 }>();
 
 // The size outlasts this game: the next one opens at the same size.
@@ -136,6 +139,41 @@ const mainLabel = computed(() => {
 
     return markingLabel(props.mode, marks.value.length);
 });
+
+/**
+ * What a problem report is about: the move and phase, while the feedback on
+ * it shows. There is nothing to report before then.
+ */
+const report = computed<ProblemReport | null>(() => {
+    if (feedback.value === null || step.value === null) {
+        return null;
+    }
+
+    const words = played.value
+        ? `${played.value.words} ${played.value.san ?? ''}`.trim()
+        : '';
+    const move = `move ${String(moveNumber.value)}, ply ${String(ply.value)}`;
+    const mode =
+        props.mode === 'squares' ? 'Square control' : 'Spot the hanging piece';
+
+    return {
+        title: `${mode}: game ${String(props.game.id)}, ${move}`,
+        details: [
+            `Mode: ${mode.toLowerCase()}`,
+            `Game: practice game ${String(props.game.id)}`,
+            `Move: ${words} (${move})`,
+            `Phase: ${phaseName(step.value, steps.value)}`,
+        ],
+    };
+});
+
+watch(
+    report,
+    (now) => {
+        emit('report', now);
+    },
+    { immediate: true },
+);
 
 function onMain(): void {
     if (feedback.value === null) {
