@@ -250,7 +250,7 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 - The six points above were settled in build step 21.
 - Puzzles are served easiest first within a category, by their Lichess rating. Puzzles with the same rating are served by puzzle ID, lowest first.
 - The all pieces option is one list across the six pieces, by rating and then by puzzle ID. Pieces are not taken in turn, so the mix follows the ratings: the easiest puzzles are mostly rook and king puzzles, and it evens out later.
-- In all pieces the prompt does not name the piece: it reads "Win material in two moves." In a piece's own category it names it, as in "Win material with the knight."
+- In all pieces the prompt does not name the piece: it reads "Find the best move." In a piece's own category it names it, as in "Find the best knight move." Changed on 15 October 2026 from "Win material in two moves." and "Win material with the knight.", because the last capture does not always come out ahead in material.
 - A puzzle counts as seen once its result is decided: at the first wrong move, or at the final capture when there was none. A puzzle that was shown and left before that is not seen, and is served again.
 - A puzzle the user has seen is not served again until the category runs out. The seen list for that category then resets.
 - Seen records are shared: there is one per puzzle, whichever category it was played in. A puzzle seen in the knight category is skipped in all pieces, and the other way round.
