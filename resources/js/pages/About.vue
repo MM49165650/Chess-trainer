@@ -70,11 +70,7 @@ defineProps<{
             by another pawn does not count here, unless one of the attackers is
             a pawn too.
         </p>
-        <p>
-            Kings are never marked. A piece pinned to its own king can only take
-            along the line of the pin, but it still stops the other king from
-            stepping onto any square it attacks.
-        </p>
+        <p>Kings are never marked.</p>
         <p>
             These rules only look at the position as it stands: who attacks and
             who defends each piece. A piece that can only be won by first making
