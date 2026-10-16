@@ -194,30 +194,66 @@ export function attackSet(board: Board, square: Square): Square[] {
     }
 }
 
-// Every piece and pawn except the kings that is attacked by an enemy and
-// defended by no other piece of its own colour. Kings attack and defend.
+// Whether a piece is hanging, from the pieces that attack and defend it.
+// Kings are never hanging, but they attack and defend.
+function isHanging(
+    piece: Piece,
+    attackers: readonly PieceType[],
+    defenders: readonly PieceType[],
+): boolean {
+    if (piece.type === 'king' || attackers.length === 0) {
+        return false;
+    }
+
+    const pawnAttacks = attackers.includes('pawn');
+
+    // 1. Attacked and not defended.
+    if (defenders.length === 0) {
+        return true;
+    }
+
+    // 2. A piece, not a pawn, attacked by a pawn.
+    if (piece.type !== 'pawn' && pawnAttacks) {
+        return true;
+    }
+
+    // 3. Two or more attackers and one defender, except a pawn defended by a
+    // pawn, unless a pawn attacks it as well.
+    if (attackers.length >= 2 && defenders.length === 1) {
+        return !(
+            piece.type === 'pawn' &&
+            defenders[0] === 'pawn' &&
+            !pawnAttacks
+        );
+    }
+
+    return false;
+}
+
+// Every piece and pawn that is hanging, by the three rules of Appendix B.
 function hangingSquares(board: Board): SquareSet {
-    const attackedBy: Record<Color, Set<Square>> = {
-        white: new Set(),
-        black: new Set(),
-    };
+    const attackersOf = new Map<Square, Piece[]>();
 
     for (const [square, piece] of board) {
         for (const target of attackSet(board, square)) {
-            attackedBy[piece.color].add(target);
+            attackersOf.set(target, [
+                ...(attackersOf.get(target) ?? []),
+                piece,
+            ]);
         }
     }
 
     const hanging: Square[] = [];
 
     for (const [square, piece] of board) {
+        const around = attackersOf.get(square) ?? [];
+        const typesOf = (color: Color): PieceType[] =>
+            around
+                .filter((other) => other.color === color)
+                .map((other) => other.type);
         const enemy: Color = piece.color === 'white' ? 'black' : 'white';
 
-        if (
-            piece.type !== 'king' &&
-            attackedBy[enemy].has(square) &&
-            !attackedBy[piece.color].has(square)
-        ) {
+        if (isHanging(piece, typesOf(enemy), typesOf(piece.color))) {
             hanging.push(square);
         }
     }

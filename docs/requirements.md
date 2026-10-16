@@ -1,6 +1,6 @@
 # Chess training site: product requirements
 
-Last updated: 14 October 2026
+Last updated: 16 October 2026
 
 A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that end in a capture, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
@@ -130,8 +130,8 @@ These rules are the specification for the import code and its tests. The two han
 | Occupied squares | A controlled square may hold a piece of either colour; controlling a friendly piece means defending it |
 | Rooks, bishops, queens | Control runs up to and including the first piece in the way |
 | Pawns | Control their two forward diagonal squares only, never the squares they push to |
-| Pins | Ignored for both control and hanging |
-| Hanging | Attacked by at least one enemy piece and defended by no friendly piece |
+| Pins | Ignored for both control and hanging: a pinned piece still attacks and defends |
+| Hanging | Any one of three rules, set out in Appendix B, step 6: attacked and not defended; a piece other than a pawn attacked by an enemy pawn; or two or more attackers and exactly one defender, except a pawn defended by a pawn when no pawn attacks it. Kings count as attackers and defenders. Decided on 16 October 2026 |
 | Hanging: scope | Pieces and pawns of both sides; kings are excluded |
 
 **Consequences of the rules**
@@ -280,7 +280,7 @@ The user watches a beginner game one move at a time and, after every move, marks
 **The one phase**
 
 - Each move has one phase: mark every hanging piece and pawn on the board, of both sides, judged after the move. A castling move has one phase as well.
-- The rules for hanging are those of Mode 2's definitions and Appendix B: attacked by at least one enemy piece and defended by no friendly piece, with pins ignored and kings left out. The answer is the stored `hanging` set.
+- The rules for hanging are those of Mode 2's definitions and Appendix B, step 6: a piece is hanging when it is attacked and not defended, when it is not a pawn and an enemy pawn attacks it, or when it has two or more attackers and exactly one defender, except a pawn defended by a pawn that no pawn attacks. Pins are ignored and kings are left out. The answer is the stored `hanging` set. The rules were widened from the first one alone on 16 October 2026.
 - A hanging piece is marked again on every move for as long as it stays hanging.
 - The piece that just moved can itself be hanging.
 - An empty submission is valid. Many positions have no hanging pieces.
@@ -652,7 +652,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 **Tests that matter most**
 
 - Tests are kept to a small fixed set. There is no general unit-testing practice and no coverage target; the static checks cover the rest.
-- Golden tests for the control and hanging-piece rules: fifteen to twenty hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
+- Golden tests for the control and hanging-piece rules: twenty-six hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
 - Import twice and confirm every game and puzzle keeps the same ID.
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
@@ -878,7 +878,12 @@ Call the position before the move B and the position after it A.
 3. `lost` is the before set minus the after set.
 4. `controlled` is the after set.
 5. Castling: do steps 1 to 4 separately for the king and for the rook. `lost` and `controlled` are the king's alone. The rook's two sets are stored apart, as `rook.lost` and `rook.controlled`. On every other move `rook` is null.
-6. `hanging`: look at every piece and pawn in A, of both colours, except the kings. It is attacked if its square is in the attack set of at least one enemy piece, pawn or king. It is defended if its square is in the attack set of at least one other piece, pawn or king of its own colour. If it is attacked and not defended, add its square.
+6. `hanging`: look at every piece and pawn in A, of both colours, except the kings. Its attackers are the enemy pieces, pawns and king whose attack set holds its square. Its defenders are the other pieces, pawns and king of its own colour whose attack set holds its square. Add its square if any of these is true:
+    1. It has at least one attacker and no defender.
+    2. It is a knight, bishop, rook or queen, and at least one attacker is a pawn. This rule does not apply to pawns.
+    3. It has two or more attackers and exactly one defender. This rule does not apply to a pawn whose one defender is a pawn, unless one of its attackers is a pawn.
+
+    The attack sets are the ones above, so a piece behind another on the same line is neither an attacker nor a defender. Rules 2 and 3 were added on 16 October 2026.
 7. `piece` is the type of the moving piece before the move. For castling it is `king`.
 
 **Notes**
@@ -906,6 +911,18 @@ After `e2e4`, `e7e5`, White plays `g1f3`.
 - `lost`: `e2`, `f3`, `h3`
 - `controlled`: `d2`, `d4`, `e1`, `e5`, `g1`, `g5`, `h2`, `h4`
 - `hanging`: `e5`, which the knight attacks and no black piece defends
+
+**Example: the three hanging rules**
+
+From a practice game, after 1.e3 d5 2.Qh5 Nc6 3.c4 dxc4 4.Bxc4 Nh6 5.g4 Ne5 6.g5 Nc6:
+
+- The knight on `h6` is attacked by the g5 pawn and the queen, and defended by the g7 pawn. It is hanging by rule 2, and by rule 3 as well.
+- `f7` is attacked by the bishop and the queen and defended by the king and the knight on h6, so it is not hanging.
+
+White then plays 7.gxh6:
+
+- `f7` still has its two attackers, but only the king defends it now. It is hanging by rule 3.
+- The pawn on `h6` is attacked by the g7 pawn and defended by the queen. One attacker and one defender, and rule 2 does not apply to pawns, so it is not hanging.
 
 **Example: castling**
 
@@ -972,7 +989,7 @@ A `moves` entry:
 | `black_rating` | smallint | Between 0 and 4000 |
 | `time_control` | text | As given by Lichess, for example `600+0` |
 | `ply_count` | smallint | At least 1 |
-| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1 and has been 2 since 13 October 2026, when the rook's answers on a castling move were stored apart from the king's |
+| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1. It became 2 on 13 October 2026, when the rook's answers on a castling move were stored apart from the king's, and has been 3 since 16 October 2026, when rules 2 and 3 were added to `hanging` |
 | `moves` | jsonb | Array with one entry per ply, in order; its length equals `ply_count` |
 
 A `moves` entry:
