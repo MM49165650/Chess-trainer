@@ -204,29 +204,36 @@ const VALUES: Readonly<Record<PieceType, number>> = {
     king: 0,
 };
 
+// An attacker, and whether it can actually capture. A pinned piece off its
+// pin line still attacks a square next to the enemy king, but cannot capture.
+type Attacker = { type: PieceType; captures: boolean };
+
 // Whether a piece is hanging, from the pieces that attack and defend it.
 // Kings are never hanging, but they attack and defend.
 function isHanging(
     piece: Piece,
-    attackers: readonly PieceType[],
+    attackers: readonly Attacker[],
     defenders: readonly PieceType[],
 ): boolean {
     if (piece.type === 'king' || attackers.length === 0) {
         return false;
     }
 
-    const pawnAttacks = attackers.includes('pawn');
+    const pawnAttacks = attackers.some(({ type }) => type === 'pawn');
 
     // 1. Attacked and not defended.
     if (defenders.length === 0) {
         return true;
     }
 
-    // 2. Attacked by a cheaper piece. A king never counts as the cheaper
-    // attacker, and nothing is cheaper than a pawn.
+    // 2. Attacked by a cheaper piece that can capture. A king never counts as
+    // the cheaper attacker, and nothing is cheaper than a pawn.
     if (
         attackers.some(
-            (type) => type !== 'king' && VALUES[type] < VALUES[piece.type],
+            ({ type, captures }) =>
+                captures &&
+                type !== 'king' &&
+                VALUES[type] < VALUES[piece.type],
         )
     ) {
         return true;
@@ -299,22 +306,36 @@ function pinLines(board: Board): Map<Square, ReadonlySet<Square>> {
 }
 
 // Every piece and pawn that is hanging, by the three rules of Appendix B.
-// A piece pinned to its king attacks and defends only along its pin line.
+// A piece pinned to its king attacks and defends only along its pin line,
+// except on a square the other side's king attacks or defends: it still gives
+// check there, so it counts in full, though it cannot capture.
 function hangingSquares(board: Board): SquareSet {
-    const attackersOf = new Map<Square, Piece[]>();
+    const attackersOf = new Map<Square, (Piece & { captures: boolean })[]>();
     const pins = pinLines(board);
+    const kingSquares = new Map<Color, ReadonlySet<Square>>();
+
+    for (const [square, piece] of board) {
+        if (piece.type === 'king') {
+            kingSquares.set(piece.color, new Set(attackSet(board, square)));
+        }
+    }
 
     for (const [square, piece] of board) {
         const line = pins.get(square);
+        const enemyKing =
+            kingSquares.get(piece.color === 'white' ? 'black' : 'white') ??
+            new Set<Square>();
 
         for (const target of attackSet(board, square)) {
-            if (line !== undefined && !line.has(target)) {
+            const captures = line === undefined || line.has(target);
+
+            if (!captures && !enemyKing.has(target)) {
                 continue;
             }
 
             attackersOf.set(target, [
                 ...(attackersOf.get(target) ?? []),
-                piece,
+                { ...piece, captures },
             ]);
         }
     }
@@ -323,13 +344,15 @@ function hangingSquares(board: Board): SquareSet {
 
     for (const [square, piece] of board) {
         const around = attackersOf.get(square) ?? [];
-        const typesOf = (color: Color): PieceType[] =>
-            around
-                .filter((other) => other.color === color)
-                .map((other) => other.type);
         const enemy: Color = piece.color === 'white' ? 'black' : 'white';
+        const attackers = around
+            .filter((other) => other.color === enemy)
+            .map(({ type, captures }) => ({ type, captures }));
+        const defenders = around
+            .filter((other) => other.color === piece.color)
+            .map((other) => other.type);
 
-        if (isHanging(piece, typesOf(enemy), typesOf(piece.color))) {
+        if (isHanging(piece, attackers, defenders)) {
             hanging.push(square);
         }
     }
