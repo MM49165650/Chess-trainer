@@ -35,8 +35,8 @@ defineProps<{
             <Link :href="ListTacticsCategoriesController.url()">
                 Tactics by piece</Link
             >
-            gives you short puzzles that win material in two moves, grouped by
-            the piece that does it, so you learn what each piece can do.
+            gives you short two-move puzzles, each ending in a capture, grouped
+            by the piece that plays them, so you learn what each piece can do.
         </p>
         <p>
             <Link :href="ShowSquaresController.url()">Square control</Link>
