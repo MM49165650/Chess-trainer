@@ -245,12 +245,73 @@ function isHanging(
     return false;
 }
 
+// The lines that pin a piece to its own king, by the pinned piece's square.
+// A line holds the squares between the king and the pinning piece, and the
+// pinning piece's own square. Pins to any other piece are ignored.
+function pinLines(board: Board): Map<Square, ReadonlySet<Square>> {
+    const pins = new Map<Square, ReadonlySet<Square>>();
+    const pinners: readonly [readonly Step[], readonly PieceType[]][] = [
+        [STRAIGHTS, ['rook', 'queen']],
+        [DIAGONALS, ['bishop', 'queen']],
+    ];
+
+    for (const [kingSquare, king] of board) {
+        if (king.type !== 'king') {
+            continue;
+        }
+
+        for (const [directions, types] of pinners) {
+            for (const direction of directions) {
+                const line: Square[] = [];
+                let pinned: Square | null = null;
+                let target = offset(kingSquare, direction);
+
+                while (target !== null) {
+                    line.push(target);
+                    const other = board.get(target);
+
+                    if (other !== undefined) {
+                        if (pinned !== null) {
+                            if (
+                                other.color !== king.color &&
+                                types.includes(other.type)
+                            ) {
+                                pins.set(pinned, new Set(line));
+                            }
+
+                            break;
+                        }
+
+                        if (other.color !== king.color) {
+                            break;
+                        }
+
+                        pinned = target;
+                    }
+
+                    target = offset(target, direction);
+                }
+            }
+        }
+    }
+
+    return pins;
+}
+
 // Every piece and pawn that is hanging, by the three rules of Appendix B.
+// A piece pinned to its king attacks and defends only along its pin line.
 function hangingSquares(board: Board): SquareSet {
     const attackersOf = new Map<Square, Piece[]>();
+    const pins = pinLines(board);
 
     for (const [square, piece] of board) {
+        const line = pins.get(square);
+
         for (const target of attackSet(board, square)) {
+            if (line !== undefined && !line.has(target)) {
+                continue;
+            }
+
             attackersOf.set(target, [
                 ...(attackersOf.get(target) ?? []),
                 piece,
