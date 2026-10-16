@@ -1,6 +1,11 @@
 # Deployment runbook
 
-How the site gets onto `chess.asanfa.com`: build step 4. Work through the sections in order. Every command runs on the server as root, from a root shell (the Hestia web terminal, the provider's console, or however you reach the server). After each command, "You should see" says what you should see. If you see something else, stop there and ask before going on.
+How the site gets onto `chess.asanfa.com`: build step 4. Work through the sections in order. Every command runs on the server as root, from a root shell (SSH, the Hestia web terminal, the provider's console, or however you reach the server). Over SSH, work inside `tmux` (`tmux new -s deploy`, and `tmux attach -t deploy` after a dropped connection), so that a long step such as the image build keeps running if the connection drops. After each command, "You should see" says what you should see. If you see something else, stop there and ask before going on.
+
+Two habits save trouble when pasting commands:
+
+- Paste any command that uses `apt` or runs something in a container (`docker compose exec`, `deploy.sh`, `backup.sh`) on its own, or last in a paste. These read the keyboard while they run and swallow any lines pasted after them, even with `exec -T`.
+- `HESTIA_USER` (section 0) lasts only for the shell it was set in. Set it again in every new shell: a new SSH connection, a new tmux window, and after a reboot.
 
 Each section ends with how to undo it. To undo everything, undo the sections in reverse order.
 
@@ -72,10 +77,10 @@ v-list-web-domain "$HESTIA_USER" chess.asanfa.com
 You should see the domain with SSL, Let's Encrypt and the HTTPS redirect (SSL force) all switched on, and the `IP` it listens on. Note the `PROXY` value (probably `default`): it is the template to go back to.
 
 ```bash
-v-list-web-domain-ssl "$HESTIA_USER" chess.asanfa.com | grep -E 'SUBJECT|NOT_AFTER|ISSUER'
+v-list-web-domain-ssl "$HESTIA_USER" chess.asanfa.com | grep -E 'SUBJECT|VALID TIL|ISSUER'
 ```
 
-You should see the subject `chess.asanfa.com`, a Let's Encrypt issuer and the expiry date. Note the date.
+You should see the subject `chess.asanfa.com`, a Let's Encrypt issuer, and the expiry date after `VALID TIL:` (Hestia's name for it in this listing). Note the date.
 
 ```bash
 grep FIREWALL_SYSTEM /usr/local/hestia/conf/hestia.conf
@@ -135,7 +140,7 @@ You should see apt fetch from `download.docker.com` and install the five package
 systemctl is-active docker && docker version --format '{{.Server.Version}}' && docker compose version
 ```
 
-You should see `active`, a Docker version (28 or later), and `Docker Compose version v2.` followed by a number.
+You should see `active`, a Docker version (28 or later), and `Docker Compose version v2.` or later (for example `v5.6.0`).
 
 ```bash
 docker run --rm hello-world | grep 'Hello from Docker'
@@ -257,19 +262,25 @@ You should see `Environment … production`, `Debug Mode … OFF` and `URL … c
 
 ## 6. Point chess.asanfa.com at the app
 
-The Hestia proxy template `asanfa` is `solvefem` with port 8012, plus the domain's access and error logs, so that Hestia's log viewer shows the visitors (section 7 uses them). The plain HTTP template keeps Hestia's HTTPS redirect include and the `nginx.conf_*` include; the HTTPS template keeps `nginx.ssl.conf_*`. Hestia's Let's Encrypt places its challenge answers in exactly those two include files, so issuing and renewing the certificate work as before.
+The Hestia proxy template `asanfa` is a copy of a proxy template already working on this server for another site, with the port changed to 8012, plus the domain's access and error logs, so that Hestia's log viewer shows the visitors (section 7 uses them). The plain HTTP template keeps Hestia's HTTPS redirect include and the `nginx.conf_*` include; the HTTPS template keeps `nginx.ssl.conf_*`. Hestia's Let's Encrypt places its challenge answers in exactly those two include files, so issuing and renewing the certificate work as before.
 
 ```bash
 install -m 644 deploy/hestia/asanfa.tpl deploy/hestia/asanfa.stpl /usr/local/hestia/data/templates/web/nginx/
 ```
 
-Compare the HTTPS template with the one that already works:
+Compare the HTTPS template with the one it was copied from. Set `EXISTING` to that template's name and `PORT` to the port it proxies to:
 
 ```bash
-diff <(sed 's/8011/8012/' /usr/local/hestia/data/templates/web/nginx/solvefem.stpl) /usr/local/hestia/data/templates/web/nginx/asanfa.stpl
+EXISTING=the-existing-template PORT=its-port && diff --strip-trailing-cr -w -B <(sed "s/$PORT/8012/" /usr/local/hestia/data/templates/web/nginx/$EXISTING.stpl) /usr/local/hestia/data/templates/web/nginx/asanfa.stpl
 ```
 
-You should see only the comment lines at the top and the three log lines (`access_log` twice and `error_log`) as differences. Anything else means `solvefem.stpl` differs from the copy given for this step: stop and ask. The same comparison for `asanfa.tpl` may show more, since the plain HTTP version of `solvefem` was not given; what matters there is the two `include` lines.
+You should see only the comment lines at the top and the three log lines (`access_log` twice and `error_log`) as differences. `--strip-trailing-cr -w -B` ignores line endings, spacing and blank lines, since the existing template may have been saved on Windows; without them every line shows as different. Anything else means the existing template differs from the copy given for this step: stop and ask. The plain HTTP template was not copied from an existing one; what matters there is its two `include` lines:
+
+```bash
+grep -h include /usr/local/hestia/data/templates/web/nginx/asanfa.tpl /usr/local/hestia/data/templates/web/nginx/asanfa.stpl
+```
+
+You should see `nginx.forcessl.conf*` and `nginx.conf_*` from `asanfa.tpl`, and `nginx.ssl.conf_*` from `asanfa.stpl`, plus one comment line that mentions includes.
 
 ```bash
 v-list-web-templates-proxy | grep -w asanfa
@@ -312,7 +323,7 @@ curl -s https://chess.asanfa.com/ | grep -o '<title>[^<]*' && curl -sI http://ch
 You should see `<title>Asanfa Chess Trainer`, then a `301` with `location: https://chess.asanfa.com/`. Open the site on a phone as well.
 
 ```bash
-v-list-web-domain-ssl "$HESTIA_USER" chess.asanfa.com | grep NOT_AFTER && grep -r v-update-letsencrypt /var/spool/cron/crontabs/
+v-list-web-domain-ssl "$HESTIA_USER" chess.asanfa.com | grep 'VALID TIL' && grep -r v-update-letsencrypt /var/spool/cron/crontabs/
 ```
 
 You should see the same expiry date as in section 1, and Hestia's renewal job, `v-update-letsencrypt-ssl`, which renews the certificate when it is close to expiry.
@@ -320,10 +331,10 @@ You should see the same expiry date as in section 1, and Hestia's renewal job, `
 Optionally, prove that issuing still works with the new template by issuing the certificate again now (this counts once against Let's Encrypt's weekly limit of five for the same name):
 
 ```bash
-v-add-letsencrypt-domain "$HESTIA_USER" chess.asanfa.com && v-list-web-domain-ssl "$HESTIA_USER" chess.asanfa.com | grep NOT_AFTER
+v-add-letsencrypt-domain "$HESTIA_USER" chess.asanfa.com && v-list-web-domain-ssl "$HESTIA_USER" chess.asanfa.com | grep VALID
 ```
 
-You should see no error, and an expiry date about 90 days from today. The challenge goes through Cloudflare: with Full (strict), Cloudflare reaches the server over HTTPS even for the challenge's HTTP address, which the HTTPS template answers through `nginx.ssl.conf_letsencrypt`.
+You should see no error, `VALID FROM` with today's date, and `VALID TIL` about 90 days from today. The expiry date noted in section 1 no longer applies. The challenge goes through Cloudflare: with Full (strict), Cloudflare reaches the server over HTTPS even for the challenge's HTTP address, which the HTTPS template answers through `nginx.ssl.conf_letsencrypt`.
 
 **Undo:**
 
@@ -366,10 +377,10 @@ tail -n 3 /var/log/apache2/domains/chess.asanfa.com.log
 You should see your phone's address at the start of the latest lines, not a Cloudflare address. This log is written by the `asanfa` template's `access_log`, with nginx's `$remote_addr`.
 
 ```bash
-docker compose logs --tail 3 app
+docker compose logs app | grep -v ' /up ' | tail -n 3
 ```
 
-You should see Apache's lines inside the container starting with `172.30.12.1`: every request comes from the trusted gateway.
+You should see Apache's lines inside the container starting with `172.30.12.1`: every request comes from the trusted gateway. The `grep` leaves out the container's own health check, which calls `/up` from `127.0.0.1` every 10 seconds and would otherwise fill the last lines.
 
 Last, what Laravel makes of such a request: a request from the gateway with a forged first address and a forged host.
 
@@ -528,16 +539,22 @@ The full imports, steps 18, 23 and 29, are not part of this step. When they are 
 | `data/intermediate/puzzles.jsonl` | about 3.3 MB | 23 |
 | `data/intermediate/practice-games.jsonl` | about 5 MB | 29 |
 
-1. Upload the file with Hestia's file manager, logged in as the Hestia user, into a new folder `chess-imports` in the home directory. No SSH is needed.
-2. As root, copy it into the folder the app container sees, read-only, as `/var/www/html/data/intermediate` (the bind mount in `compose.production.yaml`):
+1. Upload the file. With SSH, first run `mkdir -p /root/chess-imports` on the server, then, from PowerShell in the repository folder on your computer, with the server's IP address in place of `SERVER_IP`:
 
-    ```bash
-    install -d /opt/chess-trainer/data/intermediate && install -m 644 /home/$HESTIA_USER/chess-imports/puzzles.jsonl /opt/chess-trainer/data/intermediate/
+    ```powershell
+    scp data\intermediate\puzzles.jsonl root@SERVER_IP:/root/chess-imports/
     ```
 
-3. Check that it arrived whole: `sha256sum /opt/chess-trainer/data/intermediate/puzzles.jsonl` on the server must match `Get-FileHash data\intermediate\puzzles.jsonl` in PowerShell on the computer it came from.
-4. Run the load with `--dry-run` first, then for real, for example `docker compose exec app php artisan import:puzzles data/intermediate/puzzles.jsonl --dry-run`.
-5. Delete the uploaded copy from `chess-imports` afterwards.
+    Use the IP address, not `chess.asanfa.com`: Cloudflare does not pass SSH through. Without SSH, use Hestia's file manager, logged in as the Hestia user, and upload into a new folder `chess-imports` in the home directory; in step 2, read from `/home/$HESTIA_USER/chess-imports/` instead.
+2. As root, copy it into the folder the app container sees, read-only, as `/var/www/html/data/intermediate` (the bind mount in `compose.production.yaml`), from wherever step 1 put it:
+
+    ```bash
+    install -d /opt/chess-trainer/data/intermediate && install -m 644 /root/chess-imports/puzzles.jsonl /opt/chess-trainer/data/intermediate/
+    ```
+
+3. Check that it arrived whole: `sha256sum /opt/chess-trainer/data/intermediate/puzzles.jsonl` on the server must match `Get-FileHash data\intermediate\puzzles.jsonl` in PowerShell on the computer it came from (PowerShell prints it in capitals).
+4. Run the load with `--dry-run` first, then for real, each in its own paste, for example `docker compose exec -T app php artisan import:puzzles data/intermediate/puzzles.jsonl --dry-run`. The masters file loads with `import:master-games`, the practice games with `import:practice-games`.
+5. Delete the uploaded copy from `chess-imports` afterwards, and take a backup (`bash deploy/backup.sh`).
 
 Git ignores `data/`, so `git pull` never touches these files. Each load is safe to rerun and never deletes, so the IDs stay stable.
 

@@ -1,7 +1,7 @@
 # Asanfa Chess Trainer: proxies the whole site to the app container on
-# 127.0.0.1:8012. Copied from solvefem.stpl with the port changed and the domain
-# logs added. Kept in the repository as deploy/hestia/asanfa.stpl; see
-# docs/deployment.md for how to install it.
+# 127.0.0.1:8012. Copied from a proxy template already in use on the server,
+# with the port changed and the domain logs added. Kept in the repository as
+# deploy/hestia/asanfa.stpl; see docs/deployment.md for how to install it.
 
 server {
     listen      %ip%:%proxy_ssl_port% ssl;
