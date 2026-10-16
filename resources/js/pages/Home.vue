@@ -36,8 +36,7 @@ const MODES = [
     },
     {
         name: 'Tactics by piece',
-        description:
-            'Win material in two moves, sorted by the piece that plays them.',
+        description: 'Two-move tactics, sorted by the piece that plays them.',
         href: ListTacticsCategoriesController.url(),
     },
     {
