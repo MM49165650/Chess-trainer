@@ -202,8 +202,8 @@ onBeforeUnmount(() => {
             <h1 class="font-serif text-heading tracking-heading">
                 {{
                     namesPiece
-                        ? `Win material with the ${puzzle.piece}.`
-                        : 'Win material in two moves.'
+                        ? `Find the best ${puzzle.piece} move.`
+                        : 'Find the best move.'
                 }}
             </h1>
 
