@@ -101,8 +101,7 @@ onMounted(async () => {
                 Choose a piece.
             </h1>
             <p class="text-muted">
-                Win material in two moves with one piece, ending in a capture.
-                Easiest first.
+                Two moves with one piece, ending in a capture. Easiest first.
             </p>
             <p v-if="!canSave" class="text-caption text-muted" role="status">
                 Your progress will not be saved in this browser.

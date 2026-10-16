@@ -73,7 +73,7 @@ final class PageMetaData extends Data
     {
         return new self(
             title: 'Tactics by piece',
-            description: 'Short tactics grouped by piece. Win material in two moves, ending in a capture.',
+            description: 'Short tactics grouped by piece. Two moves, ending in a capture.',
             heading: 'Tactics by piece',
         );
     }
@@ -86,14 +86,14 @@ final class PageMetaData extends Data
         if ($piece === 'all') {
             return new self(
                 title: 'Tactics: all pieces',
-                description: 'Short tactics with every piece. Win material in two moves, ending in a capture.',
+                description: 'Short tactics with every piece. Two moves, ending in a capture.',
                 heading: 'All pieces',
             );
         }
 
         return new self(
             title: 'Tactics: '.$piece,
-            description: 'Short '.$piece.' tactics. Win material in two moves with the '.$piece.', ending in a capture.',
+            description: 'Short '.$piece.' tactics. Two moves with the '.$piece.', ending in a capture.',
             heading: Str::ucfirst($piece).' tactics',
         );
     }

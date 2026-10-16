@@ -2,7 +2,7 @@
 
 Last updated: 14 October 2026
 
-A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that win material, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
+A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that end in a capture, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
 ## MVP scope
 
@@ -13,7 +13,7 @@ The MVP is four training modes served from a read-only library, with nothing to 
 - Guess the move, with games from eleven masters
 - Square control, on games by players rated under 1200
 - Spot the hanging piece, on the same games
-- Tactics by piece, two moves long, each winning material by a capture
+- Tactics by piece, two moves long, each ending in a capture
 - Progress, history and settings saved in the browser
 - Command-line imports for all game and puzzle data
 - A mobile-first interface
@@ -215,7 +215,7 @@ Settled in build step 26, and shared with spot the hanging piece since 13 Octobe
 
 ## Mode 3: Tactics by piece
 
-The user solves short tactics grouped by the piece that delivers them. The mode is about winning material by capturing with a given piece. This was decided on 12 October 2026, after the full Lichess file was counted.
+The user solves short tactics grouped by the piece that delivers them. The mode is about short tactics with a given piece that end in a capture. This was decided on 12 October 2026, after the full Lichess file was counted. On 15 October 2026 the site's wording stopped calling it winning material, because the last capture does not always come out ahead.
 
 **Categories**
 
