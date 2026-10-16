@@ -48,9 +48,37 @@ defineProps<{
             <Link :href="ShowHangingController.url()">
                 Spot the hanging piece</Link
             >
-            uses the same games. After every move you mark each piece left
-            undefended and under attack, on either side, so you stop missing
-            free captures and stop giving them away.
+            uses the same games. After every move you mark every piece left
+            hanging, on either side, so you stop missing free captures and stop
+            giving them away.
+        </p>
+
+        <h2>What counts as hanging</h2>
+        <p>
+            A piece or pawn is hanging when the other side can win it. That
+            happens in three ways.
+        </p>
+        <p>Nothing defends it, and something attacks it.</p>
+        <p>
+            It is attacked by a cheaper piece, even if it is defended. A pawn is
+            worth the least, then a knight or bishop, then a rook, then the
+            queen. A knight attacking a rook, for example, wins the rook for a
+            knight.
+        </p>
+        <p>
+            It is attacked twice or more and defended only once. A pawn defended
+            by another pawn does not count here, unless one of the attackers is
+            a pawn too.
+        </p>
+        <p>
+            Kings are never marked. A piece pinned to its own king can only take
+            along the line of the pin, but it still stops the other king from
+            stepping onto any square it attacks.
+        </p>
+        <p>
+            These rules only look at the position as it stands: who attacks and
+            who defends each piece. A piece that can only be won by first making
+            a threat, or through a longer combination, is not marked.
         </p>
 
         <h2>Your progress</h2>
