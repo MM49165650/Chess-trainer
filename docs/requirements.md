@@ -131,7 +131,7 @@ These rules are the specification for the import code and its tests. The two han
 | Rooks, bishops, queens | Control runs up to and including the first piece in the way |
 | Pawns | Control their two forward diagonal squares only, never the squares they push to |
 | Pins | Ignored for both control and hanging: a pinned piece still attacks and defends |
-| Hanging | Any one of three rules, set out in Appendix B, step 6: attacked and not defended; a piece other than a pawn attacked by an enemy pawn; or two or more attackers and exactly one defender, except a pawn defended by a pawn when no pawn attacks it. Kings count as attackers and defenders. Decided on 16 October 2026 |
+| Hanging | Any one of three rules, set out in Appendix B, step 6: attacked and not defended; attacked by a cheaper piece; or two or more attackers and exactly one defender, except a pawn defended by a pawn when no pawn attacks it. Kings count as attackers and defenders, but never as the cheaper attacker. Decided on 16 October 2026, and rule 2 widened from a pawn attacker to any cheaper attacker the same day |
 | Hanging: scope | Pieces and pawns of both sides; kings are excluded |
 
 **Consequences of the rules**
@@ -280,7 +280,7 @@ The user watches a beginner game one move at a time and, after every move, marks
 **The one phase**
 
 - Each move has one phase: mark every hanging piece and pawn on the board, of both sides, judged after the move. A castling move has one phase as well.
-- The rules for hanging are those of Mode 2's definitions and Appendix B, step 6: a piece is hanging when it is attacked and not defended, when it is not a pawn and an enemy pawn attacks it, or when it has two or more attackers and exactly one defender, except a pawn defended by a pawn that no pawn attacks. Pins are ignored and kings are left out. The answer is the stored `hanging` set. The rules were widened from the first one alone on 16 October 2026.
+- The rules for hanging are those of Mode 2's definitions and Appendix B, step 6: a piece is hanging when it is attacked and not defended, when an enemy piece worth less than it attacks it, or when it has two or more attackers and exactly one defender, except a pawn defended by a pawn that no pawn attacks. Pins are ignored and kings are left out. The answer is the stored `hanging` set. The rules were widened from the first one alone on 16 October 2026.
 - A hanging piece is marked again on every move for as long as it stays hanging.
 - The piece that just moved can itself be hanging.
 - An empty submission is valid. Many positions have no hanging pieces.
@@ -652,7 +652,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 **Tests that matter most**
 
 - Tests are kept to a small fixed set. There is no general unit-testing practice and no coverage target; the static checks cover the rest.
-- Golden tests for the control and hanging-piece rules: twenty-six hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
+- Golden tests for the control and hanging-piece rules: thirty hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
 - Import twice and confirm every game and puzzle keeps the same ID.
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
@@ -880,10 +880,10 @@ Call the position before the move B and the position after it A.
 5. Castling: do steps 1 to 4 separately for the king and for the rook. `lost` and `controlled` are the king's alone. The rook's two sets are stored apart, as `rook.lost` and `rook.controlled`. On every other move `rook` is null.
 6. `hanging`: look at every piece and pawn in A, of both colours, except the kings. Its attackers are the enemy pieces, pawns and king whose attack set holds its square. Its defenders are the other pieces, pawns and king of its own colour whose attack set holds its square. Add its square if any of these is true:
     1. It has at least one attacker and no defender.
-    2. It is a knight, bishop, rook or queen, and at least one attacker is a pawn. This rule does not apply to pawns.
+    2. At least one attacker is worth less than it. The values are pawn 1, knight 3, bishop 3, rook 5 and queen 9. A knight and a bishop are equal, so neither is cheaper than the other. A king never counts as the cheaper attacker, because it cannot take a defended piece. Nothing is cheaper than a pawn, so this rule never applies to pawns. For example, a queen attacked by a knight is hanging even when it is defended, and a bishop attacked by a knight and defended once is not.
     3. It has two or more attackers and exactly one defender. This rule does not apply to a pawn whose one defender is a pawn, unless one of its attackers is a pawn.
 
-    The attack sets are the ones above, so a piece behind another on the same line is neither an attacker nor a defender. Rules 2 and 3 were added on 16 October 2026.
+    The attack sets are the ones above, so a piece behind another on the same line is neither an attacker nor a defender. Rules 2 and 3 were added on 16 October 2026. Rule 2 first asked only for a pawn attacking a knight, bishop, rook or queen, and was widened to any cheaper attacker the same day.
 7. `piece` is the type of the moving piece before the move. For castling it is `king`.
 
 **Notes**
@@ -989,7 +989,7 @@ A `moves` entry:
 | `black_rating` | smallint | Between 0 and 4000 |
 | `time_control` | text | As given by Lichess, for example `600+0` |
 | `ply_count` | smallint | At least 1 |
-| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1. It became 2 on 13 October 2026, when the rook's answers on a castling move were stored apart from the king's, and has been 3 since 16 October 2026, when rules 2 and 3 were added to `hanging` |
+| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1. It became 2 on 13 October 2026, when the rook's answers on a castling move were stored apart from the king's, became 3 on 16 October 2026, when rules 2 and 3 were added to `hanging`, and has been 4 since later that day, when rule 2 was widened from a pawn attacker to any cheaper attacker |
 | `moves` | jsonb | Array with one entry per ply, in order; its length equals `ply_count` |
 
 A `moves` entry:

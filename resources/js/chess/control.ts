@@ -194,6 +194,16 @@ export function attackSet(board: Board, square: Square): Square[] {
     }
 }
 
+// What each piece is worth to hanging rule 2. The king's value is never used.
+const VALUES: Readonly<Record<PieceType, number>> = {
+    pawn: 1,
+    knight: 3,
+    bishop: 3,
+    rook: 5,
+    queen: 9,
+    king: 0,
+};
+
 // Whether a piece is hanging, from the pieces that attack and defend it.
 // Kings are never hanging, but they attack and defend.
 function isHanging(
@@ -212,8 +222,13 @@ function isHanging(
         return true;
     }
 
-    // 2. A piece, not a pawn, attacked by a pawn.
-    if (piece.type !== 'pawn' && pawnAttacks) {
+    // 2. Attacked by a cheaper piece. A king never counts as the cheaper
+    // attacker, and nothing is cheaper than a pawn.
+    if (
+        attackers.some(
+            (type) => type !== 'king' && VALUES[type] < VALUES[piece.type],
+        )
+    ) {
         return true;
     }
 
