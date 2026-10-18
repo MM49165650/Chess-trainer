@@ -529,9 +529,9 @@ You should see the app container recreated and `Healthy`. This brings back the o
 
 **Undo:** roll back as above.
 
-## 11. Importing content (later)
+## 11. Importing content
 
-The full imports, steps 18, 23 and 29, are not part of this step. When they are done, the intermediate files go to the server like this. The source files never do, since the extracts run locally.
+The full imports, steps 18, 23 and 29, were done by 16 October 2026. An import is run again to load new content, or to update stored answers after a change to the calculation (see "Updating answers after a rule change" below). Either way, the intermediate files go to the server like this. The source files never do, since the extracts run locally.
 
 | File | Size | Step |
 | --- | --- | --- |
@@ -557,6 +557,39 @@ The full imports, steps 18, 23 and 29, are not part of this step. When they are 
 5. Delete the uploaded copy from `chess-imports` afterwards, and take a backup (`bash deploy/backup.sh`).
 
 Git ignores `data/`, so `git pull` never touches these files. Each load is safe to rerun and never deletes, so the IDs stay stable.
+
+**Updating answers after a rule change**
+
+When a change to the calculation in Appendix B of the requirements raises `ANSWERS_VERSION`, the practice games already on the server keep their old answers until they are updated. Done this way on 17 October 2026, for answers version 4.
+
+1. Merge and deploy the pull request first (section 10).
+2. On your computer, regenerate `data/intermediate/practice-games.jsonl` with the same source and options, and update the local database with `--update`. Check that it holds the same 500 games with the same IDs, and that every game carries the new version. In PowerShell, in the repository folder, this prints 500 when the file is at version 4 (change the number for a later version):
+
+    ```powershell
+    (Select-String -Path data\intermediate\practice-games.jsonl -Pattern '"answers_version":\s*4').Count
+    ```
+
+    Keep the fingerprint from `Get-FileHash data\intermediate\practice-games.jsonl` for step 3. Upload only this file, not the backup copies the regeneration leaves beside it.
+3. Upload it and check its fingerprint as in steps 1 to 3 above.
+4. Take a backup, in its own paste: `bash deploy/backup.sh`.
+5. Run the load with `--dry-run --update`, in its own paste:
+
+    ```bash
+    docker compose exec -T app php artisan import:practice-games data/intermediate/practice-games.jsonl --dry-run --update
+    ```
+
+    It must report `Imported 0` and `Updated 500`, with 500 practice games in the database. Anything else means the server holds different games: stop and find out why before going on.
+6. Run it again without `--dry-run`, in its own paste.
+7. Check the version, in its own paste. It should print one line, `4|500` for version 4:
+
+    ```bash
+    docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select answers_version, count(*) from practice_games group by 1"'
+    ```
+
+8. Purge the Cloudflare cache: in the dashboard for the domain, **Caching → Configuration → Purge Cache**, either a custom purge of the hostname `chess.asanfa.com` or **Purge Everything**. Each game is cached for a day, by Cloudflare and by browsers. Without the purge, the old answers can be served for up to a day; browsers refresh their own copies within a day by themselves, so players need not do anything.
+9. Delete the uploaded copy from `chess-imports`.
+
+**Undo:** restore the backup from step 4 (section 9), then purge the Cloudflare cache again.
 
 ## Resource limits
 
