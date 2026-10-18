@@ -104,7 +104,7 @@ Until 13 October 2026 this mode had a third phase, hanging pieces. On that day, 
 **Games**
 
 - Games come from the Lichess open database: rated 10-minute rapid games with no increment, with both players rated under 1200. Games with a bot player are left out. Decided on 13 October 2026.
-- 500 games are loaded, between 30 and 120 plies long, chosen for a mix of openings and game lengths. Appendix E has the exact rule.
+- 4,000 games are loaded, between 30 and 120 plies long, chosen for a mix of openings and game lengths. Appendix E has the exact rule. There were 500 at first; on 18 October 2026 they were grown to 4,000, keeping the first 500 and their IDs.
 - Usernames are removed at import.
 - The user goes through the whole game move by move, starting at move 1. These are not isolated puzzles.
 - Moves are shown, not guessed. Every move by either side is an exercise.
@@ -196,7 +196,7 @@ Added on 14 October 2026, after build step 33 and before the first deployment. T
 - They apply to the next game picked: by Start, by "Start new game", by "Next game" on the play screen, and when a saved session's game cannot be resumed. A game in progress keeps going as it started; the grouping on the page shows this, so there is no note about it.
 - Start new game, while a game is in progress: it records the current game as abandoned, as "Next game" does, picks a new game with the current choices, never the one just left, and opens the play screen on it. There is no confirmation step.
 - When every game of the chosen band has been seen in this mode, that band's seen games are cleared without a message, and picking starts again from all of them. The mode's seen games in the other bands are kept. With Any, the band is every game, so the whole set is cleared, as before.
-- If the chosen band holds no game at all, the play screen says "There are no games of this length yet." It cannot happen with the 500 games, which fill all three bands.
+- If the chosen band holds no game at all, the play screen says "There are no games of this length yet." It cannot happen with the 4,000 games, which fill all three bands.
 
 **The marking screen**
 
@@ -274,7 +274,7 @@ The user watches a beginner game one move at a time and, after every move, marks
 
 **Games**
 
-- The games are the 500 practice games of square control, with the same stored answers. Nothing is imported again, and the mode has no import command of its own.
+- The games are the 4,000 practice games of square control, with the same stored answers. Nothing is imported again, and the mode has no import command of its own.
 - The user goes through the whole game move by move, starting at move 1. Moves are shown, not guessed, and every move by either side is an exercise.
 
 **The one phase**
@@ -785,7 +785,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet. After the step, on 13 October 2026, the screen was split into the two modes: two phases in square control, one in spot the hanging piece, and moving on by itself after a phase that is exactly right | A full game can be worked through comfortably on a phone |
 | 27. Session | For both modes, each with its own progress: next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase in each mode, and a game finished in one mode is still served in the other |
 | 28. Tallies | For square control, the two phase scores and the tallies by piece; for spot the hanging piece, its one score | The numbers match a session counted by hand |
-| 29. Full import | Done by 16 October 2026: all practice games loaded on the server, from the same intermediate file loaded locally in step 24 (`data/intermediate/practice-games.jsonl`, kept safe outside the repository), so the 500 games do not change. On 17 October 2026 their answers were brought up to answers version 4 with the update option, keeping every ID | Needs no further decisions: game selection is settled |
+| 29. Full import | Done by 16 October 2026: all practice games loaded on the server, from the same intermediate file loaded locally in step 24 (`data/intermediate/practice-games.jsonl`, kept safe outside the repository), so the 500 games do not change. On 17 October 2026 their answers were brought up to answers version 4 with the update option, keeping every ID. On 18 October 2026 the practice games were grown from 500 to 4,000 (`--limit 4000 --per-family 200`) from the same source file, keeping every ID: the first 500 are among the 4,000, and the new games follow on from them | Needs no further decisions: game selection is settled |
 
 **Stage 6: Finish**
 
@@ -806,7 +806,7 @@ One decision is still open: whether progress carries over after installing on an
 
 | Decision | Applies to | What needs deciding |
 | --- | --- | --- |
-| Game selection | Square control | Decided on 13 October 2026, after a report on the first 4.9 million games of the September 2026 file: 500 games with the time control `600+0`, both players under 1200, no bot players, 30 to 120 plies, at most 25 per opening family, spread evenly over three length bands. Appendix E has the exact rule |
+| Game selection | Square control | Decided on 13 October 2026, after a report on the first 4.9 million games of the September 2026 file: 500 games with the time control `600+0`, both players under 1200, no bot players, 30 to 120 plies, at most 25 per opening family, spread evenly over three length bands. On 18 October 2026 grown to 4,000 games with at most 200 per opening family, by the same rules and from the same file, so the first 500 stay. Appendix E has the exact rule |
 | Puzzle difficulty | Tactics by piece | Decided on 12 October 2026: a rating of at most 1500, a popularity of at least 80, at least 500 plays, and 2,000 per piece, taking the most popular, then the most played, then by puzzle ID. Puzzles are served easiest first within a category |
 | Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
@@ -1146,8 +1146,8 @@ They are options so that the values can change without code changes.
 | `extract:practice` | `--max-rating` | Rating limit. Both players must be under it | 1200. Decided on 13 October 2026 |
 | `extract:practice` | `--min-plies` | Shortest game kept | 30. Decided on 13 October 2026 |
 | `extract:practice` | `--max-plies` | Longest game kept | 120. Decided on 13 October 2026 |
-| `extract:practice` | `--limit` | How many games are chosen | 500. Decided on 13 October 2026 |
-| `extract:practice` | `--per-family` | Most games chosen per opening family | 25. Decided on 13 October 2026 |
+| `extract:practice` | `--limit` | How many games are chosen | 4000. Decided on 13 October 2026 as 500, raised to 4000 on 18 October 2026 |
+| `extract:practice` | `--per-family` | Most games chosen per opening family | 200. Decided on 13 October 2026 as 25, raised to 200 on 18 October 2026 |
 | `extract:puzzles` | `--max-rating` | Highest puzzle rating kept | 1500. Decided on 12 October 2026 |
 | `extract:puzzles` | `--min-popularity` | Lowest popularity kept | 80. Decided on 12 October 2026 |
 | `extract:puzzles` | `--min-plays` | Fewest plays kept | 500. Decided on 12 October 2026 |
@@ -1182,7 +1182,7 @@ Decided on 13 October 2026. The aim is a mix of openings and of game lengths, an
 
 - The opening family of a game is its `Opening` tag up to the first colon, so "Sicilian Defense: Bowdler Attack" belongs to "Sicilian Defense". A game with no `Opening` tag belongs to the family `?`.
 - There are three length bands: short, up to 49 plies; medium, 50 to 73 plies; and long, 74 plies or more. With the default limits these are 30 to 49, 50 to 73 and 74 to 120. Since 14 October 2026 the same bands are the game length choice of the two marking modes, so they are defined once, in `resources/js/marking/lengths.ts`, which the extract uses.
-- Each band takes a third of `--limit`. When the limit does not divide by three, the shorter bands take the remainder, so 500 gives 167, 167 and 166.
+- Each band takes a third of `--limit`. When the limit does not divide by three, the shorter bands take the remainder, so 4,000 gives 1,334, 1,333 and 1,333.
 - The games are put in order of the SHA-256 of their moves as written in the file: standard notation, joined by single spaces, without move numbers, comments, annotation symbols or the result. This order does not depend on the order in the file.
 - The games are taken in that order. A game is chosen when its band is not full and its family has fewer than `--per-family` games. Otherwise it is passed over.
 - A chosen game is then replayed. One with an illegal move is skipped, and its place stays open for a later game. One with the same moves as a game already chosen is skipped as well.

@@ -41,8 +41,8 @@ export const DEFAULT_OPTIONS: PracticeOptions = {
     maxRating: 1200,
     minPlies: 30,
     maxPlies: 120,
-    limit: 500,
-    perFamily: 25,
+    limit: 4000,
+    perFamily: 200,
 };
 
 /** One game of the source file: its tags and its moves as written. */
