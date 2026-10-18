@@ -1285,7 +1285,7 @@ A practice game response:
 {
   "id": 7,
   "ply_count": 64,
-  "answers_version": 2,
+  "answers_version": 4,
   "moves": [
     {
       "uci": "g1f3",
