@@ -537,7 +537,7 @@ The full imports, steps 18, 23 and 29, were done by 16 October 2026. An import i
 | --- | --- | --- |
 | `data/intermediate/masters.jsonl` | about 14 MB | 18 |
 | `data/intermediate/puzzles.jsonl` | about 3.3 MB | 23 |
-| `data/intermediate/practice-games.jsonl` | about 5 MB | 29 |
+| `data/intermediate/practice-games.jsonl` | about 41 MB, 4,000 games since 18 October 2026 | 29 |
 
 1. Upload the file. With SSH, first run `mkdir -p /root/chess-imports` on the server, then, from PowerShell in the repository folder on your computer, with the server's IP address in place of `SERVER_IP`:
 
@@ -553,7 +553,7 @@ The full imports, steps 18, 23 and 29, were done by 16 October 2026. An import i
     ```
 
 3. Check that it arrived whole: `sha256sum /opt/chess-trainer/data/intermediate/puzzles.jsonl` on the server must match `Get-FileHash data\intermediate\puzzles.jsonl` in PowerShell on the computer it came from (PowerShell prints it in capitals).
-4. Run the load with `--dry-run` first, then for real, each in its own paste, for example `docker compose exec -T app php artisan import:puzzles data/intermediate/puzzles.jsonl --dry-run`. The masters file loads with `import:master-games`, the practice games with `import:practice-games`.
+4. Run the load with `--dry-run` first, then for real, each in its own paste, for example `docker compose exec -T app php artisan import:puzzles data/intermediate/puzzles.jsonl --dry-run`. The masters file loads with `import:master-games`, the practice games with `import:practice-games`. Run the practice games load as `php -d memory_limit=512M artisan import:practice-games …`: the import reads the whole file at once, and with 4,000 games it peaked at 117 MB, close to PHP's usual 128 MB limit. The app container has 768 MB, so 512 MB for this one command is safe.
 5. Delete the uploaded copy from `chess-imports` afterwards, and take a backup (`bash deploy/backup.sh`).
 
 Git ignores `data/`, so `git pull` never touches these files. Each load is safe to rerun and never deletes, so the IDs stay stable.
@@ -563,10 +563,10 @@ Git ignores `data/`, so `git pull` never touches these files. Each load is safe 
 When a change to the calculation in Appendix B of the requirements raises `ANSWERS_VERSION`, the practice games already on the server keep their old answers until they are updated. Done this way on 17 October 2026, for answers version 4.
 
 1. Merge and deploy the pull request first (section 10).
-2. On your computer, regenerate `data/intermediate/practice-games.jsonl` with the same source and options, and update the local database with `--update`. Check that it holds the same 500 games with the same IDs, and that every game carries the new version. In PowerShell, in the repository folder, this prints 500 when the file is at version 4 (change the number for a later version):
+2. On your computer, regenerate `data/intermediate/practice-games.jsonl` with the same source and options, and update the local database with `--update`. Check that it holds the same games with the same IDs, 4,000 since 18 October 2026, and that every game carries the new version. In PowerShell, in the repository folder, this prints the number of games in the file, 4000, when the file is at version 6 (change the number for a later version):
 
     ```powershell
-    (Select-String -Path data\intermediate\practice-games.jsonl -Pattern '"answers_version":\s*4').Count
+    (Select-String -Path data\intermediate\practice-games.jsonl -Pattern '"answers_version":\s*6').Count
     ```
 
     Keep the fingerprint from `Get-FileHash data\intermediate\practice-games.jsonl` for step 3. Upload only this file, not the backup copies the regeneration leaves beside it.
@@ -575,12 +575,12 @@ When a change to the calculation in Appendix B of the requirements raises `ANSWE
 5. Run the load with `--dry-run --update`, in its own paste:
 
     ```bash
-    docker compose exec -T app php artisan import:practice-games data/intermediate/practice-games.jsonl --dry-run --update
+    docker compose exec -T app php -d memory_limit=512M artisan import:practice-games data/intermediate/practice-games.jsonl --dry-run --update
     ```
 
-    It must report `Imported 0` and `Updated 500`, with 500 practice games in the database. Anything else means the server holds different games: stop and find out why before going on.
-6. Run it again without `--dry-run`, in its own paste.
-7. Check the version, in its own paste. It should print one line, `4|500` for version 4:
+    It must report `Imported 0` and `Updated` equal to the number of games in the file, 4,000 since 18 October 2026, with the same number of practice games in the database. The one exception is the first load of the 4,000-game file on a server that still holds the first 500: it reports `Imported 3500` and `Updated 500`, and 4,000 in the database afterwards. Anything else means the server holds different games: stop and find out why before going on.
+6. Run it again without `--dry-run`, in its own paste, keeping `-d memory_limit=512M`.
+7. Check the version, in its own paste. It should print one line, the new version and the number of games, `6|4000` for version 6:
 
     ```bash
     docker compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "select answers_version, count(*) from practice_games group by 1"'
