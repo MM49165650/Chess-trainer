@@ -154,6 +154,10 @@ test('both endpoints are limited to 120 requests a minute', function (string $pa
 test('a game opens at its own address in each marking mode, and an unknown number is not found', function (string $mode, string $title): void {
     $game = madeUpPracticeGame('a');
 
+    // The check runs before the assets are built, so the page is drawn
+    // without them.
+    $this->withoutVite();
+
     $this->get('/'.$mode.'/game/'.$game->id)
         ->assertOk()
         ->assertSee('<title>Game '.$game->id.' · '.$title.' - ', false)
