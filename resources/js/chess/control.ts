@@ -194,7 +194,8 @@ export function attackSet(board: Board, square: Square): Square[] {
     }
 }
 
-// What each piece is worth to hanging rule 2. The king's value is never used.
+// What each piece is worth to hanging rules 2 and 3. The king's value is
+// never used.
 const VALUES: Readonly<Record<PieceType, number>> = {
     pawn: 1,
     knight: 3,
@@ -219,8 +220,6 @@ function isHanging(
         return false;
     }
 
-    const pawnAttacks = attackers.some(({ type }) => type === 'pawn');
-
     // 1. Attacked and not defended.
     if (defenders.length === 0) {
         return true;
@@ -239,13 +238,17 @@ function isHanging(
         return true;
     }
 
-    // 3. Two or more attackers and one defender, except a pawn defended by a
-    // pawn, unless a pawn attacks it as well.
+    // 3. Two or more attackers and one defender, when an attacker that can
+    // make the first capture is worth no more than it, or when the one
+    // defender is the king. A king never makes the first capture.
     if (attackers.length >= 2 && defenders.length === 1) {
-        return !(
-            piece.type === 'pawn' &&
-            defenders[0] === 'pawn' &&
-            !pawnAttacks
+        const starters = attackers.filter(
+            ({ type, captures }) => captures && type !== 'king',
+        );
+
+        return (
+            starters.some(({ type }) => VALUES[type] <= VALUES[piece.type]) ||
+            (defenders[0] === 'king' && starters.length > 0)
         );
     }
 
