@@ -125,7 +125,7 @@ test('each rule skips its game and reports it, and no name is written', () => {
         white_rating: 1100,
         black_rating: 1150,
         time_control: '600+0',
-        answers_version: 5,
+        answers_version: 6,
     });
 });
 

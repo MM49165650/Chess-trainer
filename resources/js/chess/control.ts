@@ -194,65 +194,32 @@ export function attackSet(board: Board, square: Square): Square[] {
     }
 }
 
-// What each piece is worth to hanging rules 2 and 3. The king's value is
-// never used.
+// What each piece is worth in the exchange. A king always captures last, and
+// its own value is never used, because nothing can take it back.
 const VALUES: Readonly<Record<PieceType, number>> = {
     pawn: 1,
     knight: 3,
     bishop: 3,
     rook: 5,
     queen: 9,
-    king: 0,
+    king: Infinity,
 };
 
-// An attacker, and whether it can actually capture. A pinned piece off its
-// pin line still attacks a square next to the enemy king, but cannot capture.
-type Attacker = { type: PieceType; captures: boolean };
+// A piece that can take part in the exchange on a square, and whether it can
+// actually capture. A pinned piece off its pin line cannot, but it still
+// attacks the square, so the other side's king cannot capture there.
+type Capturer = { type: PieceType; captures: boolean };
 
-// Whether a piece is hanging, from the pieces that attack and defend it.
-// Kings are never hanging, but they attack and defend.
-function isHanging(
-    piece: Piece,
-    attackers: readonly Attacker[],
-    defenders: readonly PieceType[],
-): boolean {
-    if (piece.type === 'king' || attackers.length === 0) {
-        return false;
-    }
+// One side's capturers on a square, as lines: a piece that attacks the square,
+// then the pieces lined up behind it, in the order they can capture.
+type Lines = readonly (readonly Capturer[])[];
 
-    // 1. Attacked and not defended.
-    if (defenders.length === 0) {
-        return true;
-    }
+// The step from one square to another on the same rank, file or diagonal.
+function stepTowards(from: Square, to: Square): Step {
+    const files = FILES.indexOf(to.charAt(0)) - FILES.indexOf(from.charAt(0));
+    const ranks = Number(to.charAt(1)) - Number(from.charAt(1));
 
-    // 2. Attacked by a cheaper piece that can capture. A king never counts as
-    // the cheaper attacker, and nothing is cheaper than a pawn.
-    if (
-        attackers.some(
-            ({ type, captures }) =>
-                captures &&
-                type !== 'king' &&
-                VALUES[type] < VALUES[piece.type],
-        )
-    ) {
-        return true;
-    }
-
-    // 3. Two or more attackers and one defender, when an attacker that can
-    // make the first capture is worth no more than it, or when the one
-    // defender is the king. A king never makes the first capture.
-    if (attackers.length >= 2 && defenders.length === 1) {
-        const starters = attackers.filter(
-            ({ type, captures }) => captures && type !== 'king',
-        );
-
-        return (
-            starters.some(({ type }) => VALUES[type] <= VALUES[piece.type]) ||
-            (defenders[0] === 'king' && starters.length > 0)
-        );
-    }
-
-    return false;
+    return [Math.sign(files), Math.sign(ranks)];
 }
 
 // The lines that pin a piece to its own king, by the pinned piece's square.
@@ -308,54 +275,132 @@ function pinLines(board: Board): Map<Square, ReadonlySet<Square>> {
     return pins;
 }
 
-// Every piece and pawn that is hanging, by the three rules of Appendix B.
-// A piece pinned to its king attacks and defends only along its pin line,
-// except on a square the other side's king attacks or defends: it still gives
-// check there, so it counts in full, though it cannot capture.
-function hangingSquares(board: Board): SquareSet {
-    const attackersOf = new Map<Square, (Piece & { captures: boolean })[]>();
-    const pins = pinLines(board);
-    const kingSquares = new Map<Color, ReadonlySet<Square>>();
+function opponent(color: Color): Color {
+    return color === 'white' ? 'black' : 'white';
+}
 
-    for (const [square, piece] of board) {
-        if (piece.type === 'king') {
-            kingSquares.set(piece.color, new Set(attackSet(board, square)));
+// Both sides' capturers on a square. Behind a rook, bishop, queen or pawn
+// that attacks the square, the next piece on the line running away from it
+// joins in if it is of the same colour and moves along that line, and so on
+// down the line. Nothing behind a knight or a king counts.
+function capturersOf(
+    board: Board,
+    attacks: ReadonlyMap<Square, readonly Square[]>,
+    pins: ReadonlyMap<Square, ReadonlySet<Square>>,
+    square: Square,
+): Record<Color, Lines> {
+    const lines: Record<Color, Capturer[][]> = { white: [], black: [] };
+    const capturer = (from: Square, piece: Piece): Capturer => ({
+        type: piece.type,
+        captures: pins.get(from)?.has(square) ?? true,
+    });
+
+    for (const [from, piece] of board) {
+        if (!(attacks.get(from) ?? []).includes(square)) {
+            continue;
         }
-    }
 
-    for (const [square, piece] of board) {
-        const line = pins.get(square);
-        const enemyKing =
-            kingSquares.get(piece.color === 'white' ? 'black' : 'white') ??
-            new Set<Square>();
+        const line = [capturer(from, piece)];
 
-        for (const target of attackSet(board, square)) {
-            const captures = line === undefined || line.has(target);
+        if (piece.type !== 'knight' && piece.type !== 'king') {
+            const step = stepTowards(square, from);
+            const movers: readonly PieceType[] =
+                step[0] === 0 || step[1] === 0
+                    ? ['rook', 'queen']
+                    : ['bishop', 'queen'];
+            let target = offset(from, step);
 
-            if (!captures && !enemyKing.has(target)) {
-                continue;
+            while (target !== null) {
+                const other = board.get(target);
+
+                if (other !== undefined) {
+                    if (
+                        other.color !== piece.color ||
+                        !movers.includes(other.type)
+                    ) {
+                        break;
+                    }
+
+                    line.push(capturer(target, other));
+                }
+
+                target = offset(target, step);
             }
-
-            attackersOf.set(target, [
-                ...(attackersOf.get(target) ?? []),
-                { ...piece, captures },
-            ]);
         }
+
+        lines[piece.color].push(line);
     }
 
+    return lines;
+}
+
+// The most one side can win by capturing next on a square, where `target` is
+// the value of the piece standing there and `used` counts how many pieces of
+// each line have already captured. The side captures with its cheapest piece
+// that can, and either side may stop instead, so the result is never below 0.
+// A king captures only when nothing of the other side still attacks the
+// square, and that ends the exchange.
+function exchange(
+    lines: Record<Color, Lines>,
+    used: Record<Color, readonly number[]>,
+    side: Color,
+    target: number,
+): number {
+    const ready = (color: Color) =>
+        lines[color].flatMap((line, index) => {
+            const head = line[used[color][index] ?? 0];
+
+            return head === undefined ? [] : [{ ...head, index }];
+        });
+    const capturer = ready(side)
+        .filter(({ captures }) => captures)
+        .sort((a, b) => VALUES[a.type] - VALUES[b.type])[0];
+
+    if (capturer === undefined) {
+        return 0;
+    }
+
+    if (capturer.type === 'king') {
+        return ready(opponent(side)).length === 0 ? target : 0;
+    }
+
+    const next = {
+        ...used,
+        [side]: used[side].map((count, index) =>
+            index === capturer.index ? count + 1 : count,
+        ),
+    };
+
+    return Math.max(
+        0,
+        target - exchange(lines, next, opponent(side), VALUES[capturer.type]),
+    );
+}
+
+// Every piece and pawn that is hanging, by Appendix B, step 6: the other side
+// can win material by capturing on its square. Pins are worked out once, in
+// this position, and not again during the exchange.
+function hangingSquares(board: Board): SquareSet {
+    const pins = pinLines(board);
+    const attacks = new Map(
+        [...board.keys()].map((square) => [square, attackSet(board, square)]),
+    );
     const hanging: Square[] = [];
 
     for (const [square, piece] of board) {
-        const around = attackersOf.get(square) ?? [];
-        const enemy: Color = piece.color === 'white' ? 'black' : 'white';
-        const attackers = around
-            .filter((other) => other.color === enemy)
-            .map(({ type, captures }) => ({ type, captures }));
-        const defenders = around
-            .filter((other) => other.color === piece.color)
-            .map((other) => other.type);
+        if (piece.type === 'king') {
+            continue;
+        }
 
-        if (isHanging(piece, attackers, defenders)) {
+        const lines = capturersOf(board, attacks, pins, square);
+        const used = {
+            white: lines.white.map(() => 0),
+            black: lines.black.map(() => 0),
+        };
+
+        if (
+            exchange(lines, used, opponent(piece.color), VALUES[piece.type]) > 0
+        ) {
             hanging.push(square);
         }
     }

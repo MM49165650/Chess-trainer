@@ -130,8 +130,8 @@ These rules are the specification for the import code and its tests. The two han
 | Occupied squares | A controlled square may hold a piece of either colour; controlling a friendly piece means defending it |
 | Rooks, bishops, queens | Control runs up to and including the first piece in the way |
 | Pawns | Control their two forward diagonal squares only, never the squares they push to |
-| Pins | Ignored for control: a pinned piece still controls every square it attacks. For hanging, pins to the king count: a piece pinned to its own king attacks and defends only along its pin line, except on a square next to the other side's king, as set out in Appendix B, step 6. Pins to the queen or any other piece are ignored. Decided on 16 October 2026 |
-| Hanging | Any one of three rules, set out in Appendix B, step 6: attacked and not defended; attacked by a cheaper piece; or two or more attackers and exactly one defender, when an attacker is worth no more than the piece or the one defender is the king. Kings count as attackers and defenders, but never as the cheaper attacker, and never make the first capture. Decided on 16 October 2026, and rule 2 widened from a pawn attacker to any cheaper attacker the same day. Rule 3 changed on 18 October 2026 |
+| Pins | Ignored for control: a pinned piece still controls every square it attacks. For hanging, pins to the king count: a piece pinned to its own king can capture only along its pin line, but it still stops the other side's king from capturing on a square it attacks, as set out in Appendix B, step 6. Pins to the queen or any other piece are ignored. Decided on 16 October 2026, and worded for the exchange on 18 October 2026 |
+| Hanging | The other side can win material by capturing on the piece's square. This is worked out by an exchange on that square, set out in Appendix B, step 6: the sides take turns capturing there, each with its cheapest piece, either side may stop, and the piece is hanging if the attacking side comes out ahead. An even trade is not hanging. Pieces lined up behind a capturer take part in turn, and a king captures only when nothing of the other side still attacks the square. Decided on 18 October 2026, replacing three counting rules used from 16 October 2026 |
 | Hanging: scope | Pieces and pawns of both sides; kings are excluded |
 
 **Consequences of the rules**
@@ -280,7 +280,7 @@ The user watches a beginner game one move at a time and, after every move, marks
 **The one phase**
 
 - Each move has one phase: mark every hanging piece and pawn on the board, of both sides, judged after the move. A castling move has one phase as well.
-- The rules for hanging are those of Mode 2's definitions and Appendix B, step 6: a piece is hanging when it is attacked and not defended, when an enemy piece worth less than it attacks it, or when it has two or more attackers and exactly one defender, and either an attacker is worth no more than it or the one defender is the king. A piece pinned to its own king attacks and defends only along its pin line, except on a square next to the other side's king; other pins are ignored. Kings are left out. The answer is the stored `hanging` set. The rules were widened from the first one alone on 16 October 2026, and pins to the king were counted from the same day. Rule 3 took its present form on 18 October 2026.
+- The rules for hanging are those of Mode 2's definitions and Appendix B, step 6: a piece is hanging when the other side can win material by capturing on its square. The captures there are played out, each side taking with its cheapest piece and either side free to stop, and the piece is hanging if the attacking side comes out ahead; an even trade is not hanging. Pieces lined up behind a capturer take part in turn, and a king captures only when nothing else attacks the square. A piece pinned to its own king can capture only along its pin line; other pins are ignored. Kings are left out. The answer is the stored `hanging` set. Pins to the king were counted from 16 October 2026. On 18 October 2026 the exchange replaced the three counting rules used until then.
 - A hanging piece is marked again on every move for as long as it stays hanging.
 - The piece that just moved can itself be hanging.
 - An empty submission is valid. Many positions have no hanging pieces.
@@ -368,7 +368,7 @@ Settled in build step 33.
 - The home page follows the mockup `home-light`, without its label "Chess training" and its heading "Sit beside the masters and guess their next move.", which were taken out before the step was merged: the header with "Asanfa" and a settings button, then a hairline across the page, the Continue card when there is a game in progress, the four modes numbered 01 to 04, each with a one-line description, and the footer. "Asanfa" is the page's main heading. The meta description reads "Free chess training: guess masters' moves, tactics by piece, square control and spotting hanging pieces."
 - The Continue card is for guess the move only, and is text only, without the mockup's strip of board: the label "Continue", the game as "Capablanca vs. Marshall, 1918", White first and by family name, and "Move 9 of 36". The opponent's family name is `opponent_short_name`, as in the play screen's header, and the full name where it is null; the master game response carries it for this. It shows the game in progress that was played most recently, and is left out when no game is in progress or the game no longer exists. It fetches the game, so it says so while it loads and offers Try again if the request fails.
 - The footer has two centred lines: Progress and Settings, as in the mockup, then a smaller line with About, Credits, Privacy and Source code.
-- About, at `/about`, is a short plain draft for the owner to edit: a free chess trainer made for friends, what each mode is for, what counts as a hanging piece (added on 16 October 2026, after the hanging rules were widened), that progress stays in the browser, and that it is free and open source, with a link to the source code.
+- About, at `/about`, is a short plain draft for the owner to edit: a free chess trainer made for friends, what each mode is for, what counts as a hanging piece (added on 16 October 2026, after the hanging rules were widened, and rewritten for the exchange on 18 October 2026), that progress stays in the browser, and that it is free and open source, with a link to the source code.
 - Credits, at `/credits`, lists every board, piece set and font from the settings catalogue with its author, licence and source, then Chessground, PGN Mentor for the master games, Lichess for the puzzles and the practice games, and the source code link.
 - Privacy, at `/privacy`, says that there are no accounts and no cookies, that progress and settings are kept only in the browser and never sent anywhere, that Cloudflare Web Analytics counts visits without cookies, and that the fonts are served by the site itself.
 - About, credits and privacy have the back arrow to the home page, as the progress page does.
@@ -652,7 +652,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 **Tests that matter most**
 
 - Tests are kept to a small fixed set. There is no general unit-testing practice and no coverage target; the static checks cover the rest.
-- Golden tests for the control and hanging-piece rules: forty-three hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
+- Golden tests for the control and hanging-piece rules: fifty-one hand-verified positions covering every definition and consequence listed under square control. These are written before the import code, because errors there store wrong answers without any visible failure.
 - Import twice and confirm every game and puzzle keeps the same ID.
 - Replay short made-up games that include castling on both sides, a promotion and an en passant capture, and confirm they replay correctly. The games are made up because imported game data is never committed.
 - Extract made-up games with one of them on the exclusion list, and confirm it is skipped and reported.
@@ -867,7 +867,7 @@ The attack set of a piece on a square, in a given position, is:
 - Pawn: the two squares diagonally forward, where they are on the board.
 - Bishop, rook, queen: along each of its lines, every square up to and including the first occupied square.
 
-The colour of a piece standing on an attacked square does not matter. A piece's own square is never in its attack set. Pins, checks and whose turn it is are ignored: the attack sets, and so `lost` and `controlled`, never depend on them. Only the hanging rules in step 6 take pins to the king into account.
+The colour of a piece standing on an attacked square does not matter. A piece's own square is never in its attack set. Pins, checks and whose turn it is are ignored: the attack sets, and so `lost` and `controlled`, never depend on them. Only the hanging exchange in step 6 takes pins to the king into account.
 
 **Steps for one move**
 
@@ -878,14 +878,27 @@ Call the position before the move B and the position after it A.
 3. `lost` is the before set minus the after set.
 4. `controlled` is the after set.
 5. Castling: do steps 1 to 4 separately for the king and for the rook. `lost` and `controlled` are the king's alone. The rook's two sets are stored apart, as `rook.lost` and `rook.controlled`. On every other move `rook` is null.
-6. `hanging`: look at every piece and pawn in A, of both colours, except the kings. Its attackers are the enemy pieces, pawns and king whose attack set holds its square. Its defenders are the other pieces, pawns and king of its own colour whose attack set holds its square. Add its square if any of these is true:
-    1. It has at least one attacker and no defender.
-    2. At least one attacker is worth less than it. The values are pawn 1, knight 3, bishop 3, rook 5 and queen 9. A knight and a bishop are equal, so neither is cheaper than the other. A king never counts as the cheaper attacker, because it cannot take a defended piece. Nothing is cheaper than a pawn, so this rule never applies to pawns. For example, a queen attacked by a knight is hanging even when it is defended, and a bishop attacked by a knight and defended once is not.
-    3. It has two or more attackers and exactly one defender, and either (a) at least one attacker is worth no more than it, using the values of rule 2, or (b) the one defender is the king. For (a) the attacker must be able to make the first capture, so it is never a king and never a pinned piece off its pin line. For (b) the king cannot take back while a second attacker still covers the square, but at least one attacker must still be able to make the first capture; otherwise nothing can start the exchange. For example, a rook attacked by a rook and a queen and defended only by a pawn is hanging, because rook takes rook, pawn takes back and queen takes pawn; a knight attacked by a rook and a queen and defended by a bishop is not; and a pawn attacked by a rook and a queen and defended only by its king is hanging. This form dates from 18 October 2026. It replaced an exception for a pawn defended by a pawn, because until then the rule marked pieces whose attackers were all worth more than the piece, and those could not be won.
+6. `hanging`: look at every piece and pawn P in A, of both colours, except the kings. P is hanging if the other side can win material by capturing on P's square. This is worked out by an exchange on that square, in A:
+    1. The attacking side, the colour other than P's, captures first, then the sides take turns recapturing on the square. Each side always captures with its cheapest piece that can capture there at that moment. Whose turn it is in A does not matter.
+    2. Either side may stop at any point instead of capturing, and does so when continuing would leave it worse off. The attacking side may also choose not to start at all.
+    3. P is hanging if the best result for the attacking side is a gain of more than 0. An even trade, for example a knight for a knight, is not hanging.
+    4. The values are pawn 1, knight 3, bishop 3, rook 5 and queen 9. A knight and a bishop are equal.
+    5. Kings: a king can capture only if, after its capture, no piece of the other side still attacks the square, counting the pieces that have become available (point 6) and pinned pieces next to it (point 7). The king's capture always ends the exchange. So a king always captures last, and it can never take a piece that is still defended.
+    6. Batteries: pieces lined up behind a capturer take part in turn. The capturers are first the pieces whose attack set, as above, holds the square. Behind such a front piece, on the line running away from the square, the next piece joins in if it is of the same colour and moves along that line: a rook or queen on a rank or file, a bishop or queen on a diagonal. The front piece can be a rook, bishop or queen, or a pawn, and then only a bishop or queen behind it on the pawn's capture diagonal counts. Chains continue, for example rook, rook, queen. A piece behind becomes available only once every piece in front of it on that line has captured. Nothing behind a king or a knight counts, and a piece of the other colour ends the line. Batteries count on both sides.
+    7. Pins: a piece is pinned when it stands on a rank, file or diagonal between its own king and an enemy rook or queen (on a rank or file) or an enemy bishop or queen (on a diagonal), with no other piece between the king and that enemy piece. Its pin line is the squares between the king and the pinning piece, plus the pinning piece's own square. A pinned piece can capture only if the square is on its pin line, which includes taking the pinning piece. A pinned piece off its line cannot capture, but it still attacks the square, so it stops the other side's king from capturing there. Pins of both colours count, whoever is to move. Pins to the queen or any other piece are ignored. Pins are worked out once, in A, and not again during the exchange.
+    8. Simplifications: en passant is not part of the exchange, and a pawn that captures onto the last rank keeps the value of a pawn.
 
-    The attack sets are the ones above, so a piece behind another on the same line is neither an attacker nor a defender. Rules 2 and 3 were added on 16 October 2026. Rule 2 first asked only for a pawn attacking a knight, bishop, rook or queen, and was widened to any cheaper attacker the same day.
+    This rule dates from 18 October 2026. It replaced three counting rules, used from 16 October 2026: attacked and not defended; attacked by a cheaper piece; and two or more attackers and one defender, with conditions. They were replaced because they kept missing or wrongly marking exchanges: they did not see pieces lined up behind each other, and could not tell an exchange that wins from one that does not. Pins to the king were counted from 16 October 2026.
 
-    Pins to the king count for all three rules, including rule 2's cheaper attacker. A piece is pinned when it stands on a rank, file or diagonal between its own king and an enemy rook or queen (on a rank or file) or an enemy bishop or queen (on a diagonal), with no other piece between the king and that enemy piece. Its pin line is the squares between the king and the pinning piece, plus the pinning piece's own square. A pinned piece is an attacker or defender only of a square on its pin line. So a pinned knight never counts; a pinned pawn counts only if its capture square is on the pin line; and a pinned rook, bishop or queen counts along the pin line only, which includes attacking the pinning piece. There is one exception, because a pinned piece still gives check and a king can never move onto a square it attacks: on a square that the other side's king attacks or defends, a pinned piece counts in full, as an attacker or a defender. Even then, a pinned piece off its pin line never counts as rule 2's cheaper attacker, nor as an attacker that can make rule 3's first capture, because it still cannot capture. For example, with a white king on e1, a white bishop on e2 pinned by a black rook on e8, a white queen on g1 and a black king on h5, a black pawn on g4 is attacked by the queen and the bishop and defended only by the king, which cannot take back because the bishop covers g4, so the pawn is hanging by rule 3. Pins of both colours count, whoever is to move. Pins to the queen or any other piece are ignored. The pinned piece's own hanging status is worked out as usual, and kings are unchanged. For example, with a white king on e1, a white knight on c3 and a black bishop on b4, the knight does not defend a pawn on e4, so a pawn there attacked by a black knight is hanging. Pins to the king were counted from 16 October 2026.
+    For example:
+
+    - A piece with an attacker and no defender is hanging, and so is a piece attacked by a cheaper one: a queen attacked by a knight and defended by a pawn is hanging, because knight takes queen and pawn takes knight wins 6.
+    - An even trade is not hanging: a bishop attacked by a knight and defended by a pawn, or a knight attacked by a knight and defended by a pawn.
+    - A knight attacked by a knight and a bishop and defended by a rook and a queen is hanging: knight takes knight, rook takes knight, bishop takes rook and queen takes bishop wins 8 for 6. A pawn attacked by a knight and a bishop and defended by a knight and a bishop is not, because knight takes pawn and knight takes knight already loses 2, and going on does not help.
+    - A rook attacked by a rook and a queen and defended only by a pawn is hanging: rook takes rook, pawn takes rook and queen takes pawn. A knight attacked by a rook and a queen and defended only by a bishop is hanging too: rook takes knight, bishop takes rook and queen takes bishop wins 6 for 5.
+    - Batteries: a rook defended only by a queen and attacked by two rooks doubled on the file is hanging: rook takes rook, queen takes rook and rook takes queen. A pawn on d5 defended by a pawn on c6 and attacked by a pawn on e4, with a queen behind it on f3, is hanging: exd5, cxd5 and Qxd5 wins a pawn. A piece lined up behind a defender counts in the same way: a knight attacked by two knights and defended by a bishop with a queen behind it is not hanging.
+    - Kings: a pawn defended only by its king and attacked by one rook is not hanging, because rook takes pawn and king takes rook. With a second rook doubled behind the first it is hanging, because the king cannot take back.
+    - Pins: with a white king on e1, a white bishop on e2 pinned by a black rook on e8, a white queen on g1 and a black king on h5, a black pawn on g4 is hanging: queen takes pawn, and the king cannot take back because the bishop covers g4, though the bishop itself cannot capture there. With a white king on e1, a white knight on c3 and a black bishop on b4, the knight cannot capture on e4, so a white pawn there attacked by a black knight and defended by nothing else is hanging.
 7. `piece` is the type of the moving piece before the move. For castling it is `king`.
 
 **Notes**
@@ -914,17 +927,17 @@ After `e2e4`, `e7e5`, White plays `g1f3`.
 - `controlled`: `d2`, `d4`, `e1`, `e5`, `g1`, `g5`, `h2`, `h4`
 - `hanging`: `e5`, which the knight attacks and no black piece defends
 
-**Example: the three hanging rules**
+**Example: hanging pieces in a practice game**
 
 From a practice game, after 1.e3 d5 2.Qh5 Nc6 3.c4 dxc4 4.Bxc4 Nh6 5.g4 Ne5 6.g5 Nc6:
 
-- The knight on `h6` is attacked by the g5 pawn and the queen, and defended by the g7 pawn. It is hanging by rule 2, and by rule 3 as well.
-- `f7` is attacked by the bishop and the queen and defended by the king and the knight on h6, so it is not hanging.
+- The knight on `h6` is attacked by the g5 pawn and the queen, and defended by the g7 pawn, with the bishop on f8 behind that pawn. gxh6 gxh6 wins White a knight for a pawn, and Qxh6 would lose the queen to the bishop, so the knight is hanging.
+- `f7` is attacked by the bishop and the queen and defended by the king and the knight on h6. Bxf7 Nxf7 Qxf7 Kxf7 leaves White behind, so it is not hanging.
 
 White then plays 7.gxh6:
 
-- `f7` still has its two attackers, but only the king defends it now. It is hanging by rule 3.
-- The pawn on `h6` is attacked by the g7 pawn and defended by the queen. One attacker and one defender, and rule 2 does not apply to pawns, so it is not hanging.
+- `f7` is now defended only by the king. Bxf7 wins a pawn, and the king cannot take back while the queen covers f7, so it is hanging.
+- The pawn on `h6` is attacked by the g7 pawn and defended by the queen. gxh6 wins it, because Qxh6 would lose the queen to the bishop on f8, so it is hanging.
 
 **Example: castling**
 
@@ -991,7 +1004,7 @@ A `moves` entry:
 | `black_rating` | smallint | Between 0 and 4000 |
 | `time_control` | text | As given by Lichess, for example `600+0` |
 | `ply_count` | smallint | At least 1 |
-| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1. It became 2 on 13 October 2026, when the rook's answers on a castling move were stored apart from the king's, became 3 on 16 October 2026, when rules 2 and 3 were added to `hanging`, became 4 later that day, when rule 2 was widened from a pawn attacker to any cheaper attacker and pins to the king were counted for `hanging`, and has been 5 since 18 October 2026, when rule 3 of `hanging` was changed to need an attacker worth no more than the piece, or the king as the one defender, because it marked pieces that could not be won |
+| `answers_version` | smallint | The version of the calculation in Appendix B that produced the answers. It started at 1. It became 2 on 13 October 2026, when the rook's answers on a castling move were stored apart from the king's, became 3 on 16 October 2026, when rules 2 and 3 were added to `hanging`, became 4 later that day, when rule 2 was widened from a pawn attacker to any cheaper attacker and pins to the king were counted for `hanging`, became 5 on 18 October 2026, when rule 3 of `hanging` was changed to need an attacker worth no more than the piece, or the king as the one defender, and has been 6 since later that day, when the three rules of `hanging` were replaced by an exchange on each square, because the counting rules kept missing or wrongly marking exchanges |
 | `moves` | jsonb | Array with one entry per ply, in order; its length equals `ply_count` |
 
 A `moves` entry:
@@ -1285,7 +1298,7 @@ A practice game response:
 {
   "id": 7,
   "ply_count": 64,
-  "answers_version": 5,
+  "answers_version": 6,
   "moves": [
     {
       "uci": "g1f3",
