@@ -19,7 +19,7 @@ import {
 } from '../../resources/js/marking/lengths.ts';
 
 /** The version of the calculation in Appendix B that the answers come from. */
-export const ANSWERS_VERSION = 4;
+export const ANSWERS_VERSION = 5;
 
 export type PracticeOptions = {
     /** The only time control kept, as in the TimeControl tag. */

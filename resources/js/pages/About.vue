@@ -66,9 +66,9 @@ defineProps<{
             knight.
         </p>
         <p>
-            It is attacked twice or more and defended only once. A pawn defended
-            by another pawn does not count here, unless one of the attackers is
-            a pawn too.
+            It is attacked twice or more and defended only once, as long as one
+            of the attackers is worth no more than it, or its only defender is
+            the king.
         </p>
         <p>Kings are never marked.</p>
         <p>
