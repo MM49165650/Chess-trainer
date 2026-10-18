@@ -364,7 +364,7 @@ onMounted(async () => {
             <BackArrow :parent="landing" label="Back" />
             <!-- The game's number sits under the title, so that a coach can
                  read it out, without a row of its own. -->
-            <div class="flex min-w-0 flex-1 flex-col">
+            <div class="flex min-w-0 flex-1 flex-col gap-0.5">
                 <p class="truncate font-serif text-title-small">
                     {{ meta.heading }}
                 </p>
