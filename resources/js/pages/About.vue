@@ -55,26 +55,31 @@ defineProps<{
 
         <h2>What counts as hanging</h2>
         <p>
-            A piece or pawn is hanging when the other side can win it. That
-            happens in three ways.
-        </p>
-        <p>Nothing defends it, and something attacks it.</p>
-        <p>
-            It is attacked by a cheaper piece, even if it is defended. A pawn is
-            worth the least, then a knight or bishop, then a rook, then the
-            queen. A knight attacking a rook, for example, wins the rook for a
-            knight.
+            A piece or pawn is hanging when the other side can win material by
+            capturing it.
         </p>
         <p>
-            It is attacked twice or more and defended only once, as long as one
-            of the attackers is worth no more than it, or its only defender is
-            the king.
+            To check, play out the captures on its square. The attacker takes
+            with its cheapest piece, the defender takes back with its cheapest
+            piece, and so on, and either side can stop when it is ahead. If the
+            attacker comes out ahead, the piece is hanging. A pawn is worth 1, a
+            knight or bishop 3, a rook 5 and the queen 9.
+        </p>
+        <p>
+            So a piece with no defender is hanging, and so is one attacked by a
+            cheaper piece. An even trade, such as a knight for a knight, does
+            not count.
+        </p>
+        <p>
+            Pieces lined up behind each other, like doubled rooks, take part one
+            after another. A king can only take when nothing else attacks the
+            square.
         </p>
         <p>Kings are never marked.</p>
         <p>
-            These rules only look at the position as it stands: who attacks and
-            who defends each piece. A piece that can only be won by first making
-            a threat, or through a longer combination, is not marked.
+            These rules only look at the captures on each square. A piece that
+            can only be won by first making a threat, or through a longer
+            combination, is not marked.
         </p>
 
         <h2>Your progress</h2>
