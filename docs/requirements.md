@@ -1,6 +1,6 @@
 # Chess training site: product requirements
 
-Last updated: 16 October 2026
+Last updated: 18 October 2026
 
 A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that end in a capture, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
@@ -728,8 +728,8 @@ The steps follow their numbers, except that deployment waits until the build is 
 
 1. Step 32, installable.
 2. Step 33, the remaining pages and states. After it, on 14 October 2026, the game length, skip the opening and start a new game options were added to the two marking modes' landing pages, outside the numbered steps.
-3. Step 4, the first deployment, to `chess.asanfa.com`. The intermediate files of the full imports reach the server by upload through Hestia's file manager, as `docs/deployment.md` describes.
-4. The full imports on the server: the master games loaded locally in step 18, and steps 23 and 29.
+3. Step 4, the first deployment, to `chess.asanfa.com`. Done on 15 October 2026.
+4. The full imports on the server: the master games loaded locally in step 18, and steps 23 and 29. Done by 16 October 2026. The intermediate files reach the server by `scp` or through Hestia's file manager, as `docs/deployment.md` describes.
 5. The iPhone carry-over test, listed in Stage 6.
 6. Step 34, the launch check.
 
@@ -740,7 +740,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 1. Repository | The starter kit with Vue, Inertia and TypeScript, with its login and registration pages removed; Docker for PHP, Node and Postgres; the GPL-3.0 licence file; a public GitHub repository with secret scanning | The home page loads in Docker from a fresh clone |
 | 2. Check command and CI | Pint, Larastan, Rector, Pest architecture tests, the TypeScript checker, ESLint, Vitest and the licence check, behind one command; CI and a pre-commit hook that run it | CI passes on the empty app and fails on a deliberate violation of each tool |
 | 3. Agent setup | This document saved as `docs/requirements.md`; `AGENTS.md` written from Appendix H; Laravel Boost installed | An agent given a trivial task reads both files and runs the check command |
-| 4. First deployment | Done after step 33, once the build is done. Settled on 14 October 2026; the runbook is `docs/deployment.md`. The owner's Hetzner server runs Ubuntu 24.04 managed by HestiaCP 1.10.2, whose nginx, in front of Apache, serves other sites, so nothing else on it changes: Docker from Docker's apt repository runs the app (Apache with PHP 8.4 and the built assets, `Dockerfile.production`) and Postgres 18 (no published port, data in a named volume) from `compose.production.yaml`, with the app published on `127.0.0.1:8012` only; secrets in a server-only `.env`; debug mode off. Hestia's nginx proxies `chess.asanfa.com` to it through the custom proxy template `asanfa` (`deploy/hestia/`), keeping Hestia's Let's Encrypt certificate and renewal. Cloudflare is in front, proxied, with Full (strict) encryption for the subdomain. Laravel trusts only the gateway of the app's fixed Docker network, and only its `X-Forwarded-For` and `X-Forwarded-Proto`; visitors' real addresses come from Hestia's nginx, which takes them from Cloudflare's `CF-Connecting-IP` through its `cloudflare.inc`. A Hestia firewall reload rebuilds only the `INPUT` chain and leaves Docker's rules alone, so no firewall hook is needed. A nightly `pg_dump` to `chess-trainer-backups` in the Hestia user's home, keeping the last 14, and before every deploy. `deploy/deploy.sh`, run by hand on the server, pulls `main`, builds, backs up, migrates and swaps the container. Automatic deploys on merge are a follow-up | The site answers on `https://chess.asanfa.com`, deployed from the main branch by `deploy/deploy.sh`, and a firewall reload in the Hestia panel leaves it running |
+| 4. First deployment | Done on 15 October 2026, after step 33. Settled on 14 October 2026; the runbook is `docs/deployment.md`. The owner's Hetzner server runs Ubuntu 24.04 managed by HestiaCP 1.10.2, whose nginx, in front of Apache, serves other sites, so nothing else on it changes: Docker from Docker's apt repository runs the app (Apache with PHP 8.4 and the built assets, `Dockerfile.production`) and Postgres 18 (no published port, data in a named volume) from `compose.production.yaml`, with the app published on `127.0.0.1:8012` only; secrets in a server-only `.env`; debug mode off. Hestia's nginx proxies `chess.asanfa.com` to it through the custom proxy template `asanfa` (`deploy/hestia/`), keeping Hestia's Let's Encrypt certificate and renewal. Cloudflare is in front, proxied, with Full (strict) encryption for the subdomain. Laravel trusts only the gateway of the app's fixed Docker network, and only its `X-Forwarded-For` and `X-Forwarded-Proto`; visitors' real addresses come from Hestia's nginx, which takes them from Cloudflare's `CF-Connecting-IP` through its `cloudflare.inc`. A Hestia firewall reload rebuilds only the `INPUT` chain and leaves Docker's rules alone, so no firewall hook is needed. A nightly `pg_dump` to `chess-trainer-backups` in the Hestia user's home, keeping the last 14, and before every deploy. `deploy/deploy.sh`, run by hand on the server, pulls `main`, builds, backs up, migrates and swaps the container. Automatic deploys on merge are a follow-up | The site answers on `https://chess.asanfa.com`, deployed from the main branch by `deploy/deploy.sh`, and a firewall reload in the Hestia panel leaves it running |
 
 **Stage 2: Chess core**
 
@@ -764,7 +764,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 15. End of game | The score, the replay with guesses marked, the share summary, and stepping back and forward through the moves during the game and after it | A finished game can be reviewed and shared from a phone |
 | 16. Browsing | The masters page; the game list with search, filters, paging, scores and in-progress markers; the random game button; the site's not-found page | A specific game can be found and started in a few taps |
 | 17. Search engines | Titles and descriptions in the page source for every public page, and the sitemap; the `opponent_short_name` column, filled by the extract, and used in titles and the play screen header | A game page's source shows its title and description with scripts disabled |
-| 18. Full import | All master games loaded. Done on 12 October 2026 into the local database: 5,772 games. They are loaded on the server once step 4 is done | Needs no further decisions: the game source and the minimum length are settled |
+| 18. Full import | All master games loaded. Done on 12 October 2026 into the local database: 5,772 games. Loaded on the server by 16 October 2026, after step 4 | Needs no further decisions: the game source and the minimum length are settled |
 
 **Stage 4: Tactics by piece**
 
@@ -774,7 +774,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 20. Endpoints | The puzzle ID list and the fetch-by-IDs endpoint | Both match Appendix F |
 | 21. Play screen | The setup move, the first move, the opponent's reply and the second move, fail then retry, and show solution | A puzzle can be solved and failed on a phone |
 | 22. Categories and progress | The category page with the all pieces option; the easiest-first order; seen tracking; tallies; the reset when a category runs out | No puzzle repeats within a category until it is exhausted |
-| 23. Full import | All puzzles loaded on the server, from the same intermediate file loaded locally in step 19 (`data/intermediate/puzzles.jsonl`, kept safe outside the repository), so the selection does not change. Refreshing from a newer Lichess file is not planned: imports never delete, so each refresh would add puzzles without removing any | Needs no further decisions: puzzle difficulty is settled |
+| 23. Full import | Done by 16 October 2026: all 12,000 puzzles loaded on the server, from the same intermediate file loaded locally in step 19 (`data/intermediate/puzzles.jsonl`, kept safe outside the repository), so the selection does not change. Refreshing from a newer Lichess file is not planned: imports never delete, so each refresh would add puzzles without removing any | Needs no further decisions: puzzle difficulty is settled |
 
 **Stage 5: Square control and spot the hanging piece**
 
@@ -785,7 +785,7 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 26. Marking screen | The three phases on one game: tap to mark, submit, feedback showing missed and wrong squares, and the rewind button. Nothing is saved yet. After the step, on 13 October 2026, the screen was split into the two modes: two phases in square control, one in spot the hanging piece, and moving on by itself after a phase that is exactly right | A full game can be worked through comfortably on a phone |
 | 27. Session | For both modes, each with its own progress: next game; resuming at the exact move and phase; seen games | Closing and reopening the browser resumes at the same phase in each mode, and a game finished in one mode is still served in the other |
 | 28. Tallies | For square control, the two phase scores and the tallies by piece; for spot the hanging piece, its one score | The numbers match a session counted by hand |
-| 29. Full import | All practice games loaded on the server, from the same intermediate file loaded locally in step 24 (`data/intermediate/practice-games.jsonl`, kept safe outside the repository), so the 500 games do not change | Needs no further decisions: game selection is settled |
+| 29. Full import | Done by 16 October 2026: all practice games loaded on the server, from the same intermediate file loaded locally in step 24 (`data/intermediate/practice-games.jsonl`, kept safe outside the repository), so the 500 games do not change. On 17 October 2026 their answers were brought up to answers version 4 with the update option, keeping every ID | Needs no further decisions: game selection is settled |
 
 **Stage 6: Finish**
 
@@ -1285,7 +1285,7 @@ A practice game response:
 {
   "id": 7,
   "ply_count": 64,
-  "answers_version": 2,
+  "answers_version": 4,
   "moves": [
     {
       "uci": "g1f3",
