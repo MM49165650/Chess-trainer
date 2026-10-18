@@ -553,7 +553,7 @@ The full imports, steps 18, 23 and 29, were done by 16 October 2026. An import i
     ```
 
 3. Check that it arrived whole: `sha256sum /opt/chess-trainer/data/intermediate/puzzles.jsonl` on the server must match `Get-FileHash data\intermediate\puzzles.jsonl` in PowerShell on the computer it came from (PowerShell prints it in capitals).
-4. Run the load with `--dry-run` first, then for real, each in its own paste, for example `docker compose exec -T app php artisan import:puzzles data/intermediate/puzzles.jsonl --dry-run`. The masters file loads with `import:master-games`, the practice games with `import:practice-games`.
+4. Run the load with `--dry-run` first, then for real, each in its own paste, for example `docker compose exec -T app php artisan import:puzzles data/intermediate/puzzles.jsonl --dry-run`. The masters file loads with `import:master-games`, the practice games with `import:practice-games`. Run the practice games load as `php -d memory_limit=512M artisan import:practice-games …`: the import reads the whole file at once, and with 4,000 games it peaked at 117 MB, close to PHP's usual 128 MB limit. The app container has 768 MB, so 512 MB for this one command is safe.
 5. Delete the uploaded copy from `chess-imports` afterwards, and take a backup (`bash deploy/backup.sh`).
 
 Git ignores `data/`, so `git pull` never touches these files. Each load is safe to rerun and never deletes, so the IDs stay stable.
@@ -575,11 +575,11 @@ When a change to the calculation in Appendix B of the requirements raises `ANSWE
 5. Run the load with `--dry-run --update`, in its own paste:
 
     ```bash
-    docker compose exec -T app php artisan import:practice-games data/intermediate/practice-games.jsonl --dry-run --update
+    docker compose exec -T app php -d memory_limit=512M artisan import:practice-games data/intermediate/practice-games.jsonl --dry-run --update
     ```
 
     It must report `Imported 0` and `Updated` equal to the number of games in the file, 4,000 since 18 October 2026, with the same number of practice games in the database. The one exception is the first load of the 4,000-game file on a server that still holds the first 500: it reports `Imported 3500` and `Updated 500`, and 4,000 in the database afterwards. Anything else means the server holds different games: stop and find out why before going on.
-6. Run it again without `--dry-run`, in its own paste.
+6. Run it again without `--dry-run`, in its own paste, keeping `-d memory_limit=512M`.
 7. Check the version, in its own paste. It should print one line, the new version and the number of games, `6|4000` for version 6:
 
     ```bash
