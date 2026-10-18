@@ -175,7 +175,7 @@ export function tabsOf(steps: readonly PhaseStep[]): PhaseTab[] {
 
 /**
  * How a submitted phase came out, in a sentence, such as "Three squares
- * missed, one too many."
+ * missed, one extra."
  */
 export function verdictOf(feedback: MarkFeedback, phase: Phase): string {
     const noun = phase === 'hanging' ? 'piece' : 'square';
@@ -201,7 +201,7 @@ export function verdictOf(feedback: MarkFeedback, phase: Phase): string {
     const parts = [
         ...(missed > 0 ? [`${counted(missed)} missed`] : []),
         ...(wrong > 0
-            ? [`${missed > 0 ? inWords(wrong) : counted(wrong)} too many`]
+            ? [`${missed > 0 ? inWords(wrong) : counted(wrong)} extra`]
             : []),
     ];
 
