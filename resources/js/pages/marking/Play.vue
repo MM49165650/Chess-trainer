@@ -3,12 +3,15 @@
 // hanging piece: watch a beginner game one move at a time and mark what the
 // mode asks about. The page resumes the mode's session where it stopped, or
 // picks a game at random from those the mode has not seen, of the length the
-// mode is set to, and fetches it. Each mode keeps its own session and seen
-// games.
+// mode is set to, and fetches it. At a game's own address it opens that game
+// instead, by its number. Each mode keeps its own session and seen games.
 
+import { router } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import ShowPracticeGameController from '@/actions/App/Http/Controllers/Api/ShowPracticeGameController';
+import PlayHangingController from '@/actions/App/Http/Controllers/Hanging/PlayHangingController';
 import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHangingController';
+import PlaySquaresController from '@/actions/App/Http/Controllers/Squares/PlaySquaresController';
 import ShowSquaresController from '@/actions/App/Http/Controllers/Squares/ShowSquaresController';
 import BackArrow from '@/components/BackArrow.vue';
 import { useBoardHeightLimit } from '@/components/board/useBoardHeightLimit';
@@ -19,7 +22,12 @@ import AppButton from '@/components/ui/AppButton.vue';
 import type { PageMetaData, PracticeGamePlayData } from '@/generated/data';
 import type { GameListItem } from '@/marking/choose';
 import type { MarkingMode } from '@/marking/phases';
-import { forgetGame, pickGame, practiceGames } from '@/marking/picking';
+import {
+    forgetGame,
+    openGame,
+    pickGame,
+    practiceGames,
+} from '@/marking/picking';
 import { emptyScores, withPhase, type RunningScore } from '@/marking/tallies';
 import {
     startOf,
@@ -41,6 +49,8 @@ const props = defineProps<{
     /** Which of the two modes the page is in. */
     mode: MarkingMode;
     meta: PageMetaData;
+    /** The game to open, at its own address, by its number. */
+    number?: number;
 }>();
 
 /** The mode's landing page, where the back arrow leads. */
@@ -48,6 +58,13 @@ const landing = computed(() =>
     props.mode === 'squares'
         ? ShowSquaresController.url()
         : ShowHangingController.url(),
+);
+
+/** The exercise's own address, where a random game is played. */
+const playUrl = computed(() =>
+    props.mode === 'squares'
+        ? PlaySquaresController.url()
+        : PlayHangingController.url(),
 );
 
 /** Every practice game, or null until the list arrives. */
@@ -201,6 +218,40 @@ async function resumeOrPick(): Promise<void> {
     await pick();
 }
 
+/**
+ * Opens a game by its number: the game in progress resumes if it is this
+ * one, and otherwise this game starts at move 1 and a different game in
+ * progress is left as abandoned. A saved point that is not in the game
+ * starts it again at move 1.
+ */
+async function openNumbered(id: number): Promise<void> {
+    let session = await openGame(props.mode, id);
+    const opened = await fetchGame(id);
+
+    if (opened !== null && startOf(opened, props.mode, session) === null) {
+        await deleteSession(props.mode);
+        session = await openGame(props.mode, id);
+    }
+
+    const at = opened === null ? null : startOf(opened, props.mode, session);
+
+    if (opened === null || at === null) {
+        await deleteSession(props.mode);
+        await pick();
+
+        return;
+    }
+
+    show(opened, at);
+}
+
+/** Loads the game to play: the one the address names, or the session's. */
+async function load(): Promise<void> {
+    await (props.number === undefined
+        ? resumeOrPick()
+        : openNumbered(props.number));
+}
+
 async function run(task: () => Promise<void>): Promise<void> {
     if (loading.value) {
         return;
@@ -231,6 +282,30 @@ async function nextGame(): Promise<void> {
 
         if (current !== null && !done.value) {
             await recordGameSeen(props.mode, current.id, 'abandoned');
+        }
+
+        // At a game's own address the next game is played at the
+        // exercise's address, so a reload does not open this game again.
+        if (props.number !== undefined) {
+            try {
+                await pickGame(
+                    props.mode,
+                    current === null ? [] : [current.id],
+                );
+            } catch {
+                // The play page picks a game when there is no session.
+            }
+
+            await new Promise<void>((resolve) => {
+                router.visit(playUrl.value, {
+                    replace: true,
+                    onFinish: () => {
+                        resolve();
+                    },
+                });
+            });
+
+            return;
         }
 
         await pick();
@@ -266,7 +341,7 @@ function saveProgress(ended: PhaseResult, next: ResumePoint | null): void {
 }
 
 function retry(): void {
-    void run(resumeOrPick);
+    void run(load);
 }
 
 onMounted(async () => {
@@ -287,9 +362,19 @@ onMounted(async () => {
     <main ref="page" class="sm:mx-auto sm:w-[560px]">
         <header class="flex items-center gap-1 py-1 pr-1 pl-1 short:py-0">
             <BackArrow :parent="landing" label="Back" />
-            <p class="min-w-0 flex-1 truncate font-serif text-title-small">
-                {{ meta.heading }}
-            </p>
+            <!-- The game's number sits under the title, so that a coach can
+                 read it out, without a row of its own. -->
+            <div class="flex min-w-0 flex-1 flex-col">
+                <p class="truncate font-serif text-title-small">
+                    {{ meta.heading }}
+                </p>
+                <p
+                    v-if="!failure && !loading && game !== null"
+                    class="truncate text-label text-muted tabular-nums"
+                >
+                    Game {{ game.id }}
+                </p>
+            </div>
             <!-- Only while the game is on the board, as the report is. -->
             <ReportProblem
                 :report="!failure && !loading && game !== null ? report : null"

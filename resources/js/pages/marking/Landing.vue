@@ -4,17 +4,21 @@
 // progress, if there is one, with Resume, and a "New game" section with the
 // choices for the next game picked: the game length and the moves of the
 // opening to skip. Its button reads Start when no game is in progress, and
-// "Start new game" otherwise, which leaves that game as abandoned.
+// "Start new game" otherwise, which leaves that game as abandoned. Last, an
+// "Open a game" section opens a game by its number, at the game's address.
 
 import { Link, router } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 import PlayHangingController from '@/actions/App/Http/Controllers/Hanging/PlayHangingController';
+import PlayHangingGameController from '@/actions/App/Http/Controllers/Hanging/PlayHangingGameController';
 import PlaySquaresController from '@/actions/App/Http/Controllers/Squares/PlaySquaresController';
+import PlaySquaresGameController from '@/actions/App/Http/Controllers/Squares/PlaySquaresGameController';
 import PageHead from '@/components/PageHead.vue';
 import ChoiceGroup from '@/components/settings/ChoiceGroup.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppSlider from '@/components/ui/AppSlider.vue';
 import type { PageMetaData } from '@/generated/data';
+import { gameNumber } from '@/marking/byNumber';
 import { CHOICES_OF } from '@/marking/choose';
 import {
     GAME_LENGTHS,
@@ -85,15 +89,16 @@ const session = ref<MarkingSession | null>(null);
 const sessionPlies = ref<number | null>(null);
 
 /**
- * Where the game in progress stands, in full moves as a game score counts
- * them: "Move 9 of 36", or "Move 9" if the game list did not load.
+ * The game in progress by its number, and where it stands in full moves as
+ * a game score counts them: "Game 1234 · Move 9 of 36", or
+ * "Game 1234 · Move 9" if the game list did not load.
  */
-const moveNote = computed(() => {
+const progressNote = computed(() => {
     if (session.value === null) {
         return '';
     }
 
-    const move = `Move ${String(Math.ceil(session.value.ply / 2))}`;
+    const move = `Game ${String(session.value.gameId)} · Move ${String(Math.ceil(session.value.ply / 2))}`;
 
     return sessionPlies.value === null
         ? move
@@ -153,6 +158,50 @@ async function startNewGame(): Promise<void> {
     }
 
     play();
+}
+
+/** The game number as typed in "Open a game". */
+const typedNumber = ref('');
+
+/** The number last opened that names no game, shown under the field. */
+const unknownNumber = ref<string | null>(null);
+
+watch(typedNumber, () => {
+    unknownNumber.value = null;
+});
+
+/**
+ * Opens the game typed in "Open a game", at its own address. A number that
+ * is not in the game list says so, and nothing else happens. Without the
+ * list, the address says itself whether the game exists.
+ */
+async function openTyped(): Promise<void> {
+    const typed = typedNumber.value.trim();
+
+    if (typed === '' || starting.value) {
+        return;
+    }
+
+    let id: number | null;
+
+    try {
+        id = gameNumber(await practiceGames(), typed);
+    } catch {
+        id = /^[0-9]{1,18}$/.test(typed) ? Number(typed) : null;
+    }
+
+    if (id === null) {
+        unknownNumber.value = typed;
+
+        return;
+    }
+
+    starting.value = true;
+    router.visit(
+        props.mode === 'squares'
+            ? PlaySquaresGameController.url(id)
+            : PlayHangingGameController.url(id),
+    );
 }
 
 onMounted(async () => {
@@ -241,7 +290,7 @@ onMounted(async () => {
                         id="landing-progress"
                         class="label-caps text-accent tabular-nums"
                     >
-                        Game in progress · {{ moveNote }}
+                        {{ progressNote }}
                     </h2>
                     <AppButton size="wide" :disabled="starting" @click="play">
                         Resume
@@ -307,7 +356,76 @@ onMounted(async () => {
                         {{ session === null ? 'Start' : 'Start new game' }}
                     </AppButton>
                 </section>
+
+                <!-- A game by its number, as a coach gives it to a student. -->
+                <section
+                    aria-labelledby="landing-open"
+                    class="mt-6 flex flex-col border-t border-hairline pt-6"
+                >
+                    <h2 id="landing-open" class="label-caps text-muted">
+                        Open a game
+                    </h2>
+                    <form
+                        class="mt-4 flex flex-col"
+                        novalidate
+                        @submit.prevent="openTyped"
+                    >
+                        <label
+                            for="landing-number"
+                            class="text-label text-muted"
+                        >
+                            Game number
+                        </label>
+                        <div class="mt-2 flex items-center gap-3">
+                            <input
+                                id="landing-number"
+                                v-model="typedNumber"
+                                class="field w-32 min-w-0 tabular-nums"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                maxlength="18"
+                                enterkeyhint="go"
+                                :aria-invalid="unknownNumber !== null"
+                                aria-describedby="landing-number-note"
+                            />
+                            <AppButton
+                                type="submit"
+                                variant="outline"
+                                :disabled="starting"
+                            >
+                                Open
+                            </AppButton>
+                        </div>
+                        <p
+                            id="landing-number-note"
+                            class="mt-2 min-h-[1lh] text-caption text-wrong-text"
+                            role="status"
+                        >
+                            <template v-if="unknownNumber !== null">
+                                There is no game {{ unknownNumber }}.
+                            </template>
+                        </p>
+                    </form>
+                </section>
             </div>
         </div>
     </main>
 </template>
+
+<style scoped>
+/* The size keeps a phone from zooming in when the field is tapped. */
+.field {
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--color-control-border);
+    border-radius: var(--radius-pill);
+    background-color: transparent;
+    color: var(--color-ink);
+    font-size: var(--text-button);
+}
+
+.field:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+}
+</style>

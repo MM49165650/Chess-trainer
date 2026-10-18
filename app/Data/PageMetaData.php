@@ -134,6 +134,30 @@ final class PageMetaData extends Data
         );
     }
 
+    /**
+     * @param  int  $number  The practice game's ID
+     */
+    public static function squaresGame(int $number): self
+    {
+        return new self(
+            title: 'Game '.$number.' · Square control',
+            description: 'Game '.$number.' in square control. Watch a beginner game move by move, and mark the squares each moved piece gave up and now controls.',
+            heading: 'Square control',
+        );
+    }
+
+    /**
+     * @param  int  $number  The practice game's ID
+     */
+    public static function hangingGame(int $number): self
+    {
+        return new self(
+            title: 'Game '.$number.' · Spot the hanging piece',
+            description: 'Game '.$number.' in spot the hanging piece. Watch a beginner game move by move, and mark every piece left hanging, on either side.',
+            heading: 'Spot the hanging piece',
+        );
+    }
+
     public static function progress(): self
     {
         return new self(

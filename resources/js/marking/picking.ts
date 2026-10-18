@@ -1,7 +1,8 @@
 // Picking the next game of a marking mode and making it the mode's session.
 // The play page picks when there is no session and on "Next game", and the
 // landing page when "Start a new game" is pressed. Both follow the mode's
-// choices of game length and skipped opening as they stand at the pick.
+// choices of game length and skipped opening as they stand at the pick. A
+// game opened by its number is made the session here too, without them.
 
 import ListPracticeGameIdsController from '@/actions/App/Http/Controllers/Api/ListPracticeGameIdsController';
 import type { PracticeGameIdListData } from '@/generated/data';
@@ -9,9 +10,12 @@ import { loadSettings, useSettings } from '@/settings/useSettings';
 import {
     clearSeenGames,
     readSeenGames,
+    readSession,
+    recordGameSeen,
     saveSession,
     type MarkingSession,
 } from '@/storage/marking';
+import { openByNumber } from './byNumber';
 import { CHOICES_OF, chooseGame, type GameListItem } from './choose';
 import type { MarkingMode } from './phases';
 import { pointAfterOpening } from './useMarkingGame';
@@ -88,4 +92,25 @@ export async function pickGame(
     await saveSession(mode, session);
 
     return session;
+}
+
+/**
+ * Opens a game by its number and saves it as the session: the game in
+ * progress resumes if it is the same game, and otherwise the game starts at
+ * move 1 and a different game in progress is recorded as abandoned. The
+ * answer is the session to play, saved or not.
+ */
+export async function openGame(
+    mode: MarkingMode,
+    gameId: number,
+): Promise<MarkingSession> {
+    const opened = openByNumber(mode, await readSession(mode), gameId);
+
+    if (opened.abandon !== null) {
+        await recordGameSeen(mode, opened.abandon, 'abandoned');
+    }
+
+    await saveSession(mode, opened.session);
+
+    return opened.session;
 }
