@@ -170,7 +170,7 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 **Sessions**
 
 - Sessions are open-ended. The user goes for as long as they like, and returning resumes at the same move.
-- A next game button serves a random game. There is no browsing. The mode opens on a landing page at /squares that shows the two phase percentages and a Start or Resume button. The exercise itself runs at /squares/play.
+- A next game button serves a random game. A game can also be opened by its number; see Games by number below. The mode opens on a landing page at /squares that shows the two phase percentages and a Start or Resume button. The exercise itself runs at /squares/play.
 - The session, the seen games and the scores are this mode's own. A game played in spot the hanging piece is not used up here.
 - The board is shown with White at the bottom.
 - A rewind button shows the position before the move. The move's squares are not highlighted in this mode. Phase 1 depends on that earlier position, and a user resuming a session did not just watch the move.
@@ -187,7 +187,7 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 Added on 14 October 2026, after build step 33 and before the first deployment. The layout below was settled the same day.
 
 - Below the percentages, the landing page has, in order: the game in progress, when there is one, and a "New game" section. Both are hidden until the browser has said whether there is a game in progress, so nothing moves or changes as the page opens.
-- The game in progress sits between two hairlines, in the style of the home page's Continue card: one line in the accent colour, "Game in progress · Move 9 of 36", with the move the session is at and the game's length in full moves as a game score counts them, then a primary Resume button. If the game list fails to load, the line reads "Game in progress · Move 9".
+- The game in progress sits between two hairlines, in the style of the home page's Continue card: one line in the accent colour, "Game 1234 · Move 9 of 36", with the game's number, the move the session is at and the game's length in full moves as a game score counts them, then a primary Resume button. If the game list fails to load, the line reads "Game 1234 · Move 9". Until 18 October 2026 it began "Game in progress" instead of the number.
 - The "New game" section has the heading "New game", then the game length choice, the skip the opening slider, and a button. With no game in progress the button is the main one, filled, and reads "Start", and a hairline separates the section from the percentages. While a game is in progress it is outlined and reads "Start new game", because starting abandons that game.
 - The two buttons are the same size, the landing button size of the shared button component: centred, three quarters of the column wide and at most 320 pixels, and 44 pixels tall, the height of a tap target. The play screens keep their own buttons. No other landing page has a main button of this kind: the masters and the tactics categories are lists. Settled on 14 October 2026.
 - Game length, labelled "Game length": Any, Short, Medium and Long, as a row of choices, with the range of the one chosen in a caption below: "15–60 moves", "15–24 moves", "25–36 moves" and "37–60 moves". The default is Any. Short, Medium and Long are the three length bands the games were chosen with (Appendix E): up to 49 plies, 50 to 73 and 74 or more. The captions count full moves, the moves both sides have made, so a 49-ply game is in Short as 24 full moves. A new game is picked only from that band.
@@ -197,6 +197,20 @@ Added on 14 October 2026, after build step 33 and before the first deployment. T
 - Start new game, while a game is in progress: it records the current game as abandoned, as "Next game" does, picks a new game with the current choices, never the one just left, and opens the play screen on it. There is no confirmation step.
 - When every game of the chosen band has been seen in this mode, that band's seen games are cleared without a message, and picking starts again from all of them. The mode's seen games in the other bands are kept. With Any, the band is every game, so the whole set is cleared, as before.
 - If the chosen band holds no game at all, the play screen says "There are no games of this length yet." It cannot happen with the 4,000 games, which fill all three bands.
+
+**Games by number**
+
+Added on 18 October 2026, so that a coach can give a student a specific game.
+
+- A game's number is its practice game ID, 1 to 4,000 today, which never changes. The play screen shows it under the title in the header, as "Game 1234" in the small muted label style, so the header keeps its height and the line above the question keeps its room.
+- After the "New game" section, the landing page has a small "Open a game" section, below a hairline: the heading "Open a game", a number field labelled "Game number" and an outlined "Open" button. A number that is not in the game ID list shows "There is no game 1234." under the field, in the wrong colour, and nothing else happens. A number in the list opens the game's address.
+- Each game has an address of its own, /squares/game/1234, that opens it in this mode. The number is digits only. An unknown number shows the site's not-found page.
+- A game opened by number counts like any other: its phases count towards the mode's percentages and tallies, and finishing it records it as seen, finished.
+- A game already finished can be opened again. It is played from the start and counts again.
+- If another game is in progress in the mode, opening a game by number records that game as abandoned, as "Next game" does. There is no confirmation step. If the game opened is the game in progress, it simply resumes.
+- A game opened by number always starts at move 1. The game length and skip the opening choices do not apply to it, so a coach and a student see the same game from the same start. They still apply to the next random game.
+- After a game opened by number ends, the main button and "Next game" pick a random game as usual, and the screen moves to /squares/play, so a reload does not open the numbered game again.
+- The other mode's session, seen games and scores are never touched.
 
 **The marking screen**
 
@@ -298,11 +312,12 @@ The user watches a beginner game one move at a time and, after every move, marks
 **Sessions**
 
 - Sessions are open-ended, and returning resumes at the same move.
-- A next game button serves a random game. There is no browsing. The mode opens on a landing page at /hanging that shows the percentage and a Start or Resume button. The exercise itself runs at /hanging/play.
+- A next game button serves a random game. A game can also be opened by its number, as in square control. The mode opens on a landing page at /hanging that shows the percentage and a Start or Resume button. The exercise itself runs at /hanging/play.
 - The session, the seen games and the scores are this mode's own. A game played in square control is not used up here.
 - The landing page shows the heading "Spot the hanging piece" and one line under it: "Watch a beginner game move by move, and mark every piece left hanging, on either side." The same line is the page's meta description.
 - Everything else about sessions works as in square control: the Start or Resume button, picking an unseen game, the "Next game" button in the header and abandoned games, the silent reset when every game has been seen, and a missing game. Each move has one phase, so resuming always plays the move as usual. Settled in build step 27.
 - The landing page has the same three options as square control's, with the same wording, defaults and behaviour: the game in progress with Resume, and the "New game" section with game length, skip the opening and its Start or "Start new game" button. See Choosing the next game under Mode 2. The two choices are this mode's own settings, saved apart from square control's, and the silent reset clears only this mode's seen games of the chosen band. Added on 14 October 2026.
+- Games by number work as in square control (see Games by number under Mode 2), with the game's address at /hanging/game/1234, the "Open a game" section after "New game", and the number under the title on the play screen. Added on 18 October 2026.
 
 **The marking screen**
 
@@ -668,6 +683,7 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Choose practice games by length from a made-up list, and confirm each rule: only games of the chosen band are chosen, including the games at each band's edge; when a band runs out, only that band's seen games are reset, the current game is still avoided, and the other bands keep theirs; and a band with no games has nothing to choose. Added on 14 October 2026.
 - Start made-up practice games after a skipped opening, and confirm each rule: the game starts at White's move after the skipped full moves, at move 1 with nothing skipped, and at the last move of a game too short for the skip; the starting position is the one after the skipped moves, with a castling move and a capture among them; and only the moves worked on are counted. Added on 14 October 2026.
 - Resume made-up practice games in the marking logic at a saved move and phase, and confirm each rule: it starts at that move and phase; a first phase plays the move after the starting position, and a later phase shows the position after the move at once; a castling move resumes at the rook's lost and controlled phases; and the saved results of the move's earlier phases are shown and counted as they were. Both tests added in build step 27.
+- Open made-up practice games by number in both marking modes, and confirm each rule: with no game in progress the game starts at move 1, with the skipped opening left out; another game in progress is left as abandoned; the game in progress resumes where it stands; a finished game, which a random pick no longer serves, is played again from move 1; and a number not in the game list, or not a number, names no game, and the game's address is the not-found page. Added on 18 October 2026.
 - Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
 - Resize the board with a made-up settings store, and confirm each rule: the size is saved once when the resize ends and not during the drag; it is still there for the next puzzle without the settings being read again; a saved size is used on the next visit; and a resize made before the settings arrive is not overwritten by them.
 - Open the four play screens in a headless browser with made-up games and puzzles, at 360×640, 375×550, 390×660 and 412×780, and confirm in each state (playing, after a wrong guess, looking back at a move, the end of a game, a failed puzzle with Show solution, the solution shown, a wrong square shown in square control, the feedback and rewind of both marking modes) that the page does not scroll in either direction, that the board is the full width at 360×640, 390×660 and 412×780, and that it is at least 280 pixels at 375×550.
@@ -826,6 +842,7 @@ One decision is still open: whether progress carries over after installing on an
 - Automated browser tests at phone size for the four core flows
 - More board themes and piece sets
 - A desktop layout with the board beside a panel, which needs its own mockups
+- A full game browser for the practice games, with length filters; not planned yet
 
 ## Appendix A: Conventions
 
@@ -1217,10 +1234,12 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | `/guess/{master}` | Game list for one master, by slug |
 | `/guess/{master}/random` | Redirects to a random game by that master |
 | `/guess/{master}/{game}` | Play a master game |
-| `/squares` | Square control landing page: the two phase percentages (from step 28), the game in progress with Resume, if there is one, and a New game section with the game length and skip the opening choices and a Start or Start new game button |
+| `/squares` | Square control landing page: the two phase percentages (from step 28), the game in progress with Resume, if there is one, a New game section with the game length and skip the opening choices and a Start or Start new game button, and an Open a game section that opens a game by its number |
 | `/squares/play` | The square-control exercise |
-| `/hanging` | Spot the hanging piece landing page: the percentage, the same game in progress and New game sections |
+| `/squares/game/{game}` | One practice game in square control, by its number; `game` is digits only, and an unknown number is the not-found page. Title "Game 1234 · Square control" |
+| `/hanging` | Spot the hanging piece landing page: the percentage, the same game in progress, New game and Open a game sections |
 | `/hanging/play` | The spot the hanging piece exercise |
+| `/hanging/game/{game}` | One practice game in spot the hanging piece, by its number, as for square control. Title "Game 1234 · Spot the hanging piece" |
 | `/tactics` | The piece categories |
 | `/tactics/{piece}` | Play tactics; `piece` is one of the six piece types or `all` |
 | `/progress`, `/settings`, `/credits`, `/privacy` | As named |
@@ -1231,6 +1250,7 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 - Its query parameters are `q`, `color`, `year_from`, `year_to` and `page`. The search box `q` matches opponent and event, which is how those two are filtered.
 - The list receives each game's details as page data, never its moves.
 - Every public page's source carries a readable title and meta description, written by the server, such as "Guess the move: Capablanca vs. Marshall, New York 1918".
+- A practice game's address has the title "Game 1234 · Square control" or "Game 1234 · Spot the hanging piece", and the description "Game 1234 in square control." or "Game 1234 in spot the hanging piece." followed by the mode's landing line. The game addresses are left out of the sitemap. Added on 18 October 2026.
 - An address that matches no page, including a master or game that does not exist, shows the site's own not-found page in the site's style rather than the framework's default. It is built with browsing in step 16.
 
 **Data endpoints**
@@ -1449,13 +1469,14 @@ type TacticsTallies = Record<PieceType, Tally>
 - When every practice game of the chosen length is in `squareSeen`, the records of those games are deleted from it, without a message, and the others are kept. With the length set to Any, that is every game, as before 14 October 2026.
 - `squareLength` and `squareSkipMoves` in the settings are the landing page's two choices. They are read when a game is picked, and the session needs nothing more: its `ply` already says where the game stands, so a game started after a skipped opening resumes like any other. A saved value that is not one of the choices falls back to the default.
 - A session whose game no longer exists, or whose `ply`, `phase` and `rook` do not name a phase of that game, is deleted, and a new game is picked.
+- A game opened by its number needs no new store or field: it is saved as the session at move 1 and its first phase, like a picked game, after a different game in progress is recorded in `squareSeen` as abandoned. When the session is already that game, it is left as it is. Its seen record, if it has one from an earlier visit, is kept until the game is finished or abandoned again, when it is written afresh. Added on 18 October 2026.
 
 **Spot the hanging piece**
 
 - The mode's progress is its own. Nothing here reads or writes the three `square` stores, and square control does not touch the three `hanging` stores, so a game seen in one mode is still unseen in the other.
 - `ply` is the move being worked on. Each move has one phase, so the move is all that is needed to resume.
 - The phase is added to the one tally at the moment it is submitted. There is no split by piece.
-- The session, unsubmitted marks, next game, abandoned games and a session that names no move of its game work as in square control. A move has no earlier phases, so the session has no `results`.
+- The session, unsubmitted marks, next game, abandoned games, a session that names no move of its game and a game opened by its number work as in square control. A move has no earlier phases, so the session has no `results`.
 - When every practice game of the chosen length is in `hangingSeen`, the records of those games are deleted from it, without a message, and the others are kept.
 - `hangingLength` and `hangingSkipMoves` are this mode's two choices, kept apart from square control's.
 

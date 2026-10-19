@@ -11,6 +11,7 @@ use App\Http\Controllers\Guess\ListMastersController;
 use App\Http\Controllers\Guess\PlayMasterGameController;
 use App\Http\Controllers\Guess\RandomMasterGameController;
 use App\Http\Controllers\Hanging\PlayHangingController;
+use App\Http\Controllers\Hanging\PlayHangingGameController;
 use App\Http\Controllers\Hanging\ShowHangingController;
 use App\Http\Controllers\ShowAboutController;
 use App\Http\Controllers\ShowCreditsController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\ShowProgressController;
 use App\Http\Controllers\ShowSettingsController;
 use App\Http\Controllers\ShowSitemapController;
 use App\Http\Controllers\Squares\PlaySquaresController;
+use App\Http\Controllers\Squares\PlaySquaresGameController;
 use App\Http\Controllers\Squares\ShowSquaresController;
 use App\Http\Controllers\Tactics\ListTacticsCategoriesController;
 use App\Http\Controllers\Tactics\PlayTacticsController;
@@ -51,13 +53,22 @@ Route::get('/guess/{master}/{game}', PlayMasterGameController::class)
     ->where('game', '[0-9]{1,18}')
     ->name('guess.play');
 
-// Square control: the landing page, then the exercise.
+// Square control: the landing page, then the exercise, and one game by its
+// number. {game} accepts digits only.
 Route::get('/squares', ShowSquaresController::class)->name('squares.show');
 Route::get('/squares/play', PlaySquaresController::class)->name('squares.play');
 
-// Spot the hanging piece: the landing page, then the exercise.
+Route::get('/squares/game/{game}', PlaySquaresGameController::class)
+    ->where('game', '[0-9]{1,18}')
+    ->name('squares.game');
+
+// Spot the hanging piece: the same three pages.
 Route::get('/hanging', ShowHangingController::class)->name('hanging.show');
 Route::get('/hanging/play', PlayHangingController::class)->name('hanging.play');
+
+Route::get('/hanging/game/{game}', PlayHangingGameController::class)
+    ->where('game', '[0-9]{1,18}')
+    ->name('hanging.game');
 
 // Tactics by piece: the categories, then one piece's puzzles or all of them.
 Route::get('/tactics', ListTacticsCategoriesController::class)->name('tactics.categories');

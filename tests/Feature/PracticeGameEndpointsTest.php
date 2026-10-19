@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\PracticeGame;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Inertia\Testing\AssertableInertia;
 use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
@@ -148,4 +149,29 @@ test('both endpoints are limited to 120 requests a minute', function (string $pa
 })->with([
     'the ID list' => '/api/practice-games/ids',
     'a game' => '/api/practice-games/{id}',
+]);
+
+test('a game opens at its own address in each marking mode, and an unknown number is not found', function (string $mode, string $title): void {
+    $game = madeUpPracticeGame('a');
+
+    // The check runs before the assets are built, so the page is drawn
+    // without them.
+    $this->withoutVite();
+
+    $this->get('/'.$mode.'/game/'.$game->id)
+        ->assertOk()
+        ->assertSee('<title>Game '.$game->id.' · '.$title.' - ', false)
+        ->assertInertia(fn (AssertableInertia $page): AssertableInertia => $page
+            ->component('marking/Play')
+            ->where('mode', $mode)
+            ->where('number', $game->id));
+
+    foreach ([(string) ($game->id + 100), 'abc', '1abc', '-1', str_repeat('9', 19)] as $number) {
+        $this->get('/'.$mode.'/game/'.$number)
+            ->assertNotFound()
+            ->assertSee('This page is not here.');
+    }
+})->with([
+    'square control' => ['squares', 'Square control'],
+    'spot the hanging piece' => ['hanging', 'Spot the hanging piece'],
 ]);
