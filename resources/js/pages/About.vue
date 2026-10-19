@@ -70,11 +70,6 @@ defineProps<{
             cheaper piece. An even trade, such as a knight for a knight, does
             not count.
         </p>
-        <p>
-            Pieces lined up behind each other, like doubled rooks, take part one
-            after another. A king can only take when nothing else attacks the
-            square.
-        </p>
         <p>Kings are never marked.</p>
         <p>
             These rules only look at the captures on each square. A piece that
