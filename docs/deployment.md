@@ -591,6 +591,32 @@ When a change to the calculation in Appendix B of the requirements raises `ANSWE
 
 **Undo:** restore the backup from step 4 (section 9), then purge the Cloudflare cache again.
 
+## Cloudflare cache rule for the data endpoints
+
+Set up on 19 October 2026, as part of step 34. The data endpoints under `/api/` already send a public cache header (an hour for the lists, a day for one game or puzzle), but Cloudflare does not cache JSON on its own. This rule tells it to, so most game and puzzle requests are answered by Cloudflare and never reach the server. Error responses carry no public cache header, so a "not found" is never cached.
+
+In the Cloudflare dashboard for the domain, **Caching → Cache Rules → Create rule**:
+
+- **Rule name:** `chess-trainer api`
+- **When incoming requests match:** Custom filter expression, **URI Full** · **wildcard** · `https://chess.asanfa.com/api/*`. The expression preview reads `(http.request.full_uri wildcard r"https://chess.asanfa.com/api/*")`.
+- **Cache eligibility:** Eligible for cache
+- **Edge TTL:** Use cache-control header if present, bypass cache if not
+- **Browser TTL** and everything else: left as they are.
+
+It touches nothing outside `/api/` on this subdomain, so the site's pages and other sites on the domain are unaffected.
+
+**Check:** from any computer, twice (in PowerShell, `curl.exe`):
+
+```bash
+curl -sI https://chess.asanfa.com/api/practice-games/1 | grep -i cf-cache-status
+```
+
+You should see `cf-cache-status: MISS` the first time and `HIT` the second. `DYNAMIC` means the rule does not apply (a new rule can take a minute); `BYPASS` usually means the response set a cookie, which the data endpoints must never do.
+
+After an import with `--update`, purge the cache as section 11 describes, or the old answers can be served for up to a day.
+
+**Undo:** disable or delete the rule in **Caching → Cache Rules**.
+
 ## Resource limits
 
 The server is shared with other sites, so the app's use is capped: 768 MB of memory for the app container and 512 MB for Postgres, with no swap on top, and at most 16 Apache workers, which handle far more than the site needs. `docs/requirements.md` has the reasons, under Operations.
@@ -624,4 +650,4 @@ The imports in section 11 run inside the app container with `docker compose exec
 ## Follow-ups
 
 - **Automatic deploys on merge.** `deploy.sh` is run by hand for now. Since there is no SSH access from outside, the simplest automatic version is pull-based: a systemd timer on the server that checks `origin/main` every few minutes and runs `deploy.sh` when it has moved. A GitHub Actions job that connects in would need SSH.
-- Step 34 covers the rest of the launch: the Cloudflare cache rule for the data endpoints, Rocket Loader off, error tracking, analytics, the server firewall review, and a test restore of a backup (section 9 has the commands).
+- Step 34 covers the rest of the launch: Rocket Loader off, error tracking, analytics, the server firewall review, and a test restore of a backup (section 9 has the commands). The Cloudflare cache rule, also part of step 34, was set up on 19 October 2026 (see above).
