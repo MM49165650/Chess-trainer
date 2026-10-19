@@ -617,6 +617,11 @@ After an import with `--update`, purge the cache as section 11 describes, or the
 
 **Undo:** disable or delete the rule in **Caching → Cache Rules**.
 
+**Other Cloudflare settings for the site**, confirmed on 19 October 2026 for step 34:
+
+- **Encryption:** the domain as a whole is on **Full**, but the Configuration Rule **chess strict SSL** (**Rules → Configuration Rules**, Hostname equals `chess.asanfa.com`) sets **SSL** to **Full (strict)** for this site, so Cloudflare checks the server's Let's Encrypt certificate. Leave the domain-wide setting alone: other sites depend on it. If the certificate ever fails to renew, the site shows Cloudflare's error 526 until it is renewed.
+- **Rocket Loader:** off for this site. It rewrites a page's scripts and breaks the app. Check that the page has no `rocket-loader` script (in PowerShell, `curl.exe -s https://chess.asanfa.com/ | Select-String "rocket-loader"` prints nothing). If it ever does, turn it off for this hostname only, with a Configuration Rule setting **Rocket Loader** to **Off**, since the main setting applies to the whole domain.
+
 ## Resource limits
 
 The server is shared with other sites, so the app's use is capped: 768 MB of memory for the app container and 512 MB for Postgres, with no swap on top, and at most 16 Apache workers, which handle far more than the site needs. `docs/requirements.md` has the reasons, under Operations.
@@ -650,4 +655,4 @@ The imports in section 11 run inside the app container with `docker compose exec
 ## Follow-ups
 
 - **Automatic deploys on merge.** `deploy.sh` is run by hand for now. Since there is no SSH access from outside, the simplest automatic version is pull-based: a systemd timer on the server that checks `origin/main` every few minutes and runs `deploy.sh` when it has moved. A GitHub Actions job that connects in would need SSH.
-- Step 34 covers the rest of the launch: Rocket Loader off, error tracking, analytics, the server firewall review, and a test restore of a backup (section 9 has the commands). The Cloudflare cache rule, also part of step 34, was set up on 19 October 2026 (see above).
+- Step 34 covers the rest of the launch: error tracking, analytics, the server firewall review, and a test restore of a backup (section 9 has the commands). The Cloudflare items of step 34, the cache rule, strict encryption and Rocket Loader off, were done or confirmed on 19 October 2026 (see "Cloudflare cache rule for the data endpoints").
