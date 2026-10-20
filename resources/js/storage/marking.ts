@@ -7,13 +7,22 @@ import { PIECE_TYPES, type Phase, type PieceType } from '@/chess/conventions';
 import { STORES_OF } from '@/marking/choose';
 import type { MarkingMode } from '@/marking/phases';
 import {
+    SCORED_PHASES,
     counted,
     emptyScores,
     withPhase,
     type RunningScore,
 } from '@/marking/tallies';
+import {
+    localDate,
+    windowDates,
+    windowTotals,
+    type DayTally,
+    type WindowTotals,
+} from './days';
 import { database, now, type Database } from './db';
 import type {
+    DailyTallies,
     HangingSession,
     SquarePhase,
     SquareSession,
@@ -63,6 +72,23 @@ const unsaved: Record<MarkingMode, RunningScore[]> = {
     squares: emptyScores('squares'),
     hanging: emptyScores('hanging'),
 };
+
+/** The same phases by day, by local date. */
+const unsavedDays: Record<MarkingMode, Map<string, DailyTallies['tallies']>> = {
+    squares: new Map(),
+    hanging: new Map(),
+};
+
+/** A day's tallies with one more phase counted in its own phase. */
+function dayCounted(
+    saved: DailyTallies['tallies'] | undefined,
+    ended: EndedPhase,
+): DailyTallies['tallies'] {
+    return {
+        ...saved,
+        [ended.phase]: counted(saved?.[ended.phase] ?? NOTHING, ended.exact),
+    };
+}
 
 /** Square control's tallies as stored, with every phase and piece filled in. */
 function filledSquareTallies(saved: SquareTallies | undefined): SquareTallies {
@@ -128,12 +154,61 @@ export async function readScores(mode: MarkingMode): Promise<RunningScore[]> {
     }));
 }
 
+/** A phase's totals in the last seven days and the seven before. */
+export type RecentScore = { phase: Phase } & WindowTotals;
+
 /**
- * Counts a phase that has ended and saves where the game goes next, in one
- * transaction, so that either both are saved or neither is. When `next` is
- * null the game is over: it is recorded as finished and the session ends.
- * A phase that could not be saved is still counted for the visit. The
- * answer is whether it was saved.
+ * The mode's totals per phase in the last seven days and the seven before,
+ * as of a moment: what is stored by day, and what this visit counted but
+ * could not save.
+ */
+export async function readRecentScores(
+    mode: MarkingMode,
+    moment: Date = new Date(),
+): Promise<RecentScore[]> {
+    const dates = windowDates(moment);
+    const days: Pick<DailyTallies, 'date' | 'tallies'>[] = [
+        ...unsavedDays[mode].entries(),
+    ].map(([date, tallies]) => ({ date, tallies }));
+
+    try {
+        const db = await database();
+
+        if (db !== null) {
+            days.push(
+                ...(await db.getAll(
+                    'dailyTallies',
+                    IDBKeyRange.bound(
+                        [mode, dates.before.from],
+                        [mode, dates.recent.to],
+                    ),
+                )),
+            );
+        }
+    } catch {
+        // Nothing stored can be read; the visit's own count still shows.
+    }
+
+    return SCORED_PHASES[mode].map((phase) => ({
+        phase,
+        ...windowTotals(
+            days.flatMap(({ date, tallies }): DayTally[] => {
+                const tally = tallies[phase];
+
+                return tally === undefined ? [] : [{ date, tally }];
+            }),
+            moment,
+        ),
+    }));
+}
+
+/**
+ * Counts a phase that has ended, in the mode's tallies and in today's
+ * results, and saves where the game goes next, in one transaction, so that
+ * either all of it is saved or none is. When `next` is null the game is
+ * over: it is recorded as finished and the session ends. A phase that could
+ * not be saved is still counted for the visit. The answer is whether it was
+ * saved.
  */
 export async function recordPhase(
     mode: MarkingMode,
@@ -141,13 +216,44 @@ export async function recordPhase(
     ended: EndedPhase,
     next: Omit<MarkingSession, 'gameId'> | null,
 ): Promise<boolean> {
-    const saved = await savePhase(mode, gameId, ended, next);
+    const date = localDate(new Date());
+    const saved = await savePhase(mode, gameId, ended, next, date);
 
     if (!saved) {
+        const days = unsavedDays[mode];
+
         unsaved[mode] = withPhase(unsaved[mode], ended.phase, ended.exact);
+        days.set(date, dayCounted(days.get(date), ended));
     }
 
     return saved;
+}
+
+/**
+ * Makes the writes in a transaction and waits for it to be saved. A write
+ * that throws, rather than failing in the database, would otherwise leave
+ * the writes before it to be saved, so the transaction is then abandoned
+ * and nothing in it is kept.
+ */
+async function allOrNothing(
+    transaction: { done: Promise<void>; abort: () => void },
+    writes: () => Promise<void>,
+): Promise<void> {
+    try {
+        await writes();
+        await transaction.done;
+    } catch (error) {
+        // Abandoning it makes `done` fail too, which is expected here.
+        transaction.done.catch(() => undefined);
+
+        try {
+            transaction.abort();
+        } catch {
+            // It had already ended without saving.
+        }
+
+        throw error;
+    }
 }
 
 async function savePhase(
@@ -155,6 +261,7 @@ async function savePhase(
     gameId: number,
     ended: EndedPhase,
     next: Omit<MarkingSession, 'gameId'> | null,
+    date: string,
 ): Promise<boolean> {
     try {
         const db = await database();
@@ -165,30 +272,47 @@ async function savePhase(
 
         if (mode === 'hanging') {
             const transaction = db.transaction(
-                ['hangingTallies', 'hangingSession', 'hangingSeen'],
+                [
+                    'hangingTallies',
+                    'dailyTallies',
+                    'hangingSession',
+                    'hangingSeen',
+                ],
                 'readwrite',
             );
             const tallies = transaction.objectStore('hangingTallies');
+            const daily = transaction.objectStore('dailyTallies');
             const session = transaction.objectStore('hangingSession');
 
-            await tallies.put(
-                counted((await tallies.get('tallies')) ?? NOTHING, ended.exact),
-                'tallies',
-            );
-
-            if (next === null) {
-                await transaction
-                    .objectStore('hangingSeen')
-                    .put({ gameId, status: 'finished', at: now() });
-                await session.delete('current');
-            } else {
-                await session.put(
-                    { gameId, ply: next.ply, updatedAt: now() },
-                    'current',
+            await allOrNothing(transaction, async () => {
+                await tallies.put(
+                    counted(
+                        (await tallies.get('tallies')) ?? NOTHING,
+                        ended.exact,
+                    ),
+                    'tallies',
                 );
-            }
+                await daily.put({
+                    mode,
+                    date,
+                    tallies: dayCounted(
+                        (await daily.get([mode, date]))?.tallies,
+                        ended,
+                    ),
+                });
 
-            await transaction.done;
+                if (next === null) {
+                    await transaction
+                        .objectStore('hangingSeen')
+                        .put({ gameId, status: 'finished', at: now() });
+                    await session.delete('current');
+                } else {
+                    await session.put(
+                        { gameId, ply: next.ply, updatedAt: now() },
+                        'current',
+                    );
+                }
+            });
 
             return true;
         }
@@ -203,40 +327,50 @@ async function savePhase(
         }
 
         const transaction = db.transaction(
-            ['squareTallies', 'squareSession', 'squareSeen'],
+            ['squareTallies', 'dailyTallies', 'squareSession', 'squareSeen'],
             'readwrite',
         );
         const tallies = transaction.objectStore('squareTallies');
+        const daily = transaction.objectStore('dailyTallies');
         const session = transaction.objectStore('squareSession');
-        const updated = filledSquareTallies(await tallies.get('tallies'));
 
-        updated[phase][ended.piece] = counted(
-            updated[phase][ended.piece],
-            ended.exact,
-        );
+        await allOrNothing(transaction, async () => {
+            const updated = filledSquareTallies(await tallies.get('tallies'));
 
-        await tallies.put(updated, 'tallies');
-
-        if (next === null) {
-            await transaction
-                .objectStore('squareSeen')
-                .put({ gameId, status: 'finished', at: now() });
-            await session.delete('current');
-        } else if (isSquarePhase(next.phase)) {
-            await session.put(
-                {
-                    gameId,
-                    ply: next.ply,
-                    phase: next.phase,
-                    rook: next.rook,
-                    results: next.results,
-                    updatedAt: now(),
-                },
-                'current',
+            updated[phase][ended.piece] = counted(
+                updated[phase][ended.piece],
+                ended.exact,
             );
-        }
 
-        await transaction.done;
+            await tallies.put(updated, 'tallies');
+            await daily.put({
+                mode,
+                date,
+                tallies: dayCounted(
+                    (await daily.get([mode, date]))?.tallies,
+                    ended,
+                ),
+            });
+
+            if (next === null) {
+                await transaction
+                    .objectStore('squareSeen')
+                    .put({ gameId, status: 'finished', at: now() });
+                await session.delete('current');
+            } else if (isSquarePhase(next.phase)) {
+                await session.put(
+                    {
+                        gameId,
+                        ply: next.ply,
+                        phase: next.phase,
+                        rook: next.rook,
+                        results: next.results,
+                        updatedAt: now(),
+                    },
+                    'current',
+                );
+            }
+        });
 
         return true;
     } catch {
@@ -431,4 +565,6 @@ export function hasUnsavedScores(): boolean {
 export function clearUnsavedScores(): void {
     unsaved.squares = emptyScores('squares');
     unsaved.hanging = emptyScores('hanging');
+    unsavedDays.squares.clear();
+    unsavedDays.hanging.clear();
 }

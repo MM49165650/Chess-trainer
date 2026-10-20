@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // The landing page of a marking mode, square control or spot the hanging
-// piece: what the mode is and its running percentages, then the game in
-// progress, if there is one, with Resume, and a "New game" section with the
-// choices for the next game picked: the game length and the moves of the
-// opening to skip. Its button reads Start when no game is in progress, and
+// piece: what the mode is and its percentages, since the start and in the
+// last seven days against the seven before, then the game in progress, if
+// there is one, with Resume, and a "New game" section with the choices for
+// the next game picked: the game length and the moves of the opening to
+// skip. Its button reads Start when no game is in progress, and
 // "Start new game" otherwise, which leaves that game as abandoned. Last, an
 // "Open a game" section opens a game by its number, at the game's address.
 
@@ -14,6 +15,7 @@ import PlayHangingGameController from '@/actions/App/Http/Controllers/Hanging/Pl
 import PlaySquaresController from '@/actions/App/Http/Controllers/Squares/PlaySquaresController';
 import PlaySquaresGameController from '@/actions/App/Http/Controllers/Squares/PlaySquaresGameController';
 import PageHead from '@/components/PageHead.vue';
+import MarkingScores from '@/components/marking/MarkingScores.vue';
 import ChoiceGroup from '@/components/settings/ChoiceGroup.vue';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppSlider from '@/components/ui/AppSlider.vue';
@@ -28,15 +30,16 @@ import {
 } from '@/marking/lengths';
 import type { MarkingMode } from '@/marking/phases';
 import { pickGame, practiceGames } from '@/marking/picking';
-import { emptyScores, percentage, type RunningScore } from '@/marking/tallies';
-import { scoreLabel } from '@/marking/wording';
+import type { RunningScore } from '@/marking/tallies';
 import { changeSetting, useSettings } from '@/settings/useSettings';
 import { storageAvailable } from '@/storage/db';
 import {
+    readRecentScores,
     readScores,
     readSession,
     recordGameSeen,
     type MarkingSession,
+    type RecentScore,
 } from '@/storage/marking';
 
 const props = defineProps<{
@@ -114,6 +117,9 @@ const starting = ref(false);
 
 /** The mode's running percentages, or null until the browser has said. */
 const scores = ref<RunningScore[] | null>(null);
+
+/** The last seven days against the seven before, per phase. */
+const recent = ref<RecentScore[] | null>(null);
 
 const playUrl = computed(() =>
     props.mode === 'squares'
@@ -206,6 +212,7 @@ async function openTyped(): Promise<void> {
 
 onMounted(async () => {
     canSave.value = await storageAvailable();
+    recent.value = await readRecentScores(props.mode);
     scores.value = await readScores(props.mode);
     session.value = await readSession(props.mode);
     read.value = true;
@@ -260,23 +267,13 @@ onMounted(async () => {
                 Your progress will not be saved in this browser.
             </p>
             <!-- Hidden until read, so no figure changes as the page opens. -->
-            <dl
-                class="mt-4 flex w-full"
+            <MarkingScores
+                class="mt-4 w-full"
                 :class="{ invisible: scores === null }"
-            >
-                <div
-                    v-for="score in scores ?? emptyScores(mode)"
-                    :key="score.phase"
-                    class="flex flex-1 flex-col gap-0.5"
-                >
-                    <dt class="text-label text-muted">
-                        {{ scoreLabel(score.phase, true) }}
-                    </dt>
-                    <dd class="font-serif text-title tabular-nums">
-                        {{ percentage(score.tally) }}
-                    </dd>
-                </div>
-            </dl>
+                :mode="mode"
+                :scores="scores"
+                :recent="recent"
+            />
 
             <!-- Hidden until the browser has said whether a game is in
                  progress, so nothing moves or changes under the thumb. -->
