@@ -6,6 +6,7 @@ import ListMastersController from '@/actions/App/Http/Controllers/Guess/ListMast
 import ShowHangingController from '@/actions/App/Http/Controllers/Hanging/ShowHangingController';
 import ShowAboutController from '@/actions/App/Http/Controllers/ShowAboutController';
 import ShowCreditsController from '@/actions/App/Http/Controllers/ShowCreditsController';
+import ShowHelpController from '@/actions/App/Http/Controllers/ShowHelpController';
 import ShowPrivacyController from '@/actions/App/Http/Controllers/ShowPrivacyController';
 import ShowProgressController from '@/actions/App/Http/Controllers/ShowProgressController';
 import ShowSettingsController from '@/actions/App/Http/Controllers/ShowSettingsController';
@@ -124,6 +125,12 @@ const MODES = [
                     class="flex min-h-11 items-center"
                 >
                     Privacy
+                </Link>
+                <Link
+                    :href="ShowHelpController.url()"
+                    class="flex min-h-11 items-center"
+                >
+                    Help
                 </Link>
                 <a :href="SOURCE_CODE_URL" class="flex min-h-11 items-center">
                     Source code

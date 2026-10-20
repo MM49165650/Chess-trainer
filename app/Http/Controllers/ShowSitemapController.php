@@ -10,8 +10,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Config;
 
 /**
- * GET /sitemap.xml: the home page, the masters page, each master's page and
- * every master game page. It is the same for every visitor, so it may be
+ * GET /sitemap.xml: the home page, the masters page, the help page, each
+ * master's page and every master game page. It is the same for every visitor, so it may be
  * cached.
  */
 class ShowSitemapController extends Controller
@@ -26,6 +26,7 @@ class ShowSitemapController extends Controller
         $paths = [
             route('home', absolute: false),
             route('guess.masters', absolute: false),
+            route('help', absolute: false),
         ];
 
         foreach (Master::query()->orderBy('sort_order')->get() as $master) {
