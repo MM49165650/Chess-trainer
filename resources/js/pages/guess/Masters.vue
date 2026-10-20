@@ -1,9 +1,12 @@
 <script setup lang="ts">
-// Guess the move: the masters, in their fixed order. Each row opens that
+// Guess the move: the Continue card for the game in progress, if there is
+// one, then the masters, in their fixed order. Each row opens that
 // master's game list.
 
 import { Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import ListMasterGamesController from '@/actions/App/Http/Controllers/Guess/ListMasterGamesController';
+import ContinueCard from '@/components/guess/ContinueCard.vue';
 import PageHead from '@/components/PageHead.vue';
 import ListRow from '@/components/ui/ListRow.vue';
 import type { MasterListItemData, PageMetaData } from '@/generated/data';
@@ -12,6 +15,9 @@ defineProps<{
     meta: PageMetaData;
     masters: MasterListItemData[];
 }>();
+
+/** Whether the browser has said if a game is in progress. */
+const read = ref(false);
 
 function gameCount(count: number): string {
     return count === 1 ? '1 game' : `${String(count)} games`;
@@ -51,7 +57,14 @@ function gameCount(count: number): string {
             </h1>
         </div>
 
-        <nav aria-label="Masters" class="border-t border-hairline px-5">
+        <ContinueCard class="border-t border-hairline" @read="read = true" />
+
+        <!-- Hidden until read, so the list does not move as the page opens. -->
+        <nav
+            aria-label="Masters"
+            class="border-t border-hairline px-5"
+            :class="{ invisible: !read }"
+        >
             <ListRow
                 v-for="master in masters"
                 :key="master.slug"

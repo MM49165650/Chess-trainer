@@ -49,8 +49,8 @@ const page = ref<HTMLElement | null>(null);
 useBoardHeightLimit(page);
 
 // The back arrow returns to the page the user came from, such as the game
-// list with its page, search and filters, or the home page. A game opened
-// directly goes to the master's list.
+// list with its page, search and filters, or the Guess the move page with its
+// Continue card. A game opened directly goes to the master's list.
 const parentUrl = ListMasterGamesController.url(props.game.master.slug);
 
 const occasion = computed(() =>

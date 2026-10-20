@@ -155,28 +155,44 @@ onMounted(async () => {
 
         <!-- Hidden until read, so no figure changes as the page opens. -->
         <div :class="{ invisible: stats === null }">
-            <section aria-labelledby="progress-guess" class="px-5 pt-6">
-                <h2 id="progress-guess" class="label-caps text-muted">
-                    Guess the move
+            <section aria-labelledby="progress-hanging" class="px-5 pt-6">
+                <h2 id="progress-hanging" class="label-caps text-muted">
+                    Spot the hanging piece
                 </h2>
-                <div
-                    v-if="stats !== null && stats.accuracy.length > 0"
-                    class="mt-2 border-t border-hairline"
-                >
-                    <ListRow
-                        v-for="row in stats.accuracy"
-                        :key="row.slug"
-                        :title="familyName(row.name)"
-                        :description="masterNote(row)"
+                <dl class="mt-2 flex">
+                    <div
+                        v-for="score in marking('hanging')"
+                        :key="score.phase"
+                        class="flex flex-1 flex-col gap-0.5"
                     >
-                        <template #trailing>
-                            <span class="font-serif text-title text-ink">
-                                {{ row.percent }}%
-                            </span>
-                        </template>
-                    </ListRow>
-                </div>
-                <p v-else class="mt-2 text-muted">No finished games yet.</p>
+                        <dt class="text-label text-muted">
+                            {{ scoreLabel(score.phase, true) }}
+                        </dt>
+                        <dd class="font-serif text-title tabular-nums">
+                            {{ percentage(score.tally) }}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section aria-labelledby="progress-squares" class="px-5 pt-8">
+                <h2 id="progress-squares" class="label-caps text-muted">
+                    Square control
+                </h2>
+                <dl class="mt-2 flex">
+                    <div
+                        v-for="score in marking('squares')"
+                        :key="score.phase"
+                        class="flex flex-1 flex-col gap-0.5"
+                    >
+                        <dt class="text-label text-muted">
+                            {{ scoreLabel(score.phase, true) }}
+                        </dt>
+                        <dd class="font-serif text-title tabular-nums">
+                            {{ percentage(score.tally) }}
+                        </dd>
+                    </div>
+                </dl>
             </section>
 
             <section aria-labelledby="progress-tactics" class="px-5 pt-8">
@@ -204,44 +220,28 @@ onMounted(async () => {
                 </div>
             </section>
 
-            <section aria-labelledby="progress-squares" class="px-5 pt-8">
-                <h2 id="progress-squares" class="label-caps text-muted">
-                    Square control
+            <section aria-labelledby="progress-guess" class="px-5 pt-8">
+                <h2 id="progress-guess" class="label-caps text-muted">
+                    Guess the move
                 </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('squares')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
+                <div
+                    v-if="stats !== null && stats.accuracy.length > 0"
+                    class="mt-2 border-t border-hairline"
+                >
+                    <ListRow
+                        v-for="row in stats.accuracy"
+                        :key="row.slug"
+                        :title="familyName(row.name)"
+                        :description="masterNote(row)"
                     >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
-            </section>
-
-            <section aria-labelledby="progress-hanging" class="px-5 pt-8">
-                <h2 id="progress-hanging" class="label-caps text-muted">
-                    Spot the hanging piece
-                </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('hanging')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
-                    >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
+                        <template #trailing>
+                            <span class="font-serif text-title text-ink">
+                                {{ row.percent }}%
+                            </span>
+                        </template>
+                    </ListRow>
+                </div>
+                <p v-else class="mt-2 text-muted">No finished games yet.</p>
             </section>
 
             <ResetProgress class="px-5 pt-10" @reset="read" />
