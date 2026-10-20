@@ -198,6 +198,7 @@ onMounted(async () => {
                     </div>
                 </dl>
             </section>
+
             <section aria-labelledby="progress-squares" class="px-5 pt-8">
                 <h2 id="progress-squares" class="label-caps text-muted">
                     Square control
@@ -242,7 +243,6 @@ onMounted(async () => {
                     </ListRow>
                 </div>
             </section>
-
 
             <ResetProgress class="px-5 pt-10" @reset="read" />
         </div>
