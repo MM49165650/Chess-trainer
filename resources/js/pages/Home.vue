@@ -35,9 +35,9 @@ const MODES = [
         href: ListMastersController.url(),
     },
     {
-        name: 'Tactics by piece',
-        description: 'Two-move tactics, sorted by the piece that plays them.',
-        href: ListTacticsCategoriesController.url(),
+        name: 'Spot the hanging piece',
+        description: 'After every move, find every piece left hanging.',
+        href: ShowHangingController.url(),
     },
     {
         name: 'Square control',
@@ -45,9 +45,9 @@ const MODES = [
         href: ShowSquaresController.url(),
     },
     {
-        name: 'Spot the hanging piece',
-        description: 'After every move, find every piece left hanging.',
-        href: ShowHangingController.url(),
+        name: 'Tactics by piece',
+        description: 'Two-move tactics, sorted by the piece that plays them.',
+        href: ListTacticsCategoriesController.url(),
     },
 ];
 

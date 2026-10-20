@@ -179,6 +179,45 @@ onMounted(async () => {
                 <p v-else class="mt-2 text-muted">No finished games yet.</p>
             </section>
 
+            <section aria-labelledby="progress-hanging" class="px-5 pt-8">
+                <h2 id="progress-hanging" class="label-caps text-muted">
+                    Spot the hanging piece
+                </h2>
+                <dl class="mt-2 flex">
+                    <div
+                        v-for="score in marking('hanging')"
+                        :key="score.phase"
+                        class="flex flex-1 flex-col gap-0.5"
+                    >
+                        <dt class="text-label text-muted">
+                            {{ scoreLabel(score.phase, true) }}
+                        </dt>
+                        <dd class="font-serif text-title tabular-nums">
+                            {{ percentage(score.tally) }}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+            <section aria-labelledby="progress-squares" class="px-5 pt-8">
+                <h2 id="progress-squares" class="label-caps text-muted">
+                    Square control
+                </h2>
+                <dl class="mt-2 flex">
+                    <div
+                        v-for="score in marking('squares')"
+                        :key="score.phase"
+                        class="flex flex-1 flex-col gap-0.5"
+                    >
+                        <dt class="text-label text-muted">
+                            {{ scoreLabel(score.phase, true) }}
+                        </dt>
+                        <dd class="font-serif text-title tabular-nums">
+                            {{ percentage(score.tally) }}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+
             <section aria-labelledby="progress-tactics" class="px-5 pt-8">
                 <h2 id="progress-tactics" class="label-caps text-muted">
                     Tactics by piece
@@ -204,45 +243,6 @@ onMounted(async () => {
                 </div>
             </section>
 
-            <section aria-labelledby="progress-squares" class="px-5 pt-8">
-                <h2 id="progress-squares" class="label-caps text-muted">
-                    Square control
-                </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('squares')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
-                    >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
-            </section>
-
-            <section aria-labelledby="progress-hanging" class="px-5 pt-8">
-                <h2 id="progress-hanging" class="label-caps text-muted">
-                    Spot the hanging piece
-                </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('hanging')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
-                    >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
-            </section>
 
             <ResetProgress class="px-5 pt-10" @reset="read" />
         </div>
