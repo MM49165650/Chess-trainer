@@ -1,6 +1,6 @@
 # Chess training site: product requirements
 
-Last updated: 18 October 2026
+Last updated: 19 October 2026
 
 A free, open source, mobile-first chess training site with four modes: guess the move against eleven masters, a square-control drill on beginner games, spotting hanging pieces in the same games, and short tactics that end in a capture, grouped by piece. The MVP has no accounts, and all progress is kept in the browser.
 
@@ -176,6 +176,7 @@ A rook moves from a1 to a4. The only other pieces are the white king on g2 and t
 - A rewind button shows the position before the move. The move's squares are not highlighted in this mode. Phase 1 depends on that earlier position, and a user resuming a session did not just watch the move.
 - The landing page shows the heading "Square control" and one line under it: "Watch a beginner game move by move, and mark the squares each moved piece gave up and now controls." The same line is the page's meta description. The page offers Resume while the mode has a saved session, and Start otherwise, including when storage is unavailable. Both open /squares/play, which resumes the session if there is one. Settled in build step 27, as are the points below; the layout of the buttons changed on 14 October 2026, see Choosing the next game below.
 - Between the line and the button, the landing page shows the two percentages, labelled "Squares lost" and "Squares controlled", with a dash for one that has nothing counted. Settled in build step 28.
+- Under each of the two percentages, two small muted lines compare the last seven days with the seven before: "Last 7 days 70%" and, under it, "The 7 before 60%". The last seven days are today and the six days before it, and the seven before are the seven days before those, by the dates of the browser's own time zone. A line's percentage is rounded down, like the others, and shows only once its seven days hold at least 20 counted phases of that phase; until then it shows a dash, "—". There are no arrows, colours or words judging the change. Each phase is counted under the day it was counted on, in the results by day of Appendix G, which began on 19 October 2026: earlier play counts in the percentages above but in neither window. Added on 19 October 2026.
 - A game is picked at random from the games not yet seen in this mode, of the chosen game length, never the game just played, and it becomes the session at once, at move 1 or after the skipped opening. Leaving before marking anything resumes the same game.
 - Resuming at a move's first phase plays the move as usual: the position before it for about 0.8 seconds, then the move. Resuming at a later phase of a move shows the position after the move at once, and rewind still shows the one before. The phase tabs show the earlier phases of that move with their tick or cross.
 - The "Next game" button sits in the header, at the right. Pressed before the end of a game, even on a game with nothing marked yet, it records the game as abandoned and picks another, with the mode's current choices of game length and skipped opening. At the end of a game it does what the main button does.
@@ -305,6 +306,7 @@ The user watches a beginner game one move at a time and, after every move, marks
 - The user sees one running percentage.
 - There is one tally for the mode. It is not split by piece: the answer is about the whole board, not about the piece that moved.
 - The percentage works as in square control: rounded down, a dash until a phase has been counted, and counted in memory for the visit when storage is unavailable. On the play screen it shares the legend's room as one line, "Hanging 61%". On the landing page it sits between the line and the button, labelled "Hanging pieces". Settled in build step 28.
+- Under it, the landing page compares the last seven days with the seven before, in the two small lines "Last 7 days 70%" and "The 7 before 60%", worked out as in square control: the same windows, the same 20-phase minimum with a dash below it, rounded down, and nothing from before the results by day began. Added on 19 October 2026.
 - This mode keeps Submit, and does not check a phase as it is marked the way square control does. Nothing moves on just because the marks match the answer, a wrongly marked square is not shown until the phase is submitted, and only a submitted phase is scored.
 - Feedback appears after the phase is submitted: missed pieces are highlighted, and wrongly marked squares are shown in a second colour.
 - A phase submitted exactly right plays the next move by itself after about 0.6 seconds, the named value square control uses, showing the tick and "Exactly right" first. If anything is missed or wrong, it stops on the feedback and the button continues. Rewind during the pause cancels the move on, pressing the button during the pause moves on at once, and the end of a game stops on "Next game".
@@ -446,6 +448,7 @@ Settled in build step 30.
 - It shows the four modes in the order of the home page, changed on 19 October 2026 (see Pages): spot the hanging piece, square control, tactics by piece, guess the move.
 - Guess the move lists accuracy by master as described under its scoring. The percentage is rounded down, like the marking percentages. Masters with the same accuracy are listed with more moves first, then in the fixed master order. With no finished game the section shows one line: "No finished games yet."
 - Square control shows its two percentages, "Squares lost" and "Squares controlled", and spot the hanging piece its one, "Hanging pieces", as on their landing pages: rounded down, with a dash until something is counted. The tallies by piece of square control are not shown.
+- Under each of these three percentages are the same two lines as on the landing pages, "Last 7 days 70%" and "The 7 before 60%", with the same rules. Added on 19 October 2026.
 - Tactics shows solved out of attempted, as "14 / 20": an "All pieces" total row first, as on the category page, then the six pieces in their order. A row shows a dash before any attempt.
 - The Safari note reads "Safari deletes a site's saved data after seven days without a visit. Visiting at least once a week keeps your progress." It is shown only in Safari, on any device.
 - The install note is not shown at all until the iPhone test answers the carry-over question and the note is worded. Step 32 showed a placeholder, "[Install note]"; step 33 took it out. Once worded, the note is not shown when the site is already installed.
@@ -687,6 +690,8 @@ For the MVP the server serves read-only data. Laravel and Postgres are kept so a
 - Request the two practice-game endpoints with made-up games, and confirm each rule: the ID list in ID order, and empty when nothing is loaded; a game with its moves and answers and no field the screen does not use; the cache header, no cookie and no CORS header; a 404 for an unknown ID and for an ID that is not a whole number, with no public cache header; and the rate limit.
 - Resize the board with a made-up settings store, and confirm each rule: the size is saved once when the resize ends and not during the drag; it is still there for the next puzzle without the settings being read again; a saved size is used on the next visit; and a resize made before the settings arrive is not overwritten by them.
 - Open the four play screens in a headless browser with made-up games and puzzles, at 360×640, 375×550, 390×660 and 412×780, and confirm in each state (playing, after a wrong guess, looking back at a move, the end of a game, a failed puzzle with Show solution, the solution shown, a wrong square shown in square control, the feedback and rewind of both marking modes) that the page does not scroll in either direction, that the board is the full width at 360×640, 390×660 and 412×780, and that it is at least 280 pixels at 375×550.
+- Compare made-up results by day in the two windows, and confirm each rule: a day at the first and at the last date of each window counts in it, a day just before the earlier window or after today counts in neither, and the windows count calendar days across a month end; and a window's percentage shows only from 20 phases, rounded down, with a dash below that. Added on 19 October 2026.
+- Record made-up marking phases in a stand-in for the browser's database, and confirm each rule: a phase's running tally and its daily record are saved together, and when a write in the same transaction fails, neither is; reset progress clears the daily records; upgrading a version 2 database with progress in it keeps that progress unchanged and adds the empty store; and without storage the visit's phases are counted by day in memory, and reset clears them too. Added on 19 October 2026, with `fake-indexeddb` (Apache-2.0) as the stand-in, a development dependency only.
 - Read a small file packed in several zstd frames, and confirm it gives exactly the same lines as the same file in one frame, including a line that spans a frame boundary.
 
 **Operations**
@@ -843,6 +848,7 @@ One decision is still open: whether progress carries over after installing on an
 - More board themes and piece sets
 - A desktop layout with the board beside a panel, which needs its own mockups
 - A full game browser for the practice games, with length filters; not planned yet
+- A weekly chart on the progress page of the marking modes' percentages, for example over the last 12 weeks, drawn from the results by day in Appendix G
 
 ## Appendix A: Conventions
 
@@ -1234,10 +1240,10 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | `/guess/{master}` | Game list for one master, by slug |
 | `/guess/{master}/random` | Redirects to a random game by that master |
 | `/guess/{master}/{game}` | Play a master game |
-| `/squares` | Square control landing page: the two phase percentages (from step 28), the game in progress with Resume, if there is one, a New game section with the game length and skip the opening choices and a Start or Start new game button, and an Open a game section that opens a game by its number |
+| `/squares` | Square control landing page: the two phase percentages (from step 28), each with the last seven days against the seven before (from 19 October 2026), the game in progress with Resume, if there is one, a New game section with the game length and skip the opening choices and a Start or Start new game button, and an Open a game section that opens a game by its number |
 | `/squares/play` | The square-control exercise |
 | `/squares/game/{game}` | One practice game in square control, by its number; `game` is digits only, and an unknown number is the not-found page. Title "Game 1234 · Square control" |
-| `/hanging` | Spot the hanging piece landing page: the percentage, the same game in progress, New game and Open a game sections |
+| `/hanging` | Spot the hanging piece landing page: the percentage with the same comparison, the same game in progress, New game and Open a game sections |
 | `/hanging/play` | The spot the hanging piece exercise |
 | `/hanging/game/{game}` | One practice game in spot the hanging piece, by its number, as for square control. Title "Game 1234 · Spot the hanging piece" |
 | `/tactics` | The piece categories |
@@ -1373,7 +1379,7 @@ Settled in build step 20.
 
 ## Appendix G: Browser storage
 
-All user data lives in one IndexedDB database in the browser, opened through the `idb` library. The database is named `chess-training` until the site has a name. It started at version 1 and has been at version 2 since 13 October 2026, when the three `hanging` stores were added for spot the hanging piece. Nothing had been written to the three `square` stores by then, so their record shapes changed without a conversion.
+All user data lives in one IndexedDB database in the browser, opened through the `idb` library. The database is named `chess-training` until the site has a name. It started at version 1, was at version 2 from 13 October 2026, when the three `hanging` stores were added for spot the hanging piece, and has been at version 3 since 19 October 2026, when the `dailyTallies` store was added for the results by day. Nothing had been written to the three `square` stores by version 2, so their record shapes changed without a conversion. The upgrade to version 3 only creates the new, empty store: it changes and converts nothing already stored, so all existing progress is kept.
 
 **Stores**
 
@@ -1390,6 +1396,7 @@ All user data lives in one IndexedDB database in the browser, opened through the
 | `hangingTallies` | Fixed key `tallies` | Attempts and correct answers in spot the hanging piece |
 | `puzzlesSeen` | `puzzleId` | Puzzles attempted |
 | `tacticsTallies` | Fixed key `tallies` | Attempts and solves per piece |
+| `dailyTallies` | `mode` and `date` together | Attempts and correct answers per mode and per local date. Only the two marking modes write it so far |
 
 **Record shapes**
 
@@ -1444,6 +1451,14 @@ type HangingTally = Tally // the one record in hangingTallies
 type PuzzleSeen = { puzzleId: number; piece: PieceType; solved: boolean; at: string }
 
 type TacticsTallies = Record<PieceType, Tally>
+
+type DailyMode = 'hanging' | 'squares' | 'tactics' | 'guess'
+
+type DailyTallies = {
+  mode: DailyMode
+  date: string // the local date in the browser's time zone, as '2026-10-19'
+  tallies: Partial<Record<string, Tally>> // one tally per part of the mode
+}
 ```
 
 **Guess the move**
@@ -1488,11 +1503,23 @@ type TacticsTallies = Record<PieceType, Tally>
 - When a category has no unseen puzzles left, that piece's records in `puzzlesSeen` are deleted. The tallies are kept.
 - For the all pieces option, the pool is every unseen puzzle across the six categories. When it is empty, all records in `puzzlesSeen` are deleted.
 
+**Results by day**
+
+Added on 19 October 2026, to compare the last seven days with the seven before (see the landing pages of Mode 2 and Mode 4, and the progress page).
+
+- There is one record per mode and per local date, made the first time a phase is counted that day. `date` is the date in the browser's own time zone when the phase is counted, so a day is the user's day. It is the one date not stored in UTC.
+- `tallies` holds one tally per part of the mode, counted exactly as the mode's running tally counts it: one attempt per counted phase, and one correct when the phase scored. Spot the hanging piece has the one part `hanging`. Square control has `lost` and `controlled`, kept apart as its tallies are; the king's and the rook's phases of a castling move count in them as well, and the split by piece is not kept by day.
+- The shape is meant to serve tactics by piece and guess the move later, with `tactics` and `guess` as the mode and, for example, a part per piece or per master. They neither record nor show anything by day yet.
+- A phase's daily record is written in the same transaction as its running tally and the session it leaves behind, so either all of them are saved or none is. If any write in it fails, the transaction is abandoned.
+- The windows are worked out in the browser when a page shows them: the last seven days are today and the six days before it, and the seven before are the seven days before those. Days in neither window are left out, and the records stay.
+- History starts when version 3 is first opened. Play before then stays in the running tallies, has no date, and is not guessed at.
+- When storage is unavailable, the phases of the visit are counted by day in memory as well, as the running tallies are, until the page is reloaded.
+
 **General rules**
 
 - All reading and writing goes through one storage module. Pages never use IndexedDB directly.
-- Dates are stored as ISO 8601 text in UTC.
-- The reset progress button clears every store except `settings` and `meta`: `masterGames`, `squareSession`, `squareSeen`, `squareTallies`, `hangingSession`, `hangingSeen`, `hangingTallies`, `puzzlesSeen` and `tacticsTallies`, in one transaction. It also clears what the marking modes counted in memory during the visit. Settled in build step 30.
+- Dates are stored as ISO 8601 text in UTC, except the local date of the results by day.
+- The reset progress button clears every store except `settings` and `meta`: `masterGames`, `squareSession`, `squareSeen`, `squareTallies`, `hangingSession`, `hangingSeen`, `hangingTallies`, `puzzlesSeen`, `tacticsTallies` and, since 19 October 2026, `dailyTallies`, in one transaction. It also clears what the marking modes counted in memory during the visit, by day as well. Settled in build step 30.
 - On first use, the site asks the browser for persistent storage where that is supported.
 - If storage is unavailable, as in some private browsing modes, the site still works for the visit and shows a notice that progress will not be saved.
 - A change to the structure raises the database version and runs an upgrade step. Stores are never deleted to make a change.

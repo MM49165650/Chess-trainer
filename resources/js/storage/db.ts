@@ -4,6 +4,7 @@
 
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type {
+    DailyTallies,
     HangingSeen,
     HangingSession,
     HangingTally,
@@ -24,7 +25,7 @@ const NAME = 'chess-training';
  * A change to the structure raises this number and adds an upgrade step
  * below. Stores are never deleted to make a change.
  */
-const VERSION = 2;
+const VERSION = 3;
 
 interface Schema extends DBSchema {
     meta: { key: 'meta'; value: Meta };
@@ -39,6 +40,8 @@ interface Schema extends DBSchema {
     hangingTallies: { key: 'tallies'; value: HangingTally };
     puzzlesSeen: { key: number; value: PuzzleSeen };
     tacticsTallies: { key: 'tallies'; value: TacticsTallies };
+    // Keyed by mode and local date, so a mode's days can be read in order.
+    dailyTallies: { key: [string, string]; value: DailyTallies };
 }
 
 export type Database = IDBPDatabase<Schema>;
@@ -102,6 +105,14 @@ async function open(): Promise<Database | null> {
                         keyPath: 'gameId',
                     });
                     upgrading.createObjectStore('hangingTallies');
+                }
+
+                // Results by day, to compare the last seven days with the
+                // seven before. Nothing already stored is changed.
+                if (oldVersion < 3) {
+                    upgrading.createObjectStore('dailyTallies', {
+                        keyPath: ['mode', 'date'],
+                    });
                 }
             },
         });

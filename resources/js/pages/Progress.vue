@@ -8,15 +8,18 @@ import { Link } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
 import { PIECE_TYPES, type PieceType } from '@/chess/conventions';
 import PageHead from '@/components/PageHead.vue';
+import MarkingScores from '@/components/marking/MarkingScores.vue';
 import ResetProgress from '@/components/ResetProgress.vue';
 import ListRow from '@/components/ui/ListRow.vue';
 import type { MasterSummaryData, PageMetaData } from '@/generated/data';
 import { accuracyByMaster, type MasterAccuracy } from '@/guess/accuracy';
-import type { MarkingMode } from '@/marking/phases';
-import { emptyScores, percentage, type RunningScore } from '@/marking/tallies';
-import { scoreLabel } from '@/marking/wording';
+import type { RunningScore } from '@/marking/tallies';
 import { storageAvailable } from '@/storage/db';
-import { readScores } from '@/storage/marking';
+import {
+    readRecentScores,
+    readScores,
+    type RecentScore,
+} from '@/storage/marking';
 import { readAllMasterGames } from '@/storage/masterGames';
 import { readTacticsTallies } from '@/storage/tactics';
 import type { Tally, TacticsTallies } from '@/storage/types';
@@ -29,7 +32,9 @@ const props = defineProps<{
 type Stats = {
     accuracy: MasterAccuracy[];
     squares: RunningScore[];
+    squaresRecent: RecentScore[];
     hanging: RunningScore[];
+    hangingRecent: RecentScore[];
     tactics: TacticsTallies;
 };
 
@@ -83,22 +88,23 @@ const tacticsRows = computed(() => {
     return [{ key: 'all' as const, tally: all }, ...pieces];
 });
 
-function marking(mode: MarkingMode): RunningScore[] {
-    return stats.value?.[mode] ?? emptyScores(mode);
-}
-
 async function read(): Promise<void> {
-    const [records, squares, hanging, tactics] = await Promise.all([
-        readAllMasterGames(),
-        readScores('squares'),
-        readScores('hanging'),
-        readTacticsTallies(),
-    ]);
+    const [records, squares, squaresRecent, hanging, hangingRecent, tactics] =
+        await Promise.all([
+            readAllMasterGames(),
+            readScores('squares'),
+            readRecentScores('squares'),
+            readScores('hanging'),
+            readRecentScores('hanging'),
+            readTacticsTallies(),
+        ]);
 
     stats.value = {
         accuracy: accuracyByMaster(props.masters, records),
         squares,
+        squaresRecent,
         hanging,
+        hangingRecent,
         tactics,
     };
 }
@@ -159,40 +165,24 @@ onMounted(async () => {
                 <h2 id="progress-hanging" class="label-caps text-muted">
                     Spot the hanging piece
                 </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('hanging')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
-                    >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
+                <MarkingScores
+                    class="mt-2"
+                    mode="hanging"
+                    :scores="stats?.hanging ?? null"
+                    :recent="stats?.hangingRecent ?? null"
+                />
             </section>
 
             <section aria-labelledby="progress-squares" class="px-5 pt-8">
                 <h2 id="progress-squares" class="label-caps text-muted">
                     Square control
                 </h2>
-                <dl class="mt-2 flex">
-                    <div
-                        v-for="score in marking('squares')"
-                        :key="score.phase"
-                        class="flex flex-1 flex-col gap-0.5"
-                    >
-                        <dt class="text-label text-muted">
-                            {{ scoreLabel(score.phase, true) }}
-                        </dt>
-                        <dd class="font-serif text-title tabular-nums">
-                            {{ percentage(score.tally) }}
-                        </dd>
-                    </div>
-                </dl>
+                <MarkingScores
+                    class="mt-2"
+                    mode="squares"
+                    :scores="stats?.squares ?? null"
+                    :recent="stats?.squaresRecent ?? null"
+                />
             </section>
 
             <section aria-labelledby="progress-tactics" class="px-5 pt-8">

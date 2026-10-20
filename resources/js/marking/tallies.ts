@@ -55,3 +55,15 @@ export function percentage(tally: Tally): string {
 
     return `${String(Math.floor((tally.correct * 100) / tally.attempts))}%`;
 }
+
+/** The fewest phases a week must hold before its percentage is shown. */
+export const WINDOW_MINIMUM = 20;
+
+/**
+ * A window's tally as a percentage, as above, but only once it holds at
+ * least the minimum of phases, so a handful of phases does not swing it.
+ * A dash until then.
+ */
+export function windowPercentage(tally: Tally): string {
+    return tally.attempts < WINDOW_MINIMUM ? '—' : percentage(tally);
+}

@@ -85,3 +85,21 @@ export type PuzzleSeen = {
 };
 
 export type TacticsTallies = Record<PieceType, Tally>;
+
+/**
+ * The modes that keep results by day. Only the two marking modes record
+ * them so far; the other two names are kept for later.
+ */
+export type DailyMode = 'hanging' | 'squares' | 'tactics' | 'guess';
+
+/**
+ * One mode's results on one day in the browser's own time zone. `date` is
+ * that local date as `2026-10-19`. `tallies` holds a tally per part of the
+ * mode, counted as its running tally counts it: `hanging` in spot the
+ * hanging piece, and `lost` and `controlled` in square control.
+ */
+export type DailyTallies = {
+    mode: DailyMode;
+    date: string;
+    tallies: Partial<Record<string, Tally>>;
+};

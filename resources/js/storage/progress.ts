@@ -14,6 +14,7 @@ const PROGRESS_STORES = [
     'hangingTallies',
     'puzzlesSeen',
     'tacticsTallies',
+    'dailyTallies',
 ] as const;
 
 /** Whether there is any progress to clear, stored or counted this visit. */
