@@ -15,6 +15,7 @@ use App\Http\Controllers\Hanging\PlayHangingGameController;
 use App\Http\Controllers\Hanging\ShowHangingController;
 use App\Http\Controllers\ShowAboutController;
 use App\Http\Controllers\ShowCreditsController;
+use App\Http\Controllers\ShowHelpController;
 use App\Http\Controllers\ShowPrivacyController;
 use App\Http\Controllers\ShowProgressController;
 use App\Http\Controllers\ShowSettingsController;
@@ -86,6 +87,8 @@ Route::get('/about', ShowAboutController::class)->name('about');
 Route::get('/credits', ShowCreditsController::class)->name('credits');
 
 Route::get('/privacy', ShowPrivacyController::class)->name('privacy');
+
+Route::get('/help', ShowHelpController::class)->name('help');
 
 // Development-only pages. They are never registered on the public site, and
 // a production build leaves their code out as well.

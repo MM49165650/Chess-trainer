@@ -376,19 +376,21 @@ Most users are on phones, so phone width is the primary design target for every 
 - About, at `/about`: what the site is, how the four modes work, and that it is free and open source
 - Credits, with a link to the source code
 - Privacy, a short page saying that progress is stored only in the browser and that Cloudflare analytics is used
+- Help, at `/help`: where progress is kept, what can lose it, how to install the site, and that progress cannot be moved to a new device. Added on 19 October 2026
 
-**The home page, about, credits and privacy**
+**The home page, about, credits, privacy and help**
 
 Settled in build step 33.
 
 - The modes are shown in this order on the home page and the progress page: spot the hanging piece, square control, tactics by piece, guess the move. Changed on 19 October 2026 from the order decided in build step 33, which was guess the move, tactics by piece, square control, spot the hanging piece. The site leads with what it does that others do not, and spotting the hanging piece is the core skill.
 - The home page follows the mockup `home-light`, without its label "Chess training" and its heading "Sit beside the masters and guess their next move.", which were taken out before the step was merged: the header with "Asanfa" and a settings button, then a hairline across the page, the four modes numbered 01 to 04, each with a one-line description, and the footer. The Continue card was on the home page until 19 October 2026. "Asanfa" is the page's main heading. The meta description reads "Free chess training: guess masters' moves, tactics by piece, square control and spotting hanging pieces."
 - The Continue card is on the Guess the move page, `/guess`, at the top, above the list of masters. It was moved there from the home page on 19 October 2026, because it only ever showed guess the move. It is text only, without the mockup's strip of board: the label "Continue", the game as "Capablanca vs. Marshall, 1918", White first and by family name, and "Move 9 of 36". The opponent's family name is `opponent_short_name`, as in the play screen's header, and the full name where it is null; the master game response carries it for this. It shows the game in progress that was played most recently, and is left out when no game is in progress or the game no longer exists. The list of masters is hidden until the browser has said whether there is a game in progress, so nothing moves as the page opens. It fetches the game, so it says so while it loads and offers Try again if the request fails.
-- The footer has two centred lines: Progress and Settings, as in the mockup, then a smaller line with About, Credits, Privacy and Source code.
+- The footer has two centred lines: Progress and Settings, as in the mockup, then a smaller line with About, Credits, Privacy, Help and Source code. Help was added on 19 October 2026; the footer is the only link to it.
 - About, at `/about`, is a short plain draft for the owner to edit: a free chess trainer made for friends, what each mode is for, what counts as a hanging piece (added on 16 October 2026, after the hanging rules were widened, and rewritten for the exchange on 18 October 2026), that progress stays in the browser, and that it is free and open source, with a link to the source code.
 - Credits, at `/credits`, lists every board, piece set and font from the settings catalogue with its author, licence and source, then Chessground, PGN Mentor for the master games, Lichess for the puzzles and the practice games, and the source code link.
 - Privacy, at `/privacy`, says that there are no accounts and no cookies, that progress and settings are kept only in the browser and never sent anywhere, that Cloudflare Web Analytics counts visits without cookies, and that the fonts are served by the site itself.
-- About, credits and privacy have the back arrow to the home page, as the progress page does.
+- Help, at `/help`, added on 19 October 2026, is built like about, credits and privacy, with the same text page. Its title and heading are "Help", and its meta description "How your progress is saved in this browser, and how to install the site." It has four parts: where your progress is kept (in this browser, on this device, never sent anywhere, no account, and kept through closing the page, turning the device off and site updates); what can lose it (clearing the site's data, a private window, another browser or device, Safari's seven-day rule on iPhone, iPad and Mac, and reset progress on the progress page, which is linked); installing the site (on Android in Chrome, on iPhone and iPad in Safari, and on a computer in Chrome or Edge, then that the installed site on iPhone and iPad escapes the seven-day rule but may keep its own progress, separate from Safari's, which has not been tested, so the user should pick one and play there); and moving to a new device, which is not possible without accounts. The page is in the sitemap.
+- About, credits, privacy and help have the back arrow to the home page, as the progress page does.
 
 **Back from a play screen**
 
@@ -438,7 +440,7 @@ Settled in build step 31.
 - All progress, history and settings are stored in the browser using IndexedDB, in a versioned format so they can be uploaded to an account later.
 - The one exception is a copy of the appearance setting in localStorage, so that a small script in the page head can apply it before anything is drawn and a reload does not flash the wrong mode. IndexedDB stays the real store; the copy is written when the setting is saved there, and refreshed whenever the settings are read. Settled in build step 31.
 - Clearing browser data or switching devices loses progress. This is accepted for the MVP.
-- Safari erases a site's stored data after seven days without a visit. Installing the site to the home screen avoids this, and the progress page explains how.
+- Safari erases a site's stored data after seven days without a visit. Installing the site to the home screen avoids this, and the help page explains how (from 19 October 2026; the progress page's install note is still hidden).
 
 **The progress page**
 
@@ -451,7 +453,7 @@ Settled in build step 30.
 - Under each of these three percentages are the same two lines as on the landing pages, "Last 7 days 70%" and "The 7 before 60%", with the same rules. Added on 19 October 2026.
 - Tactics shows solved out of attempted, as "14 / 20": an "All pieces" total row first, as on the category page, then the six pieces in their order. A row shows a dash before any attempt.
 - The Safari note reads "Safari deletes a site's saved data after seven days without a visit. Visiting at least once a week keeps your progress." It is shown only in Safari, on any device.
-- The install note is not shown at all until the iPhone test answers the carry-over question and the note is worded. Step 32 showed a placeholder, "[Install note]"; step 33 took it out. Once worded, the note is not shown when the site is already installed.
+- The install note is not shown at all until the iPhone test answers the carry-over question and the note is worded. Step 32 showed a placeholder, "[Install note]"; step 33 took it out. The owner has no iPhone, so as of 19 October 2026 the note stays hidden, and the help page explains installing instead. Once worded, the note is not shown when the site is already installed.
 - If storage is unavailable, the page shows the notice that progress will not be saved, and the marking modes' figures show what was counted during the visit.
 - The reset progress button sits at the foot of the page. It is shown whenever there is something to clear, stored or counted in memory during the visit, and hidden otherwise. It opens the slide-up panel with the heading "Reset all progress?", the text "This clears your scores, history and saved games in every mode, in this browser. Your settings stay. This cannot be undone." and two buttons, "Reset progress", marked as destructive, and "Cancel". After a reset the page shows its empty state and the line "Progress reset."
 
@@ -816,12 +818,12 @@ The steps follow their numbers, except that deployment waits until the build is 
 | 31. Settings | Board themes, piece sets, sound, move input, opponent delay, and marking palettes | Each setting takes effect at once and survives a reload |
 | 32. Installable | The web app manifest and icons; the site name in the page header; the install note on the progress page as a placeholder, not shown when the site is already installed | The site installs from the desktop browser or a local network address and opens without the address bar |
 | 33. Remaining pages and states | The home page with the four modes, in the order decided in this step (see Pages); about, credits, privacy, the report a problem links, and loading and failure states | Every page exists, and a failed load shows a retry button |
-| iPhone test | Done after the full imports on the server. Whether progress made in Safari carries over to the site installed on an iPhone's home screen, tested on a real phone; the install note on the progress page worded from the answer | The carry-over question is answered, and the install note says what the test found |
+| iPhone test | Done after the full imports on the server. Whether progress made in Safari carries over to the site installed on an iPhone's home screen, tested on a real phone; the install note on the progress page worded from the answer. Not done: the owner has no iPhone, so as of 19 October 2026 the question stays open, the install note stays hidden, and the help page says plainly that this has not been tested | The carry-over question is answered, and the install note says what the test found |
 | 34. Launch check | Licences and credits; the Cloudflare cache rule, strict encryption, Rocket Loader off, and the server firewall; analytics; error tracking; a test restore of a backup | Every item is confirmed on the live site |
 
 ## Open decisions and later features
 
-One decision is still open: whether progress carries over after installing on an iPhone, which the iPhone test answers. The source of master games, their minimum length, puzzle difficulty, the selection of practice games, and the name and domain are settled.
+One decision is still open: whether progress carries over after installing on an iPhone, which the iPhone test answers. The owner has no iPhone, so it stays open for now, and the help page says so. The source of master games, their minimum length, puzzle difficulty, the selection of practice games, and the name and domain are settled.
 
 **Open decisions**
 
@@ -831,7 +833,7 @@ One decision is still open: whether progress carries over after installing on an
 | Puzzle difficulty | Tactics by piece | Decided on 12 October 2026: a rating of at most 1500, a popularity of at least 80, at least 500 plays, and 2,000 per piece, taking the most popular, then the most played, then by puzzle ID. Puzzles are served easiest first within a category |
 | Minimum game length | Guess the move | Decided on 11 October 2026 that there is no minimum; changed on 12 October 2026 to two plies, after the full extract turned up eight games forfeited after one move |
 | Source of master games | Guess the move | Decided on 11 October 2026: PGN Mentor's free per-player files, one per master. The site states no licence beyond "completely free", so only moves and basic details are imported, annotations are stripped, and PGN Mentor is credited on the credits page |
-| Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone, the iPhone test in the build order |
+| Progress after installing on iPhone | Whole site | Whether progress made in Safari carries over to the installed version; needs a test on a real phone, the iPhone test in the build order. Still open on 19 October 2026: the owner has no iPhone, and the help page states honestly that it has not been tested |
 | Name and domain | Whole site | Decided on 14 October 2026: the site is called Asanfa Chess Trainer, Asanfa for short, and lives on a subdomain of a domain the owner already has, given at the first deployment: `chess.asanfa.com` |
 
 **Later features**
@@ -1249,8 +1251,9 @@ Inertia serves the pages, and a small set of read-only endpoints serves game and
 | `/tactics` | The piece categories |
 | `/tactics/{piece}` | Play tactics; `piece` is one of the six piece types or `all` |
 | `/progress`, `/settings`, `/credits`, `/privacy` | As named |
-| `/sitemap.xml` | Lists the home page, `/guess`, the master pages and master game pages; cached publicly for one hour |
+| `/sitemap.xml` | Lists the home page, `/guess`, `/help` (from 19 October 2026), the master pages and master game pages; cached publicly for one hour |
 | `/about` | About |
+| `/help` | Help: where progress is kept, what can lose it, and installing the site. Added on 19 October 2026 |
 
 - The game list is sorted by year and shows 30 games per page.
 - Its query parameters are `q`, `color`, `year_from`, `year_to` and `page`. The search box `q` matches opponent and event, which is how those two are filtered.

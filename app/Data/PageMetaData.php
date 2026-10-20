@@ -203,6 +203,15 @@ final class PageMetaData extends Data
         );
     }
 
+    public static function help(): self
+    {
+        return new self(
+            title: 'Help',
+            description: 'How your progress is saved in this browser, and how to install the site.',
+            heading: 'Help',
+        );
+    }
+
     public static function game(Master $master, MasterGame $game): self
     {
         // White's name first. Both players go by family name; an opponent
