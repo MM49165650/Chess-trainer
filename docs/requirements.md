@@ -284,7 +284,7 @@ The user solves short tactics grouped by the piece that delivers them. The mode 
 
 ## Mode 4: Spot the hanging piece
 
-The user watches a beginner game one move at a time and, after every move, marks every piece and pawn that is hanging. Decided on 13 October 2026, when the hanging phase was taken out of square control. It is numbered after tactics so that earlier references to Mode 3 still hold. The home and progress pages show the modes in the order decided in build step 33: guess the move, tactics by piece, square control, spot the hanging piece.
+The user watches a beginner game one move at a time and, after every move, marks every piece and pawn that is hanging. Decided on 13 October 2026, when the hanging phase was taken out of square control. It is numbered after tactics so that earlier references to Mode 3 still hold. The home and progress pages show the modes in the order set on 19 October 2026: spot the hanging piece, square control, tactics by piece, guess the move. See Pages.
 
 **Games**
 
@@ -379,7 +379,7 @@ Most users are on phones, so phone width is the primary design target for every 
 
 Settled in build step 33.
 
-- The modes are shown in this order on the home page and the progress page: guess the move, tactics by piece, square control, spot the hanging piece.
+- The modes are shown in this order on the home page and the progress page: spot the hanging piece, square control, tactics by piece, guess the move. Changed on 19 October 2026 from the order decided in build step 33, which was guess the move, tactics by piece, square control, spot the hanging piece. The site leads with what it does that others do not, and spotting the hanging piece is the core skill.
 - The home page follows the mockup `home-light`, without its label "Chess training" and its heading "Sit beside the masters and guess their next move.", which were taken out before the step was merged: the header with "Asanfa" and a settings button, then a hairline across the page, the Continue card when there is a game in progress, the four modes numbered 01 to 04, each with a one-line description, and the footer. "Asanfa" is the page's main heading. The meta description reads "Free chess training: guess masters' moves, tactics by piece, square control and spotting hanging pieces."
 - The Continue card is for guess the move only, and is text only, without the mockup's strip of board: the label "Continue", the game as "Capablanca vs. Marshall, 1918", White first and by family name, and "Move 9 of 36". The opponent's family name is `opponent_short_name`, as in the play screen's header, and the full name where it is null; the master game response carries it for this. It shows the game in progress that was played most recently, and is left out when no game is in progress or the game no longer exists. It fetches the game, so it says so while it loads and offers Try again if the request fails.
 - The footer has two centred lines: Progress and Settings, as in the mockup, then a smaller line with About, Credits, Privacy and Source code.
@@ -443,7 +443,7 @@ Settled in build step 31.
 Settled in build step 30.
 
 - The page is at `/progress`. Its title is "Progress", its heading "Your progress", and its meta description "Your scores in the four modes, kept only in this browser." The home page links to it.
-- It shows the four modes in the order of the home page, decided in build step 33: guess the move, tactics by piece, square control, spot the hanging piece.
+- It shows the four modes in the order of the home page, changed on 19 October 2026 (see Pages): spot the hanging piece, square control, tactics by piece, guess the move.
 - Guess the move lists accuracy by master as described under its scoring. The percentage is rounded down, like the marking percentages. Masters with the same accuracy are listed with more moves first, then in the fixed master order. With no finished game the section shows one line: "No finished games yet."
 - Square control shows its two percentages, "Squares lost" and "Squares controlled", and spot the hanging piece its one, "Hanging pieces", as on their landing pages: rounded down, with a dash until something is counted. The tallies by piece of square control are not shown.
 - Tactics shows solved out of attempted, as "14 / 20": an "All pieces" total row first, as on the category page, then the six pieces in their order. A row shows a dash before any attempt.

@@ -30,14 +30,9 @@ defineProps<{
 /** The four modes, in the order of the home and progress pages. */
 const MODES = [
     {
-        name: 'Guess the move',
-        description: "Play through a master's win and guess each move.",
-        href: ListMastersController.url(),
-    },
-    {
-        name: 'Tactics by piece',
-        description: 'Two-move tactics, sorted by the piece that plays them.',
-        href: ListTacticsCategoriesController.url(),
+        name: 'Spot the hanging piece',
+        description: 'After every move, find every piece left hanging.',
+        href: ShowHangingController.url(),
     },
     {
         name: 'Square control',
@@ -45,9 +40,14 @@ const MODES = [
         href: ShowSquaresController.url(),
     },
     {
-        name: 'Spot the hanging piece',
-        description: 'After every move, find every piece left hanging.',
-        href: ShowHangingController.url(),
+        name: 'Tactics by piece',
+        description: 'Two-move tactics, sorted by the piece that plays them.',
+        href: ListTacticsCategoriesController.url(),
+    },
+    {
+        name: 'Guess the move',
+        description: "Play through a master's win and guess each move.",
+        href: ListMastersController.url(),
     },
 ];
 
